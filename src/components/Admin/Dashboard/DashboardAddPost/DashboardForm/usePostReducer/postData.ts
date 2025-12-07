@@ -147,3 +147,19 @@ export const videoInitialState: VideoInitialStateInterface = {
   imageUrl: "",
   videoThumbnailUrl: "",
 };
+
+export interface ReelInitialStateInterface {
+  videoUrl: string;
+  thumbnailUrl: string | null;
+  caption: string | null;
+  tags: string[]; // Array of tag IDs
+  authorId: string | null;
+}
+
+export const reelInitialState: ReelInitialStateInterface = {
+  videoUrl: "",
+  thumbnailUrl: null,
+  caption: null,
+  tags: [],
+  authorId: null,
+};

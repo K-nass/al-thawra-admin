@@ -1,9 +1,10 @@
-import { 
-  articleInitialState, 
-  audioInitialState, 
-  galleryInitialState, 
-  sortedListInitialState, 
-  videoInitialState
+import {
+  articleInitialState,
+  audioInitialState,
+  galleryInitialState,
+  sortedListInitialState,
+  videoInitialState,
+  reelInitialState
 } from "./postData";
 
 export type PostType =
@@ -12,7 +13,8 @@ export type PostType =
   | "video"
   | "audio"
   | "sorted-list"
-  | "table-of-contents";
+  | "table-of-contents"
+  | "reel";
 
 interface PostConfig {
   endpoint: string;
@@ -44,5 +46,9 @@ export const postConfig: Record<PostType, PostConfig> = {
   "table-of-contents": {
     endpoint: "table-of-contents",
     initialState: {},
+  },
+  reel: {
+    endpoint: "reels",
+    initialState: reelInitialState,
   },
 };
