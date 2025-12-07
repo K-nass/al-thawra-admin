@@ -9,6 +9,7 @@ import {
   faListCheck,
   faPlay,
   faUser,
+  faVideo,
   type IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import ContentTypeSelector from "./ContentTypeSelector/ContentTypeSelector";
@@ -21,6 +22,7 @@ type NameType =
   | "Table of Contents"
   | "Video"
   | "Audio"
+  | "Reel"
 const getContentTypes = (): ContentType[] => [
   {
     id: 1,
@@ -57,6 +59,12 @@ const getContentTypes = (): ContentType[] => [
     name: "Audio",
     icon: faPlay,
     descriptionKey: "contentTypes.audioDesc",
+  },
+  {
+    id: 7,
+    name: "Reel",
+    icon: faVideo,
+    descriptionKey: "contentTypes.reelDesc",
   },
 
 ];

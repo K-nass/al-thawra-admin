@@ -4,11 +4,13 @@ import PostDetailsForm, { type TagInterface } from "./PostDetailsForm";
 import ContentEditor from "./ContentEditor";
 import GalleryItems from "./GalleryItems";
 import SortedListItems from "./SortedListItems";
+import ReelForm from "./ReelForm";
 
 import AdditionalImages from "./AdditionalImages";
 import FileUpload from "./FileUpload";
 import CategorySelect from "./CategorySelect";
 import PublishSection from "./PublishSection";
+import ReelPublishSection from "./ReelPublishSection";
 import ImageUpload from "./ImageUpload";
 import MediaUploadComponent from "./MediaUploadComponent";
 import { useEffect, type ChangeEvent, useState } from "react";
@@ -21,6 +23,7 @@ import type {
   ArticleInitialStateInterface,
   GalleryInitialStateInterface,
   SortedListInitialStateInterface,
+  ReelInitialStateInterface,
 } from "./usePostReducer/postData";
 import { postConfig } from "./usePostReducer/postConfig";
 import { useCategories } from "@/hooks/useCategories";
@@ -104,12 +107,21 @@ export default function DashboardForm() {
   const mutation = useMutation({
     mutationFn: async () => {
       let payload: any = state;
-      const categoryId = payload.categoryId;
-      if (!categoryId) throw new Error("categoryId missing");
       if (!type) throw new Error("Post type is required");
 
       const config = postConfig[type as keyof typeof postConfig];
       if (!config) throw new Error(`Unknown post type: ${type}`);
+
+      // For reels, we don't need categoryId - post directly to /reels
+      if (type === "reel") {
+        // Reels have different structure, no categoryId needed
+        const response = await apiClient.post("/reels", payload);
+        return response.data;
+      }
+
+      // For other post types, categoryId is required
+      const categoryId = payload.categoryId;
+      if (!categoryId) throw new Error("categoryId missing");
 
       // Client-side validation for articles - imageUrl cannot be null
       // Note: Empty string is allowed by the API
@@ -322,14 +334,16 @@ export default function DashboardForm() {
         <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
           <div className="grow space-y-4 md:space-y-6">
             {/* left column */}
-            <PostDetailsForm
-              type={type}
-              state={state}
-              handleChange={handleChange}
-              tags={tags?.data.items ?? []}
-              isLoading={isLoadingTags}
-              fieldErrors={fieldErrors}
-            />
+            {type !== "reel" && (
+              <PostDetailsForm
+                type={type}
+                state={state}
+                handleChange={handleChange}
+                tags={tags?.data.items ?? []}
+                isLoading={isLoadingTags}
+                fieldErrors={fieldErrors}
+              />
+            )}
             {type === "gallery" ? (
               <GalleryItems
                 state={state as GalleryInitialStateInterface}
@@ -342,6 +356,14 @@ export default function DashboardForm() {
                 handleChange={handleChange}
                 errors={fieldErrors}
               />
+            ) : type === "reel" ? (
+              <ReelForm
+                state={state as ReelInitialStateInterface}
+                handleChange={handleChange}
+                fieldErrors={fieldErrors}
+                tags={tags?.data.items ?? []}
+                isLoading={isLoadingTags}
+              />
             ) : (
               <ContentEditor
                 state={state as ArticleInitialStateInterface}
@@ -352,13 +374,15 @@ export default function DashboardForm() {
           </div>
           <div className="w-full lg:w-80 lg:shrink-0 space-y-4 md:space-y-6">
             {/* right column */}
-            <ImageUpload
-              state={state}
-              handleChange={handleChange}
-              type={type}
-              fieldErrors={fieldErrors}
-            />
-            {!["gallery", "sorted-list", "audio", "video"].includes(
+            {type !== "reel" && (
+              <ImageUpload
+                state={state}
+                handleChange={handleChange}
+                type={type}
+                fieldErrors={fieldErrors}
+              />
+            )}
+            {!["gallery", "sorted-list", "audio", "video", "reel"].includes(
               type || ""
             ) && (
                 <>
@@ -394,19 +418,25 @@ export default function DashboardForm() {
                 }}
               />
             )}
-            <CategorySelect
-              handleChange={handleChange}
-              categories={categories?.data ?? []}
-              isLoading={isLoadingCategories}
-              value={state.categoryId}
-              errors={fieldErrors}
-            />
-            <PublishSection
-              mutation={mutation}
-              state={state}
-              handleChange={handleChange}
-              fieldErrors={fieldErrors}
-            />
+            {type !== "reel" && (
+              <CategorySelect
+                handleChange={handleChange}
+                categories={categories?.data ?? []}
+                isLoading={isLoadingCategories}
+                value={state.categoryId}
+                errors={fieldErrors}
+              />
+            )}
+            {type === "reel" ? (
+              <ReelPublishSection mutation={mutation} />
+            ) : (
+              <PublishSection
+                mutation={mutation}
+                state={state}
+                handleChange={handleChange}
+                fieldErrors={fieldErrors}
+              />
+            )}
           </div>
         </div>
       </form>
