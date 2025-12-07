@@ -211,22 +211,6 @@ export default function EditUser() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6 bg-white border-b border-slate-200">
                 <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">Edit User</h1>
                 <div className="flex gap-2 flex-wrap">
-                    <button
-                        onClick={handleBan}
-                        disabled={banUserMutation.isPending}
-                        className="flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <FontAwesomeIcon icon={faBan} />
-                        {banUserMutation.isPending ? "Banning..." : "Ban User"}
-                    </button>
-                    <button
-                        onClick={handleDelete}
-                        disabled={deleteUserMutation.isPending}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <FontAwesomeIcon icon={faTrash} />
-                        {deleteUserMutation.isPending ? "Deleting..." : "Delete User"}
-                    </button>
                     <Link
                         to="/admin/users"
                         className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors text-sm"
