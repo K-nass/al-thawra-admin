@@ -38,19 +38,19 @@ export default function Login() {
       } else {
         // No refresh token found in response
       }
-      
+
       // Get user role from response and store it
       const userRole = data?.user?.role || '';
       if (userRole) {
         setUserRole(userRole);
       }
-      
+
       setFieldErrors({});
       setNotification({
         type: 'success',
         message: t('auth.loginSuccess'),
       });
-      
+
       // Redirect based on role after short delay
       setTimeout(() => {
         // Member and Author go to home page
@@ -122,7 +122,7 @@ export default function Login() {
         <div className="flex justify-end mb-4">
           <LanguageToggle />
         </div>
-        
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -137,11 +137,10 @@ export default function Login() {
           {/* Notification */}
           {notification && (
             <div
-              className={`mb-6 p-4 rounded-lg ${
-                notification.type === 'success'
+              className={`mb-6 p-4 rounded-lg ${notification.type === 'success'
                   ? 'bg-green-50 border border-green-200 text-green-800'
                   : 'bg-red-50 border border-red-200 text-red-800'
-              }`}
+                }`}
             >
               <p className="text-sm font-medium">{notification.message}</p>
             </div>
@@ -161,9 +160,8 @@ export default function Login() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder={t('auth.email')}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${fieldErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
                 required
               />
               {fieldErrors.email && (
@@ -187,9 +185,8 @@ export default function Login() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder={t('auth.password')}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  fieldErrors.password ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${fieldErrors.password ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
                 required
               />
               {fieldErrors.password && (

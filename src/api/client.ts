@@ -78,7 +78,7 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
-      
+
     }
     return config;
   },
@@ -131,7 +131,7 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = getRefreshToken();
-      
+
       if (!refreshToken) {
         // No refresh token available, clear tokens and reject
         clearAllTokens();
@@ -154,7 +154,7 @@ apiClient.interceptors.response.use(
 
         // Update the failed request with new token
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        
+
         // Process queued requests
         processQueue(null, accessToken);
         isRefreshing = false;

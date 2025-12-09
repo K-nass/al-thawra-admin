@@ -1,25 +1,23 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft, faSave, faUpload, faUser, faTrash, faBan } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faSave, faUpload, faUser } from "@fortawesome/free-solid-svg-icons";
 import { usersApi, type UpdateUserParams } from "@/api/users.api";
 import Loader from "@/components/Common/Loader";
-import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
+import FileModal from "../DashboardAddPost/DashboardForm/FileModal";
 
 export default function EditUser() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { id, username } = useParams<{ id: string; username: string }>();
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [formData, setFormData] = useState<UpdateUserParams>({});
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [error, setError] = useState<string>("");
     const [successMessage, setSuccessMessage] = useState<string>("");
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [showBanDialog, setShowBanDialog] = useState(false);
+    const [showAvatarModal, setShowAvatarModal] = useState(false);
 
     // Fetch user profile using username
     const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
@@ -72,15 +70,12 @@ export default function EditUser() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            setFormData((prev) => ({ ...prev, AvatarImage: file }));
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setAvatarPreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+    const handleAvatarModalChange = (e: any) => {
+        // FileModal returns { target: { name: 'imageUrl', value: '...' } }
+        // We map 'imageUrl' to 'AvatarImage' for the user update payload
+        if (e.target.name === 'imageUrl') {
+            setFormData((prev) => ({ ...prev, AvatarImage: e.target.value }));
+            setAvatarPreview(e.target.value);
         }
     };
 
@@ -112,82 +107,9 @@ export default function EditUser() {
         },
     });
 
-    const deleteUserMutation = useMutation({
-        mutationFn: () => usersApi.delete(id!),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["users"] });
-            setSuccessMessage("User deleted successfully");
-            setError("");
-            setTimeout(() => {
-                navigate("/admin/users");
-            }, 1500);
-        },
-        onError: (err) => {
-            setSuccessMessage("");
-            if (axios.isAxiosError(err)) {
-                const responseData = err.response?.data;
-                if (responseData?.title) {
-                    setError(responseData.title);
-                } else if (responseData?.message) {
-                    setError(responseData.message);
-                } else {
-                    setError(err.message || "Failed to delete user");
-                }
-            } else {
-                setError("An unexpected error occurred");
-            }
-        },
-    });
-
-    const banUserMutation = useMutation({
-        mutationFn: () => usersApi.ban(id!),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["users"] });
-            queryClient.invalidateQueries({ queryKey: ["userProfile", username] });
-            setSuccessMessage("User banned successfully");
-            setError("");
-            setTimeout(() => {
-                navigate("/admin/users");
-            }, 1500);
-        },
-        onError: (err) => {
-            setSuccessMessage("");
-            if (axios.isAxiosError(err)) {
-                const responseData = err.response?.data;
-                if (responseData?.title) {
-                    setError(responseData.title);
-                } else if (responseData?.message) {
-                    setError(responseData.message);
-                } else {
-                    setError(err.message || "Failed to ban user");
-                }
-            } else {
-                setError("An unexpected error occurred");
-            }
-        },
-    });
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         updateUserMutation.mutate(formData);
-    };
-
-    const handleDelete = () => {
-        setShowDeleteDialog(true);
-    };
-
-    const handleBan = () => {
-        setShowBanDialog(true);
-    };
-
-    const confirmDelete = () => {
-        setShowDeleteDialog(false);
-        deleteUserMutation.mutate();
-    };
-
-    const confirmBan = () => {
-        setShowBanDialog(false);
-        banUserMutation.mutate();
     };
 
     if (isLoadingProfile) return <Loader />;
@@ -257,19 +179,12 @@ export default function EditUser() {
                                         )}
                                         <button
                                             type="button"
-                                            onClick={() => fileInputRef.current?.click()}
+                                            onClick={() => setShowAvatarModal(true)}
                                             className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-sm"
                                         >
                                             <FontAwesomeIcon icon={faUpload} className="text-xs" />
                                         </button>
                                     </div>
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={handleFileChange}
-                                        accept="image/*"
-                                        className="hidden"
-                                    />
                                     <p className="text-xs text-slate-500 text-center">
                                         Allowed *.jpeg, *.jpg, *.png, *.gif
                                         <br />
@@ -387,28 +302,13 @@ export default function EditUser() {
                 </form>
             </div>
 
-            {/* Confirm Dialogs */}
-            <ConfirmDialog
-                isOpen={showDeleteDialog}
-                title="Delete User"
-                message="Are you sure you want to delete this user? This action cannot be undone."
-                confirmText="Delete"
-                cancelText="Cancel"
-                onConfirm={confirmDelete}
-                onCancel={() => setShowDeleteDialog(false)}
-                type="danger"
-            />
-
-            <ConfirmDialog
-                isOpen={showBanDialog}
-                title="Ban User"
-                message="Are you sure you want to ban this user? This will deactivate their account."
-                confirmText="Ban"
-                cancelText="Cancel"
-                onConfirm={confirmBan}
-                onCancel={() => setShowBanDialog(false)}
-                type="warning"
-            />
+            {showAvatarModal && (
+                <FileModal
+                    header="images"
+                    onClose={() => setShowAvatarModal(false)}
+                    handleChange={handleAvatarModalChange}
+                />
+            )}
         </div>
     );
 }
