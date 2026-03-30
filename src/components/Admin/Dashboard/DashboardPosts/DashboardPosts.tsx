@@ -490,46 +490,29 @@ export default function DashboardPosts({ label }: { label?: string }) {
                     {/* Pagination */}
                     {((isPages && (data as any)?.totalPages && (data as any).totalPages > 1) ||
                         (!isPages && (data as any)?.data?.totalPages && (data as any).data.totalPages > 1)) && (
-                            <div className="flex justify-center items-center space-x-2 py-4 bg-gray-50 cursor-pointer">
-                                <button
-                                    onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
-                                    disabled={pageNumber === 1}
-                                    className={`px-3 py-1 border rounded-md cursor-pointer ${pageNumber === 1
-                                        ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                                        : "text-gray-700 hover:bg-gray-100"
-                                        }`}
-                                >
-                                    ‹
-                                </button>
-                                {Array.from({
-                                    length: isPages ? ((data as any)?.totalPages || 0) : ((data as any)?.data?.totalPages || 0)
-                                }, (_, i) => i + 1).map((num) => (
+                            <div className="flex items-center justify-between py-4 px-6 bg-gray-50">
+                                <div className="text-sm text-gray-600">
+                                    {t('roles.showing')} {isPages ? (data as any)?.itemsFrom : (data as any)?.data?.itemsFrom} {t('roles.to')} {isPages ? (data as any)?.itemsTo : (data as any)?.data?.itemsTo} {t('roles.of')} {isPages ? (data as any)?.totalCount : (data as any)?.data?.totalCount} {isPages ? t('roles.rolesText') : t('post.posts')}
+                                </div>
+                                <div className="flex items-center space-x-2">
                                     <button
-                                        key={num}
-                                        onClick={() => setPageNumber(num)}
-                                        className={`px-3 py-1 border rounded-md cursor-pointer ${pageNumber === num
-                                            ? "bg-[#13967B] text-white border-[#13967B]"
-                                            : "text-gray-700 hover:bg-gray-100 border-gray-200"
-                                            }`}
+                                        onClick={() => setPageNumber((prev) => Math.max(1, prev - 1))}
+                                        disabled={pageNumber === 1}
+                                        className="px-3 py-1.5 text-sm bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {num}
+                                        {t('roles.previous')}
                                     </button>
-                                ))}
-                                <button
-                                    onClick={() =>
-                                        setPageNumber((prev) => {
-                                            const totalPages = isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages;
-                                            return totalPages ? Math.min(prev + 1, totalPages) : prev;
-                                        })
-                                    }
-                                    disabled={pageNumber === (isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages)}
-                                    className={`px-3 py-1 border rounded-md cursor-pointer ${pageNumber === (isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages)
-                                        ? "text-gray-400 border-gray-200 cursor-not-allowed"
-                                        : "text-gray-700 hover:bg-gray-100"
-                                        }`}
-                                >
-                                    ›
-                                </button>
+                                    <span className="text-sm text-slate-600">
+                                        {t('roles.page')} {pageNumber} {t('roles.of')} {isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setPageNumber((prev) => Math.min(isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages, prev + 1))}
+                                        disabled={pageNumber === (isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages)}
+                                        className="px-3 py-1.5 text-sm bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {t('roles.next')}
+                                    </button>
+                                </div>
                             </div>
                         )}                </div>
             </div>

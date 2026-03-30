@@ -248,6 +248,14 @@ export default function DashboardForm() {
         payload.imageUrl = null;
       }
 
+      // Ensure metaDescription and metaKeywords are never null - must be empty strings
+      if (!payload.metaDescription || payload.metaDescription === null) {
+        payload.metaDescription = "";
+      }
+      if (!payload.metaKeywords || payload.metaKeywords === null) {
+        payload.metaKeywords = "";
+      }
+
       const response = await apiClient.post(
         `/posts/categories/${categoryId}/${endpoint}`,
         payload
@@ -282,24 +290,29 @@ export default function DashboardForm() {
           return;
         }
 
-        // Check for title first (general error message)
-        if (d?.title) message = String(d.title);
-        else if (d?.message) message = String(d.message);
-        else if (d?.errors) {
+        // Handle validation errors (422)
+        if (status === 422 && d?.errors) {
           // Extract field-level errors from API response
           if (typeof d.errors === 'object') {
+            const errorMessages: string[] = [];
             Object.entries(d.errors).forEach(([field, messages]) => {
-              // Normalize field name to lowercase for matching form fields
               const normalizedField = field.toLowerCase();
               if (Array.isArray(messages)) {
                 errors[normalizedField] = messages;
+                // Add to error messages for notification
+                messages.forEach(msg => errorMessages.push(`${field}: ${msg}`));
               } else if (typeof messages === 'string') {
                 errors[normalizedField] = [messages];
+                errorMessages.push(`${field}: ${messages}`);
               }
             });
+            // Show all validation errors in the notification
+            message = errorMessages.join('\n');
           }
-          message = d.message || 'Validation failed';
         }
+        // Check for title first (general error message)
+        else if (d?.title) message = String(d.title);
+        else if (d?.message) message = String(d.message);
         else message = error.message;
       } else if (error instanceof Error) {
         message = error.message;

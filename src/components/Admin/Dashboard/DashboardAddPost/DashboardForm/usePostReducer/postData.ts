@@ -3,8 +3,8 @@ export interface ShardedInitialStateInterface {
   language: "English" | "Arabic";
   title: string;
   slug: string | null;
-  metaDescription: string | null;
-  metaKeywords: string | null;
+  metaDescription: string;
+  metaKeywords: string;
   optionalURL: string | null;
   scheduledAt: string | null;
   status: "Draft" | "Scheduled" | "Published";
@@ -19,8 +19,8 @@ export const shardedInitialState: ShardedInitialStateInterface = {
   language: "English",
   title: "",
   slug: null,
-  metaDescription: null,
-  metaKeywords: null,
+  metaDescription: "",
+  metaKeywords: "",
   optionalURL: null,
   scheduledAt: null,
   status: "Draft",

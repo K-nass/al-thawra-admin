@@ -53,7 +53,6 @@ This document compares the available API endpoints from the backend with what's 
 - ✅ `DELETE /api/v1/users/{id}` - Implemented in `users.api.ts`
 
 **Coverage: 6/10 (60%)**
-
 ---
 
 ### Posts (General) (6/6 endpoints)

@@ -231,18 +231,17 @@ export default function DashboardEditPost() {
         payload.imageDescription = null;
       }
 
-      // Ensure required string fields are not empty strings
-      // Note: metaDescription and metaKeywords are REQUIRED by the API
+      // Ensure required string fields are not null
+      // metaDescription and metaKeywords must be empty strings, not null
       if (payload.slug === "") {
         payload.slug = null;
       }
-      // Don't set these to null - they're required fields
-      // if (payload.metaDescription === "") {
-      //   payload.metaDescription = null;
-      // }
-      // if (payload.metaKeywords === "") {
-      //   payload.metaKeywords = null;
-      // }
+      if (!payload.metaDescription || payload.metaDescription === null) {
+        payload.metaDescription = "";
+      }
+      if (!payload.metaKeywords || payload.metaKeywords === null) {
+        payload.metaKeywords = "";
+      }
       if (payload.description === "") {
         payload.description = "";
       }
@@ -383,7 +382,7 @@ export default function DashboardEditPost() {
 
       // Redirect to posts list after 2 seconds
       setTimeout(() => {
-        navigate('/admin/posts');
+        navigate('/admin/posts/all');
       }, 2000);
     },
     onError: (error: unknown) => {
