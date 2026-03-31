@@ -126,6 +126,23 @@
     "options": "الخيارات",
     "createdBy": "تم الإنشاء بواسطة"
   },
+  "validation": {
+    "titleRequired": "العنوان مطلوب",
+    "contentRequired": "المحتوى مطلوب",
+    "categoryRequired": "الفئة مطلوبة",
+    "languageRequired": "اللغة مطلوبة",
+    "formHasErrors": "يرجى تصحيح الأخطاء قبل الإرسال"
+  },
+  "success": {
+    "articleCreated": "تم إنشاء المقال بنجاح"
+  },
+  "errors": {
+    "validationErrors": "يوجد {{count}} أخطاء في النموذج",
+    "failedToCreatePost": "فشل في إنشاء المنشور",
+    "badRequest": "طلب غير صالح",
+    "resourceNotFound": "المورد غير موجود",
+    "conflict": "تعارض في البيانات"
+  },
   "filter": {
     "show": "عرض",
     "language": "اللغة",
@@ -189,6 +206,10 @@
     "showItemNumbers": "عرض أرقام العناصر في صفحة تفاصيل المقال",
     "metaDescription": "وصف ميتا",
     "metaKeywords": "كلمات مفتاحية (علامة ميتا)",
+    "language": "اللغة",
+    "selectLanguage": "اختر اللغة",
+    "english": "الإنجليزية",
+    "arabic": "العربية",
     "getVideoFromURL": "الحصول على فيديو من رابط",
     "uploadVideo": "تحميل فيديو",
     "uploadAudio": "تحميل صوت",

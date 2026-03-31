@@ -137,17 +137,21 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
                 <h3 className="text-base sm:text-lg font-semibold border-b border-slate-200 pb-3 sm:pb-4 mb-4 sm:mb-6">
                     Caption
                 </h3>
-                <textarea
-                    name="caption"
-                    value={state.caption || ""}
-                    onChange={handleChange}
-                    placeholder="Enter a caption for your reel..."
-                    rows={4}
-                    className="w-full bg-slate-50 border border-slate-300 rounded focus:ring-primary focus:border-primary p-2 resize-none"
-                />
-                {fieldErrors.caption && (
-                    <p className="text-red-500 text-xs mt-1">{fieldErrors.caption[0]}</p>
-                )}
+                <div data-error-field={fieldErrors.caption ? true : undefined}>
+                    <textarea
+                        name="caption"
+                        value={state.caption || ""}
+                        onChange={handleChange}
+                        placeholder="Enter a caption for your reel..."
+                        rows={4}
+                        className={`w-full bg-slate-50 border rounded focus:ring-primary focus:border-primary p-2 resize-none ${
+                            fieldErrors.caption ? 'border-red-500' : 'border-slate-300'
+                        }`}
+                    />
+                    {fieldErrors.caption && (
+                        <p className="text-red-500 text-xs mt-1">{fieldErrors.caption[0]}</p>
+                    )}
+                </div>
             </div>
 
             {/* Tags Section - EXACT same as PostDetailsForm */}

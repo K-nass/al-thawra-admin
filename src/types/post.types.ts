@@ -30,6 +30,7 @@ export interface CreatePostDto {
   tags?: string[];
   status?: 'draft' | 'published' | 'archived';
   publishedAt?: string;
+  language: "English" | "Arabic";
 }
 
 export interface UpdatePostDto extends Partial<CreatePostDto> {
@@ -57,4 +58,16 @@ export interface PostFormData {
   tags: string[];
   status: 'draft' | 'published' | 'archived';
   contentType: ContentType;
+}
+
+export interface ValidationError {
+  field: string;
+  messages: string[];
+}
+
+export interface ApiErrorResponse {
+  status: number;
+  title?: string;
+  message?: string;
+  errors?: Record<string, string[]>;
 }

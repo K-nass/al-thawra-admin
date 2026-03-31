@@ -89,13 +89,13 @@ export default function PublishSection({ mutation: _mutation, isEditMode = false
         </label>
 
         {state.scheduledAt && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-1">
+          <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-1" data-error-field={scheduledAtErrors ? true : undefined}>
             <div className="relative">
               <input
                 type="datetime-local"
                 className={`w-full px-3 py-2 border rounded-md text-sm shadow-sm transition-colors
                   focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                  ${scheduledAtErrors ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 hover:border-slate-400'}
+                  ${scheduledAtErrors ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 hover:border-slate-400'}
                 `}
                 value={getLocalDateTime(state.scheduledAt)}
                 onChange={handleDateChange}

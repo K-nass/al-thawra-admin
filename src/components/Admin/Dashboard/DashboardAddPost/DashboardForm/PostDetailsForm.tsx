@@ -139,7 +139,7 @@ export default function PostDetailsForm({
         </div>
 
         {/* slug */}
-        <div>
+        <div data-error-field={fieldErrors.slug ? true : undefined}>
           <label className="block text-sm font-medium mb-1" htmlFor="slug">
             {t('post.slug')}
           </label>
@@ -147,7 +147,9 @@ export default function PostDetailsForm({
             {t('post.slugHint')}
           </p>
           <input
-            className="w-full bg-slate-50  border-slate-300  rounded focus:ring-primary focus:border-primary p-2"
+            className={`w-full bg-slate-50 border rounded focus:ring-primary focus:border-primary p-2 ${
+              fieldErrors.slug ? 'border-red-500' : 'border-slate-300'
+            }`}
             type="text"
             id="slug"
             name="slug"
@@ -155,6 +157,9 @@ export default function PostDetailsForm({
             value={state.slug ?? ""}
             onChange={handleChange}
           />
+          {fieldErrors.slug && (
+            <p className="text-red-500 text-xs mt-1">{fieldErrors.slug}</p>
+          )}
         </div>
 
         {/* Meta Tag */}
@@ -236,6 +241,31 @@ export default function PostDetailsForm({
             </label>
           </div>
         </div>
+
+        {/* Language */}
+        {'language' in state && (
+          <div data-error-field={fieldErrors.language ? true : undefined}>
+            <label className="block text-sm font-medium mb-1" htmlFor="language">
+              {t('formLabels.language')}
+            </label>
+            <select
+              className={`w-full bg-slate-50 border rounded focus:ring-primary focus:border-primary p-2 ${
+                fieldErrors.language ? 'border-red-500' : 'border-slate-300'
+              }`}
+              id="language"
+              name="language"
+              value={(state as ArticleInitialStateInterface).language || ''}
+              onChange={handleChange}
+            >
+              <option value="">{t('formLabels.selectLanguage')}</option>
+              <option value="English">{t('formLabels.english')}</option>
+              <option value="Arabic">{t('formLabels.arabic')}</option>
+            </select>
+            {fieldErrors.language && (
+              <p className="text-red-500 text-xs mt-1">{fieldErrors.language}</p>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {/* Add to Slider */}

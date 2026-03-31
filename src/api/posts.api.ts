@@ -92,9 +92,19 @@ export const postsApi = {
     return response.data;
   },
 
-  // Create new post
+  // @deprecated - This endpoint does not exist in the API. Use createArticle instead.
+  // Create new post (LEGACY - NOT USED)
   create: async (data: CreatePostDto) => {
     const response = await apiClient.post<Post>('/posts', data);
+    return response.data;
+  },
+
+  // Create article in specific category (CORRECT METHOD TO USE)
+  createArticle: async (categoryId: string, data: CreatePostDto) => {
+    const response = await apiClient.post<Post>(
+      `/posts/categories/${categoryId}/articles`,
+      data
+    );
     return response.data;
   },
 

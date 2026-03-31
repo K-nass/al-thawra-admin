@@ -132,6 +132,23 @@
     "options": "Options",
     "createdBy": "Created by"
   },
+  "validation": {
+    "titleRequired": "Title is required",
+    "contentRequired": "Content is required",
+    "categoryRequired": "Category is required",
+    "languageRequired": "Language is required",
+    "formHasErrors": "Please correct the errors before submitting"
+  },
+  "success": {
+    "articleCreated": "Article created successfully"
+  },
+  "errors": {
+    "validationErrors": "There are {{count}} validation errors in the form",
+    "failedToCreatePost": "Failed to create post",
+    "badRequest": "Bad request",
+    "resourceNotFound": "Resource not found",
+    "conflict": "Data conflict"
+  },
   "filter": {
     "show": "Show",
     "language": "Language",
@@ -189,6 +206,10 @@
     "visibility": "Visibility",
     "show": "Show",
     "hide": "Hide",
+    "language": "Language",
+    "selectLanguage": "Select Language",
+    "english": "English",
+    "arabic": "Arabic",
     "addToSlider": "Add to Slider",
     "addToFeatured": "Add to Featured",
     "addToBreaking": "Add to Breaking",

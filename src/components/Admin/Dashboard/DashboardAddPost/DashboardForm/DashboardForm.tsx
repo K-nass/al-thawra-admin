@@ -104,6 +104,29 @@ export default function DashboardForm() {
 
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
 
+  // Validation function for article form
+  const validateArticleForm = (payload: any): Record<string, string[]> => {
+    const errors: Record<string, string[]> = {};
+    
+    if (!payload.title || payload.title.trim() === '') {
+      errors.title = [t('validation.titleRequired')];
+    }
+    
+    if (!payload.content || payload.content.trim() === '') {
+      errors.content = [t('validation.contentRequired')];
+    }
+    
+    if (!payload.categoryId) {
+      errors.categoryId = [t('validation.categoryRequired')];
+    }
+    
+    if (!payload.language) {
+      errors.language = [t('validation.languageRequired')];
+    }
+    
+    return errors;
+  };
+
   const mutation = useMutation({
     mutationFn: async () => {
       let payload: any = state;
@@ -123,10 +146,30 @@ export default function DashboardForm() {
       const categoryId = payload.categoryId;
       if (!categoryId) throw new Error("categoryId missing");
 
-      // Client-side validation for articles - imageUrl cannot be null
-      // Note: Empty string is allowed by the API
-      if (type === "article" && payload.imageUrl === null) {
-        payload.imageUrl = "";
+      // Client-side validation for articles
+      if (type === "article") {
+        // Validate required fields
+        const validationErrors = validateArticleForm(payload);
+        if (Object.keys(validationErrors).length > 0) {
+          setFieldErrors(validationErrors);
+          throw new Error(t('validation.formHasErrors'));
+        }
+        
+        // Null-to-string conversion for article fields (Requirements 2.5, 2.6, 2.7, 6.2, 6.3, 6.4)
+        // imageUrl cannot be null - empty string is allowed by the API
+        if (payload.imageUrl === null || payload.imageUrl === undefined) {
+          payload.imageUrl = "";
+        }
+        
+        // metaDescription cannot be null - must be empty string
+        if (payload.metaDescription === null || payload.metaDescription === undefined) {
+          payload.metaDescription = "";
+        }
+        
+        // metaKeywords cannot be null - must be empty string
+        if (payload.metaKeywords === null || payload.metaKeywords === undefined) {
+          payload.metaKeywords = "";
+        }
       }
 
       // Client-side validation for video posts
@@ -248,12 +291,14 @@ export default function DashboardForm() {
         payload.imageUrl = null;
       }
 
-      // Ensure metaDescription and metaKeywords are never null - must be empty strings
-      if (!payload.metaDescription || payload.metaDescription === null) {
-        payload.metaDescription = "";
-      }
-      if (!payload.metaKeywords || payload.metaKeywords === null) {
-        payload.metaKeywords = "";
+      // Ensure metaDescription and metaKeywords are never null for non-article types
+      if (type !== "article") {
+        if (!payload.metaDescription || payload.metaDescription === null) {
+          payload.metaDescription = "";
+        }
+        if (!payload.metaKeywords || payload.metaKeywords === null) {
+          payload.metaKeywords = "";
+        }
       }
 
       const response = await apiClient.post(
@@ -263,14 +308,16 @@ export default function DashboardForm() {
       return response.data;
     },
     onSuccess: (data) => {
+      // Handle 201 success with translated message
       const msg =
-        (data && (data.message || data.title)) ?? "Post created successfully";
+        (data && (data.message || data.title)) ?? 
+        (type === "article" ? t('success.articleCreated') : t('post.postCreatedSuccessfully'));
       setFieldErrors({});
       setNotification({ type: "success", message: String(msg) });
     },
     onError: (error: unknown) => {
       console.error("Post creation error:", error);
-      let message = "Failed to create post";
+      let message = t('errors.failedToCreatePost');
       const errors: Record<string, string[]> = {};
 
       if (axios.isAxiosError(error)) {
@@ -278,9 +325,7 @@ export default function DashboardForm() {
         const status = error.response?.status;
         console.error("API Error Response:", { status, data: d });
 
-        // Handle 401 Unauthorized - only redirect if token refresh failed
-        // The axios interceptor will automatically try to refresh the token
-        // If we get here with 401, it means refresh failed
+        // Handle 401 Unauthorized - session expired, redirect to login
         if (status === 401) {
           message = t('common.sessionExpired');
           setNotification({ type: "error", message });
@@ -290,30 +335,43 @@ export default function DashboardForm() {
           return;
         }
 
-        // Handle validation errors (422)
+        // Handle 422 Validation Errors
         if (status === 422 && d?.errors) {
           // Extract field-level errors from API response
           if (typeof d.errors === 'object') {
-            const errorMessages: string[] = [];
             Object.entries(d.errors).forEach(([field, messages]) => {
               const normalizedField = field.toLowerCase();
               if (Array.isArray(messages)) {
                 errors[normalizedField] = messages;
-                // Add to error messages for notification
-                messages.forEach(msg => errorMessages.push(`${field}: ${msg}`));
               } else if (typeof messages === 'string') {
                 errors[normalizedField] = [messages];
-                errorMessages.push(`${field}: ${messages}`);
               }
             });
-            // Show all validation errors in the notification
-            message = errorMessages.join('\n');
+            // Create user-friendly message with error count
+            const errorCount = Object.keys(errors).length;
+            message = t('errors.validationErrors', { count: errorCount });
           }
         }
-        // Check for title first (general error message)
-        else if (d?.title) message = String(d.title);
-        else if (d?.message) message = String(d.message);
-        else message = error.message;
+        // Handle 400 Bad Request
+        else if (status === 400) {
+          message = d?.title || d?.message || t('errors.badRequest');
+        }
+        // Handle 404 Not Found
+        else if (status === 404) {
+          message = d?.title || d?.message || t('errors.resourceNotFound');
+        }
+        // Handle 409 Conflict
+        else if (status === 409) {
+          message = d?.title || d?.message || t('errors.conflict');
+        }
+        // Generic error fallback
+        else if (d?.title) {
+          message = String(d.title);
+        } else if (d?.message) {
+          message = String(d.message);
+        } else {
+          message = error.message;
+        }
       } else if (error instanceof Error) {
         message = error.message;
       }
