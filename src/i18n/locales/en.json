@@ -140,14 +140,18 @@
     "formHasErrors": "Please correct the errors before submitting"
   },
   "success": {
-    "articleCreated": "Article created successfully"
+    "articleCreated": "Article created successfully",
+    "articleUpdated": "Article updated successfully"
   },
   "errors": {
     "validationErrors": "There are {{count}} validation errors in the form",
     "failedToCreatePost": "Failed to create post",
+    "failedToUpdatePost": "Failed to update post",
     "badRequest": "Bad request",
     "resourceNotFound": "Resource not found",
-    "conflict": "Data conflict"
+    "conflict": "Data conflict",
+    "serverError": "Server error occurred",
+    "tagIdsInvalid": "Invalid tags provided"
   },
   "filter": {
     "show": "Show",

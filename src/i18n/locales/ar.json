@@ -134,14 +134,18 @@
     "formHasErrors": "يرجى تصحيح الأخطاء قبل الإرسال"
   },
   "success": {
-    "articleCreated": "تم إنشاء المقال بنجاح"
+    "articleCreated": "تم إنشاء المقال بنجاح",
+    "articleUpdated": "تم تحديث المقال بنجاح"
   },
   "errors": {
     "validationErrors": "يوجد {{count}} أخطاء في النموذج",
     "failedToCreatePost": "فشل في إنشاء المنشور",
+    "failedToUpdatePost": "فشل في تحديث المنشور",
     "badRequest": "طلب غير صالح",
     "resourceNotFound": "المورد غير موجود",
-    "conflict": "تعارض في البيانات"
+    "conflict": "تعارض في البيانات",
+    "serverError": "حدث خطأ في الخادم",
+    "tagIdsInvalid": "الوسوم المقدمة غير صالحة"
   },
   "filter": {
     "show": "عرض",

@@ -336,11 +336,14 @@ export default function DashboardEditPost() {
       }
 
       // Clean up empty strings in tagIds array
+      // Backend expects array or field to be omitted, not null
       if (payload.tagIds) {
         payload.tagIds = payload.tagIds.filter((id: string) => id && id.trim() !== '');
         if (payload.tagIds.length === 0) {
-          payload.tagIds = null;
+          delete payload.tagIds;
         }
+      } else if (payload.tagIds === null) {
+        delete payload.tagIds;
       }
 
       // Clean up empty string values for single URL fields
@@ -376,7 +379,7 @@ export default function DashboardEditPost() {
     },
     onSuccess: (data) => {
       const msg =
-        (data && (data.message || data.title)) ?? "Post updated successfully";
+        (data && (data.message || data.title)) ?? t('success.articleUpdated');
       setFieldErrors({});
       setNotification({ type: "success", message: String(msg) });
 
@@ -387,7 +390,7 @@ export default function DashboardEditPost() {
     },
     onError: (error: unknown) => {
       console.error("Post update error:", error);
-      let message = "Failed to update post";
+      let message = t('errors.failedToUpdatePost');
       const errors: Record<string, string[]> = {};
 
       if (axios.isAxiosError(error)) {
@@ -414,6 +417,16 @@ export default function DashboardEditPost() {
           }
         }
 
+        // Handle 500 Internal Server Error
+        else if (status === 500) {
+          // Check for specific ArgumentNullException related to tagIds
+          if (d?.detail && d.detail.includes('Value cannot be null')) {
+            message = t('errors.serverError') + ': ' + (d.detail || 'Unknown error');
+          } else {
+            message = d?.title || d?.detail || t('errors.serverError');
+          }
+        }
+
         // Handle validation errors (422)
         else if (status === 422 && d?.errors) {
           // Extract field-level errors from API response
@@ -423,20 +436,23 @@ export default function DashboardEditPost() {
               const normalizedField = field.toLowerCase();
               if (Array.isArray(messages)) {
                 errors[normalizedField] = messages;
-                // Add to error messages for notification
-                messages.forEach(msg => errorMessages.push(`${field}: ${msg}`));
+                // Add to error messages for notification (without field prefix)
+                messages.forEach(msg => errorMessages.push(msg));
               } else if (typeof messages === 'string') {
                 errors[normalizedField] = [messages];
-                errorMessages.push(`${field}: ${messages}`);
+                errorMessages.push(messages);
               }
             });
             // Show all validation errors in the notification
-            message = errorMessages.join('\n');
+            if (errorMessages.length > 0) {
+              message = errorMessages.join('\n');
+            }
           }
         }
         // Check for title first (general error message)
         else if (d?.title) message = String(d.title);
         else if (d?.message) message = String(d.message);
+        else if (d?.detail) message = String(d.detail);
         else message = error.message;
       } else if (error instanceof Error) {
         message = error.message;

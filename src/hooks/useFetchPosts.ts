@@ -48,25 +48,32 @@ export function useFetchPosts(params: FetchPostsParams = {}) {
     if (authorName) queryParams.append("AuthorName", authorName);
     if (hasAuthor !== undefined) queryParams.append("HasAuthor", String(hasAuthor));
     if (status) queryParams.append("Status", status);
-    if (isFeatured !== undefined) queryParams.append("IsFeatured", String(isFeatured));
-    if (isBreaking !== undefined) queryParams.append("IsBreaking", String(isBreaking));
-    if (isSlider !== undefined) queryParams.append("IsSlider", String(isSlider));
-    if (isRecommended !== undefined) queryParams.append("IsRecommended", String(isRecommended));
-    if (language) queryParams.append("Language", language);
+    
+    // IMPORTANT: Only send boolean flags when they are TRUE
+    // If false or undefined, don't send them at all (backend will return all posts)
+    if (isFeatured === true) queryParams.append("IsFeatured", "true");
+    if (isBreaking === true) queryParams.append("IsBreaking", "true");
+    if (isSlider === true) queryParams.append("IsSlider", "true");
+    if (isRecommended === true) queryParams.append("IsRecommended", "true");
+    
+    if (language && language !== "all") queryParams.append("Language", language);
     if (type) queryParams.append("Type", type);
     if (from) queryParams.append("From", from);
     if (to) queryParams.append("To", to);
     
+    // Direction parameter (optional)
+    // queryParams.append("Direction", "");
+    
     // Always include these required parameters
-    queryParams.append("IncludeLikedByUsers", "false");
     queryParams.append("PageNumber", String(pageNumber || 1));
     queryParams.append("PageSize", String(pageSize || 15));
-    if (searchPhrase !== null && searchPhrase !== undefined) {
+    if (searchPhrase !== null && searchPhrase !== undefined && searchPhrase !== "") {
       queryParams.append("SearchPhrase", searchPhrase);
     }
 
+    // Use the new articles endpoint instead of the generic posts endpoint
     return await axios.get(
-      `${apiUrl}/posts?${queryParams.toString()}`
+      `${apiUrl}/posts/categories/articles?${queryParams.toString()}`
     );
   }
 

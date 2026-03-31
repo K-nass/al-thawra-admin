@@ -31,7 +31,36 @@ export interface GetPostsParams {
 }
 
 export const postsApi = {
-  // Get posts with optional filters
+  // Get articles with optional filters (NEW ENDPOINT)
+  getArticles: async (params: GetPostsParams = {}) => {
+    const queryParams: Record<string, string | number | boolean> = {};
+
+    // Only add parameters that have actual values
+    if (params.categorySlug) queryParams.CategorySlug = params.categorySlug;
+    if (params.authorName) queryParams.AuthorName = params.authorName;
+    if (params.hasAuthor !== undefined) queryParams.HasAuthor = params.hasAuthor;
+    if (params.status) queryParams.Status = params.status;
+    if (params.language) queryParams.Language = params.language;
+    if (params.from) queryParams.From = params.from;
+    if (params.to) queryParams.To = params.to;
+    if (params.searchPhrase) queryParams.SearchPhrase = params.searchPhrase;
+
+    // IMPORTANT: Only send boolean flags when they are TRUE
+    // If false or undefined, don't send them at all (backend will return all posts)
+    if (params.isFeatured === true) queryParams.IsFeatured = true;
+    if (params.isBreaking === true) queryParams.IsBreaking = true;
+    if (params.isSlider === true) queryParams.IsSlider = true;
+    if (params.isRecommended === true) queryParams.IsRecommended = true;
+    
+    // Pagination
+    queryParams.PageNumber = params.pageNumber ?? 1;
+    queryParams.PageSize = params.pageSize ?? 15;
+
+    const response = await apiClient.get<PaginatedResponse<Post>>('/posts/categories/articles', { params: queryParams });
+    return response;
+  },
+
+  // Get posts with optional filters (LEGACY - kept for backward compatibility)
   getPosts: async (params: GetPostsParams = {}) => {
     const queryParams: Record<string, string | number | boolean> = {};
 

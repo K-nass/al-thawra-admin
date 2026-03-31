@@ -258,11 +258,14 @@ export default function DashboardForm() {
       }
 
       // Clean up empty strings in tagIds array
+      // Backend expects array or field to be omitted, not null
       if (payload.tagIds) {
         payload.tagIds = payload.tagIds.filter((id: string) => id && id.trim() !== '');
         if (payload.tagIds.length === 0) {
-          payload.tagIds = null;
+          delete payload.tagIds;
         }
+      } else if (payload.tagIds === null) {
+        delete payload.tagIds;
       }
 
       // Clean up empty string values for single URL fields
@@ -339,17 +342,26 @@ export default function DashboardForm() {
         if (status === 422 && d?.errors) {
           // Extract field-level errors from API response
           if (typeof d.errors === 'object') {
+            const errorMessages: string[] = [];
             Object.entries(d.errors).forEach(([field, messages]) => {
               const normalizedField = field.toLowerCase();
               if (Array.isArray(messages)) {
                 errors[normalizedField] = messages;
+                // Collect all error messages for display
+                messages.forEach(msg => errorMessages.push(msg));
               } else if (typeof messages === 'string') {
                 errors[normalizedField] = [messages];
+                errorMessages.push(messages);
               }
             });
-            // Create user-friendly message with error count
-            const errorCount = Object.keys(errors).length;
-            message = t('errors.validationErrors', { count: errorCount });
+            // Show all validation error messages from backend
+            if (errorMessages.length > 0) {
+              message = errorMessages.join('\n');
+            } else {
+              // Fallback to generic message if no messages found
+              const errorCount = Object.keys(errors).length;
+              message = t('errors.validationErrors', { count: errorCount });
+            }
           }
         }
         // Handle 400 Bad Request

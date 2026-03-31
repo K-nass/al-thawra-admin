@@ -43,9 +43,9 @@ export default function DashboardPosts({ label }: { label?: string }) {
         itemId: null,
         itemTitle: "",
     });
-    let isSlider = false;
-    let isFeatured = false;
-    let isBreaking = false;
+    let isSlider: boolean | undefined = undefined;
+    let isFeatured: boolean | undefined = undefined;
+    let isBreaking: boolean | undefined = undefined;
     const isPages = label === "pages";
 
 
@@ -74,6 +74,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
     });
 
     // Use pages data if label is "pages", otherwise use posts data
+    // Note: The new articles API returns data directly, not nested in data.data
     const data = isPages ? pages : posts;
     const isLoading = isPages ? isLoadingPages : isLoadingPosts;
     const hasError = isPages && pagesError;
@@ -109,7 +110,9 @@ export default function DashboardPosts({ label }: { label?: string }) {
             });
         } else {
             // Handle post deletion
-            const post = (data as any)?.data?.items?.find((p: any) => p.id === itemId);
+            // Handle both old and new API response structures
+            const items = (data as any)?.data?.items || (data as any)?.items;
+            const post = items?.find((p: any) => p.id === itemId);
             if (!post) return;
 
             console.log('Post data for deletion:', post);
@@ -149,7 +152,9 @@ export default function DashboardPosts({ label }: { label?: string }) {
                 },
             });
         } else {
-            const post = (data as any)?.data?.items?.find((p: any) => p.id === confirmDialog.itemId);
+            // Handle both old and new API response structures
+            const items = (data as any)?.data?.items || (data as any)?.items;
+            const post = items?.find((p: any) => p.id === confirmDialog.itemId);
             if (!post) return;
 
             const postType = post?.postType?.toLowerCase() || 'article';
@@ -419,7 +424,8 @@ export default function DashboardPosts({ label }: { label?: string }) {
                                             ))
                                         ) : (
                                             // Render posts data
-                                            (data as any)?.data?.items?.map((item: any) => (
+                                            // Handle both old API structure (data.data.items) and new API structure (data.items)
+                                            ((data as any)?.data?.items || (data as any)?.items)?.map((item: any) => (
                                                 <tr
                                                     key={item.id}
                                                     className="hover:bg-gray-50 transition-colors"
@@ -439,7 +445,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
                                                         <span className="font-medium text-gray-900">{item.title}</span>
                                                     </td>
                                                     <td className="px-6 py-4">{item.language}</td>
-                                                    <td className="px-6 py-4">{item.postType}</td>
+                                                    <td className="px-6 py-4">{item.postType || 'Article'}</td>
                                                     <td className="px-6 py-4">
                                                         <span
                                                             className="px-2 py-1 text-xs font-medium text-white rounded-full inline-block"
@@ -460,9 +466,12 @@ export default function DashboardPosts({ label }: { label?: string }) {
                                                         <PostActionsDropdown
                                                             postId={item.id}
                                                             onEdit={(id) => {
-                                                                const post = (data as any)?.data?.items?.find((p: any) => p.id === id);
+                                                                // Handle both old and new API response structures
+                                                                const items = (data as any)?.data?.items || (data as any)?.items;
+                                                                const post = items?.find((p: any) => p.id === id);
                                                                 // Convert postType to lowercase (API returns "Article", "Gallery", etc.)
-                                                                const postType = post?.postType?.toLowerCase();
+                                                                // Default to 'article' if postType is not present
+                                                                const postType = post?.postType?.toLowerCase() || 'article';
                                                                 navigate(`/admin/edit-post/${id}?type=${postType}`, {
                                                                     state: {
                                                                         post,
@@ -489,10 +498,10 @@ export default function DashboardPosts({ label }: { label?: string }) {
 
                     {/* Pagination */}
                     {((isPages && (data as any)?.totalPages && (data as any).totalPages > 1) ||
-                        (!isPages && (data as any)?.data?.totalPages && (data as any).data.totalPages > 1)) && (
+                        (!isPages && ((data as any)?.data?.totalPages || (data as any)?.totalPages) && ((data as any)?.data?.totalPages || (data as any)?.totalPages) > 1)) && (
                             <div className="flex items-center justify-between py-4 px-6 bg-gray-50">
                                 <div className="text-sm text-gray-600">
-                                    {t('roles.showing')} {isPages ? (data as any)?.itemsFrom : (data as any)?.data?.itemsFrom} {t('roles.to')} {isPages ? (data as any)?.itemsTo : (data as any)?.data?.itemsTo} {t('roles.of')} {isPages ? (data as any)?.totalCount : (data as any)?.data?.totalCount} {isPages ? t('roles.rolesText') : t('post.posts')}
+                                    {t('roles.showing')} {isPages ? (data as any)?.itemsFrom : ((data as any)?.data?.itemsFrom || (data as any)?.itemsFrom)} {t('roles.to')} {isPages ? (data as any)?.itemsTo : ((data as any)?.data?.itemsTo || (data as any)?.itemsTo)} {t('roles.of')} {isPages ? (data as any)?.totalCount : ((data as any)?.data?.totalCount || (data as any)?.totalCount)} {isPages ? t('roles.rolesText') : t('post.posts')}
                                 </div>
                                 <div className="flex items-center space-x-2">
                                     <button
@@ -503,11 +512,11 @@ export default function DashboardPosts({ label }: { label?: string }) {
                                         {t('roles.previous')}
                                     </button>
                                     <span className="text-sm text-slate-600">
-                                        {t('roles.page')} {pageNumber} {t('roles.of')} {isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages}
+                                        {t('roles.page')} {pageNumber} {t('roles.of')} {isPages ? (data as any)?.totalPages : ((data as any)?.data?.totalPages || (data as any)?.totalPages)}
                                     </span>
                                     <button
-                                        onClick={() => setPageNumber((prev) => Math.min(isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages, prev + 1))}
-                                        disabled={pageNumber === (isPages ? (data as any)?.totalPages : (data as any)?.data?.totalPages)}
+                                        onClick={() => setPageNumber((prev) => Math.min(isPages ? (data as any)?.totalPages : ((data as any)?.data?.totalPages || (data as any)?.totalPages), prev + 1))}
+                                        disabled={pageNumber === (isPages ? (data as any)?.totalPages : ((data as any)?.data?.totalPages || (data as any)?.totalPages))}
                                         className="px-3 py-1.5 text-sm bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {t('roles.next')}
