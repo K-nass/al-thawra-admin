@@ -16,6 +16,7 @@ export interface Category {
   parentCategorySlug: string | null;
   postsCount: number;
   subCategoriesCount: number;
+  layout: string;
   subCategories: Category[];
 }
 
@@ -35,6 +36,13 @@ export const categoriesApi = {
 
   getById: async (id: string) => {
     const response = await apiClient.get<Category>(`/categories/${id}`);
+    return response.data;
+  },
+
+  getBySlug: async (slug: string, withSub = false) => {
+    const response = await apiClient.get<Category>(`/categories/${slug}`, {
+      params: { withSub },
+    });
     return response.data;
   },
 

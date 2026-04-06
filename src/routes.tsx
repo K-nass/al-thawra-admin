@@ -84,7 +84,7 @@ export const routes = createBrowserRouter([
           { path: "edit-user/:id/:username", element: <EditUser /> },
           { path: "categories", element: <DashboardCategories /> },
           { path: "add-category", element: <DashboardAddCategory /> },
-          { path: "edit-category/:id", element: <DashboardAddCategory /> }
+          { path: "edit-category/:slug", element: <DashboardAddCategory /> }
 
         ]
       }

@@ -186,7 +186,7 @@ export default function Categories() {
                                                 <td className="px-6 py-4 text-right">
                                                     <button
                                                         className="px-4 py-2 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
-                                                        onClick={() => navigate(`/admin/edit-category/${category.id}`)}
+                                                        onClick={() => navigate(`/admin/edit-category/${category.slug}`)}
                                                     >
                                                         Select an option ▼
                                                     </button>

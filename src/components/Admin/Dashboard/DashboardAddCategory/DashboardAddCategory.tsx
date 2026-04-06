@@ -7,11 +7,17 @@ import { useToast } from "@/components/Toast/ToastContainer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSave, faArrowLeft, faSpinner } from "@fortawesome/free-solid-svg-icons";
 
+const LAYOUT_OPTIONS = [
+  "Layout1", "Layout2", "Layout3", "Layout4", "Layout5", "Layout6",
+  "Layout7", "Layout8", "Layout9", "Layout10", "Layout11", "Layout12", "Layout13",
+];
+
 interface CategoryFormData {
   categoryId?: string;
   name: string;
   slug: string | null;
   language: "English" | "Arabic";
+  layout: string;
   description: string;
   colorHex: string;
   order: number;
@@ -25,13 +31,14 @@ export default function DashboardAddCategory() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const toast = useToast();
-  const { id } = useParams<{ id: string }>();
-  const isEditMode = !!id;
+  const { slug } = useParams<{ slug: string }>();
+  const isEditMode = !!slug;
   
   const [formData, setFormData] = useState<CategoryFormData>({
     name: "",
     slug: null,
     language: "English",
+    layout: "Layout1",
     description: "",
     colorHex: "#000000",
     order: 1,
@@ -41,10 +48,10 @@ export default function DashboardAddCategory() {
     parentCategoryId: null,
   });
 
-  // Fetch category data if editing
+  // Fetch category data by slug if editing
   const { data: categoryData, isLoading: isLoadingCategory } = useQuery({
-    queryKey: ["category", id],
-    queryFn: () => categoriesApi.getById(id!),
+    queryKey: ["category", slug],
+    queryFn: () => categoriesApi.getBySlug(slug!, true),
     enabled: isEditMode,
   });
 
@@ -56,6 +63,7 @@ export default function DashboardAddCategory() {
         name: categoryData.name,
         slug: categoryData.slug,
         language: categoryData.language as "English" | "Arabic",
+        layout: categoryData.layout || "Layout1",
         description: categoryData.description,
         colorHex: categoryData.colorHex,
         order: categoryData.order,
@@ -79,12 +87,12 @@ export default function DashboardAddCategory() {
   const saveMutation = useMutation({
     mutationFn: (data: CategoryFormData) => {
       if (isEditMode) {
-        // Update existing category
         const updateData = {
           categoryId: data.categoryId!,
           name: data.name,
-          slug: data.slug || undefined,
+          slug: data.slug ?? undefined,
           language: data.language,
+          layout: data.layout,
           description: data.description,
           colorHex: data.colorHex,
           order: data.order,
@@ -92,9 +100,8 @@ export default function DashboardAddCategory() {
           showOnMenu: data.showOnMenu,
           showOnHomepage: data.showOnHomepage,
         };
-        return categoriesApi.update(id!, updateData);
+        return categoriesApi.update(data.categoryId!, updateData);
       } else {
-        // Create new category
         const apiData = {
           ...data,
           slug: data.slug || undefined,
@@ -252,6 +259,23 @@ export default function DashboardAddCategory() {
               </select>
             </div>
           )}
+        </div>
+
+        {/* Layout */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            {t("categories.layout") || "Layout"}
+          </label>
+          <select
+            name="layout"
+            value={formData.layout}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            {LAYOUT_OPTIONS.map((l) => (
+              <option key={l} value={l}>{l}</option>
+            ))}
+          </select>
         </div>
 
         {/* Description */}

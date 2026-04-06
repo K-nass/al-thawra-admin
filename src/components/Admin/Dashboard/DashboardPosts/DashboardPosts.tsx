@@ -94,6 +94,66 @@ export default function DashboardPosts({ label }: { label?: string }) {
         },
     });
 
+    // Toggle flag mutation (Slider, Featured, Breaking, Recommended)
+    const toggleFlagMutation = useMutation({
+        mutationFn: async ({ postId, flag }: { postId: string; flag: 'isSlider' | 'isFeatured' | 'isBreaking' | 'isRecommended' }) => {
+            const items = (data as any)?.data?.items || (data as any)?.items;
+            const post = items?.find((p: any) => p.id === postId);
+            if (!post) throw new Error("Post not found");
+
+            const postType = post?.postType?.toLowerCase() || 'article';
+            const categoryId = post?.categoryId;
+            if (!categoryId) throw new Error("Category ID not found");
+
+            // Build minimal payload required by the update API
+            const typeIdMap: Record<string, string> = {
+                article: 'articleId',
+                gallery: 'galleryId',
+                video: 'videoId',
+                audio: 'audioId',
+                'sorted-list': 'sortedListId',
+            };
+
+            const payload: any = {
+                [typeIdMap[postType] || 'articleId']: postId,
+                title: post.title || '',
+                slug: post.slug || null,
+                description: post.description || post.summary || '',
+                metaDescription: post.metaDescription || '',
+                metaKeywords: post.metaKeywords || '',
+                content: post.content || '',
+                categoryId,
+                tagIds: post.tagIds || [],
+                optionalUrl: post.optionalUrl || null,
+                scheduledAt: post.scheduledAt || null,
+                authorId: null,
+                status: post.status || 'Published',
+                isSlider: post.isSlider ?? false,
+                isFeatured: post.isFeatured ?? false,
+                isBreaking: post.isBreaking ?? false,
+                isRecommended: post.isRecommended ?? false,
+                showOnlyToRegisteredUsers: post.showOnlyToRegisteredUsers ?? false,
+                direction: post.direction ?? null,
+                imageUrl: post.image || post.imageUrl || '',
+                imageDescription: post.imageDescription || null,
+                additionalImageUrls: post.additionalImageUrls?.length ? post.additionalImageUrls : null,
+                fileUrls: post.fileUrls?.length ? post.fileUrls : null,
+                // Toggle the target flag to true
+                [flag]: true,
+            };
+
+            return await postsApi.updatePost(categoryId, postId, postType, payload);
+        },
+        onSuccess: () => {
+            setNotification({ type: "success", message: t('success.postUpdated', 'Post updated successfully') });
+            queryClient.invalidateQueries({ queryKey: ["posts"] });
+        },
+        onError: (error: any) => {
+            const message = error?.response?.data?.title || error?.response?.data?.message || "Failed to update post";
+            setNotification({ type: "error", message });
+        },
+    });
+
     // Delete mutation for pages
     const deletePageMutation = useDeletePage();
 
@@ -480,10 +540,10 @@ export default function DashboardPosts({ label }: { label?: string }) {
                                                                     }
                                                                 });
                                                             }}
-                                                            onAddToSlider={(id) => console.log('Add to slider:', id)}
-                                                            onAddToFeatured={(id) => console.log('Add to featured:', id)}
-                                                            onAddToBreaking={(id) => console.log('Add to breaking:', id)}
-                                                            onAddToRecommended={(id) => console.log('Add to recommended:', id)}
+                                                            onAddToSlider={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isSlider' })}
+                                                            onAddToFeatured={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isFeatured' })}
+                                                            onAddToBreaking={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isBreaking' })}
+                                                            onAddToRecommended={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isRecommended' })}
                                                             onDelete={handleDelete}
                                                         />
                                                     </td>

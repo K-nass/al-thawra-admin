@@ -210,7 +210,7 @@ export default function DashboardCategories() {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             type="button"
-                            onClick={() => navigate(`/admin/edit-category/${category.id}`)}
+                            onClick={() => navigate(`/admin/edit-category/${category.slug}`)}
                             className="text-blue-600 hover:text-blue-900"
                             title={t("common.edit")}
                           >
@@ -280,7 +280,7 @@ export default function DashboardCategories() {
                             <div className="flex items-center justify-end gap-2">
                               <button
                                 type="button"
-                                onClick={() => navigate(`/admin/edit-category/${subCat.id}`)}
+                                onClick={() => navigate(`/admin/edit-category/${subCat.slug}`)}
                                 className="text-blue-600 hover:text-blue-900"
                               >
                                 <FontAwesomeIcon icon={faEdit} />
