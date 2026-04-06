@@ -6,11 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/components/Toast/ToastContainer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSave, faArrowLeft, faSpinner } from "@fortawesome/free-solid-svg-icons";
-
-const LAYOUT_OPTIONS = [
-  "Layout1", "Layout2", "Layout3", "Layout4", "Layout5", "Layout6",
-  "Layout7", "Layout8", "Layout9", "Layout10", "Layout11", "Layout12", "Layout13",
-];
+import LayoutSelector from "./LayoutSelector";
 
 interface CategoryFormData {
   categoryId?: string;
@@ -263,19 +259,13 @@ export default function DashboardAddCategory() {
 
         {/* Layout */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {t("categories.layout") || "Layout"}
+          <label className="block text-sm font-medium text-gray-700 mb-4">
+            {t("categories.layout") || "Layout"} <span className="text-red-500">*</span>
           </label>
-          <select
-            name="layout"
-            value={formData.layout}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {LAYOUT_OPTIONS.map((l) => (
-              <option key={l} value={l}>{l}</option>
-            ))}
-          </select>
+          <LayoutSelector
+            selectedLayout={formData.layout}
+            onLayoutChange={(layout) => setFormData((prev) => ({ ...prev, layout }))}
+          />
         </div>
 
         {/* Description */}
