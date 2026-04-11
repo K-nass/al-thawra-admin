@@ -11,10 +11,10 @@ export default function Layout1Preview() {
           <div className="border-2 border-dashed border-gray-400 rounded" />
         </div>
       </div>
-      
+
       {/* Center - 6 columns */}
       <div className="col-span-6 border-2 border-dashed border-gray-400 rounded" />
-      
+
       {/* Right Sidebar - 3 columns */}
       <div className="col-span-3 flex flex-col gap-1">
         <div className="border-2 border-dashed border-gray-400 rounded h-8" />

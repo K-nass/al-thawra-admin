@@ -7,9 +7,9 @@ interface FileUploadProps {
   handleChange: HandleChangeType;
   fieldErrors?: Record<string, string[]>;
 }
-export default function FileUpload({  handleChange, fieldErrors = {} }: FileUploadProps) {
-  const [fileName] = useState<string | null>()
-  const [open, setOpen] = useState<boolean>(false)
+export default function FileUpload({ handleChange, fieldErrors = {} }: FileUploadProps) {
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
   const { t } = useTranslation();
 
   return (

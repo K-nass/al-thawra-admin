@@ -80,6 +80,30 @@ export interface UserProfile {
   posts: any;
 }
 
+export interface CurrentUserProfileDto {
+  id: string;
+  userName: string;
+  email: string;
+  avatarImageUrl: string | null;
+  slug: string;
+  aboutMe: string;
+  socialAccounts: Record<string, string>;
+  permissions: string[];
+  hasAllPermissions: boolean;
+}
+
+export interface CreateUserDto {
+  userName: string;
+  email: string;
+  password: string;
+  roleName: string;
+}
+
+export interface ChangeUserRoleDto {
+  userId: string;
+  newRoleName: string;
+}
+
 export const usersApi = {
   // Get all users with pagination and filters
   getAll: async (params?: GetUsersParams) => {
@@ -128,6 +152,36 @@ export const usersApi = {
   // Ban user
   ban: async (id: string) => {
     const response = await apiClient.post(`/users/${id}/ban`);
+    return response.data;
+  },
+
+  // Activate (unban) user
+  activate: async (id: string) => {
+    const response = await apiClient.post(`/users/${id}/activate`);
+    return response.data;
+  },
+
+  // Change user role
+  changeRole: async (id: string, data: ChangeUserRoleDto) => {
+    const response = await apiClient.put(`/users/${id}/role`, data);
+    return response.data;
+  },
+
+  // Confirm user email manually
+  confirmEmail: async (id: string) => {
+    const response = await apiClient.post(`/users/${id}/confirm-email`);
+    return response.data;
+  },
+
+  // Create a new user
+  create: async (data: CreateUserDto) => {
+    const response = await apiClient.post('/users', data);
+    return response.data;
+  },
+
+  // Get current logged-in user's own profile
+  getCurrentProfile: async () => {
+    const response = await apiClient.get<CurrentUserProfileDto>('/users/profile');
     return response.data;
   },
 };

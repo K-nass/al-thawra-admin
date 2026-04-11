@@ -18,7 +18,5 @@ export type {
     ReelsResponse,
     GetReelsParams,
     CreateReelRequest,
-    UpdateReelRequest,
-    MediaUploadResponse,
-    MediaUploadStatusResponse
+    UpdateReelRequest
 } from './reels.api';

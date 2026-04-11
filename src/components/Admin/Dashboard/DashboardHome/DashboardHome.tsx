@@ -25,25 +25,12 @@ export default function DashboardHome() {
   const { t } = useTranslation();
 
   function fetchLatestContactMessages() {
-    return apiClient.get("/contact-messages", {
-      params: {
-        PageNumber: 1,
-        PageSize: 15
-      }
-    });
+    return apiClient.get("/contact-messages");
   }
 
-  function fetchContactMessagesCount() {
-    return apiClient.get("/contact-messages", {
-      params: {
-        PageNumber: 1,
-        PageSize: 15
-      }
-    });
-  }
 
-  function fetchPostsCount() {
-    return postsApi.getAll();
+  function fetchPostsCount() {    
+    return postsApi.getArticles();
   }
   
   const { data: latestContactMessages, isLoading: loadingMessages, isError: isErrorLatestContactMessages, error: latestContactMessagesError } = useQuery({
@@ -53,7 +40,7 @@ export default function DashboardHome() {
 
   const { data: contactMessagesData } = useQuery({
     queryKey: ["contactMessagesCount"],
-    queryFn: fetchContactMessagesCount,
+    queryFn: fetchLatestContactMessages,
   });
 
   const { data: postsData } = useQuery({

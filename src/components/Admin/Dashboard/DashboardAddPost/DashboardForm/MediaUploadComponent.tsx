@@ -294,7 +294,7 @@ export default function MediaUploadComponent({
           handleChange={(e: any) => {
             // Handle the uploaded media URL
             if (e.target.name === "videoUrl" || e.target.name === "audioUrl") {
-              const mediaItem = {
+              const mediaItem: MediaItem = {
                 id: "",
                 url: e.target.value,
                 fileName: e.target.fileName || "",

@@ -68,39 +68,6 @@ export const magazinesApi = {
     return `${baseURL}/magazines/${issueNumber}/pdf`;
   },
 
-  // Upload PDF file
-  uploadPdf: async (file: File, onUploadProgress?: (progressPercent: number) => void) => {
-    const formData = new FormData();
-    formData.append("File", file);
-    
-    const response = await apiClient.post<{ uploadId: string; signalRHubUrl: string }>(
-      "/media/upload-file", 
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-        timeout: 0, // Disable timeout for uploads
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            onUploadProgress?.(percentCompleted);
-          }
-        },
-      }
-    );
-    return response.data;
-  },
-
-  // Get upload status
-  getUploadStatus: async (uploadId: string) => {
-    const response = await apiClient.get<{ 
-      status: string; 
-      progressPercentage: number; 
-      url?: string;
-      message?: string;
-    }>(`/media/upload-status/${uploadId}`);
-    return response.data;
-  },
-
   // Create new magazine issue
   create: async (data: { issueNumber: string; pdfFile: File }) => {
     console.log('magazinesApi.create called with:', data);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faSave, faUpload, faUser } from "@fortawesome/free-solid-svg-icons";
@@ -9,9 +10,10 @@ import Loader from "@/components/Common/Loader";
 import FileModal from "../DashboardAddPost/DashboardForm/FileModal";
 
 export default function EditUser() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { id, username } = useParams<{ id: string; username: string }>();
+    const { id } = useParams<{ id: string; username: string }>(); // Username kept in URL if needed by routes but not used for fetching
 
     const [formData, setFormData] = useState<UpdateUserParams>({});
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -19,11 +21,10 @@ export default function EditUser() {
     const [successMessage, setSuccessMessage] = useState<string>("");
     const [showAvatarModal, setShowAvatarModal] = useState(false);
 
-    // Fetch user profile using username
+    // Fetch user profile
     const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
-        queryKey: ["userProfile", username],
-        queryFn: () => usersApi.getProfile(username!),
-        enabled: !!username,
+        queryKey: ["currentUserProfile"],
+        queryFn: () => usersApi.getCurrentProfile(),
     });
 
     // Populate form when user profile is loaded
@@ -39,10 +40,10 @@ export default function EditUser() {
             }
 
             setFormData({
-                UserId: id,
+                UserId: id, // from url
                 UserName: userProfile.userName,
                 Email: userProfile.email,
-                Slug: "", // Not available in profile
+                Slug: userProfile.slug || "", 
                 AboutMe: userProfile.aboutMe || "",
                 Facebook: socialData.Facebook || "",
                 Twitter: socialData.Twitter || "",
@@ -59,8 +60,8 @@ export default function EditUser() {
                 PersonalWebsiteUrl: socialData.PersonalWebsiteUrl || "",
             });
 
-            if (userProfile.profileImageUrl) {
-                setAvatarPreview(userProfile.profileImageUrl);
+            if (userProfile.avatarImageUrl) {
+                setAvatarPreview(userProfile.avatarImageUrl);
             }
         }
     }, [userProfile, id]);
@@ -84,7 +85,7 @@ export default function EditUser() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["users"] });
             queryClient.invalidateQueries({ queryKey: ["user", id] });
-            setSuccessMessage("User updated successfully");
+            setSuccessMessage(t("users.updateSuccess", "User updated successfully"));
             setError("");
             setTimeout(() => {
                 navigate("/admin/users");
@@ -99,16 +100,29 @@ export default function EditUser() {
                 } else if (responseData?.message) {
                     setError(responseData.message);
                 } else {
-                    setError(err.message || "Failed to update user");
+                    setError(err.message || t("users.errors.generic", "Failed to update user"));
                 }
             } else {
-                setError("An unexpected error occurred");
+                setError(t("users.errors.generic", "An unexpected error occurred"));
             }
         },
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        setError("");
+        
+        if (!formData.UserName || formData.UserName.trim() === "") {
+            setError(t("users.validation.userNameRequired"));
+            return;
+        }
+
+        if (formData.Email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.Email)) {
+            setError(t("users.validation.emailInvalid"));
+            return;
+        }
+
         updateUserMutation.mutate(formData);
     };
 

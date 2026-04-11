@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useFetchMagazines, useDeleteMagazine, useMagazineByDate } from "@/hooks/useFetchMagazines";
-import { useMagazineUpload } from "@/hooks/useMagazineUpload";
+import { useMutation } from "@tanstack/react-query";
 import type { Magazine } from "@/api/magazines.api";
 import { magazinesApi } from "@/api/magazines.api";
 import Loader from "@/components/Common/Loader";
@@ -72,26 +72,22 @@ export default function Magazines() {
   
   const deleteMagazine = useDeleteMagazine();
 
-  // Upload Hook
-  const { 
-    uploadPdf, 
-    uploadProgress, 
-    uploadStatus, 
-    isUploading, 
-    error: uploadError,
-    resetUpload 
-  } = useMagazineUpload(() => {
-    setNotification({ type: "success", message: t("magazines.uploadSuccess") });
-    refetchToday();
-    magazines.refetch();
+  // Upload Mutation
+  const createMagazineMutation = useMutation({
+    mutationFn: async (data: { issueNumber: string; pdfFile: File }) => {
+      return magazinesApi.create(data);
+    },
+    onSuccess: () => {
+      setNotification({ type: "success", message: t("magazines.uploadSuccess") });
+      refetchToday();
+      magazines.refetch();
+    },
+    onError: (error: any) => {
+      setNotification({ type: "error", message: error.message || "Failed to upload magazine" });
+    }
   });
 
-  // Handle upload error
-  useEffect(() => {
-    if (uploadError) {
-      setNotification({ type: "error", message: uploadError });
-    }
-  }, [uploadError]);
+  const isUploading = createMagazineMutation.isPending;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,7 +149,7 @@ export default function Magazines() {
     // Use today's date as issue number for now (or prompt user)
     // Format: YYYYMMDD to be safe as issue number
     const issueNumber = format(new Date(), 'yyyyMMdd');
-    uploadPdf(file, issueNumber);
+    createMagazineMutation.mutate({ issueNumber, pdfFile: file });
     
     // Reset input
     e.target.value = "";
@@ -233,8 +229,7 @@ export default function Magazines() {
             >
               {isUploading ? (
                 <>
-                  <FontAwesomeIcon icon={faCloudUploadAlt} className="animate-bounce" />
-                  {t("magazines.uploading")} {uploadProgress}%
+                  {t("magazines.uploading")}
                 </>
               ) : (
                 t("magazines.uploadTodaysIssue")

@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+  import { useQuery } from "@tanstack/react-query";
+  import { apiClient } from "@/api/client";
 
-const apiUrl = import.meta.env.VITE_API_URL;
-
-interface FetchPostsParams {
+  // Removed raw axios and apiUrl references since apiClient is used
+  
+  interface FetchPostsParams {
   category?: string | null;
   authorName?: string | null;
   hasAuthor?: boolean;
@@ -71,9 +71,9 @@ export function useFetchPosts(params: FetchPostsParams = {}) {
       queryParams.append("SearchPhrase", searchPhrase);
     }
 
-    // Use the new articles endpoint instead of the generic posts endpoint
-    return await axios.get(
-      `${apiUrl}/posts/categories/articles?${queryParams.toString()}`
+    // Use the custom apiClient to automatically attach the authorization token
+    return await apiClient.get(
+      `/posts/categories/articles?${queryParams.toString()}`
     );
   }
 
