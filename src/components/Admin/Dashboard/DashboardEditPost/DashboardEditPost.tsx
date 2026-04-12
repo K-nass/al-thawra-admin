@@ -2,8 +2,6 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import FormHeader from "../DashboardAddPost/DashboardForm/FormHeader";
 import PostDetailsForm, { type TagInterface } from "../DashboardAddPost/DashboardForm/PostDetailsForm";
 import ContentEditor from "../DashboardAddPost/DashboardForm/ContentEditor";
-import GalleryItems from "../DashboardAddPost/DashboardForm/GalleryItems";
-import SortedListItems from "../DashboardAddPost/DashboardForm/SortedListItems";
 import AdditionalImages from "../DashboardAddPost/DashboardForm/AdditionalImages";
 import FileUpload from "../DashboardAddPost/DashboardForm/FileUpload";
 import CategorySelect from "../DashboardAddPost/DashboardForm/CategorySelect";
@@ -19,8 +17,6 @@ import ApiNotification from "../../../Common/ApiNotification";
 import { usePostReducer } from "../DashboardAddPost/DashboardForm/usePostReducer/usePostReducer";
 import type {
   ArticleInitialStateInterface,
-  GalleryInitialStateInterface,
-  SortedListInitialStateInterface,
 } from "../DashboardAddPost/DashboardForm/usePostReducer/postData";
 import { postConfig } from "../DashboardAddPost/DashboardForm/usePostReducer/postConfig";
 import { useCategories } from "@/hooks/useCategories";
@@ -124,10 +120,6 @@ export default function DashboardEditPost() {
     } else if (name === "tagIds" && newTags) {
       payload = newTags;
     }
-    // Handle items array (for gallery)
-    else if (name === "items" && Array.isArray(value)) {
-      payload = value;
-    }
 
     dispatch({ type: "set-field", field: name, payload });
   }
@@ -158,14 +150,10 @@ export default function DashboardEditPost() {
       // Add the appropriate ID field based on post type
       if (type === 'article') {
         payload.articleId = postId;
-      } else if (type === 'gallery') {
-        payload.galleryId = postId;
       } else if (type === 'video') {
         payload.videoId = postId;
       } else if (type === 'audio') {
         payload.audioId = postId;
-      } else if (type === 'sorted-list') {
-        payload.sortedListId = postId;
       }
 
       // Map frontend field names to API field names
@@ -500,25 +488,11 @@ export default function DashboardEditPost() {
               isLoading={isLoadingTags}
               fieldErrors={fieldErrors}
             />
-            {type === "gallery" ? (
-              <GalleryItems
-                state={state as GalleryInitialStateInterface}
-                handleChange={handleChange}
-                errors={fieldErrors}
-              />
-            ) : type === "sorted-list" ? (
-              <SortedListItems
-                state={state as SortedListInitialStateInterface}
-                handleChange={handleChange}
-                errors={fieldErrors}
-              />
-            ) : (
-              <ContentEditor
-                state={state as ArticleInitialStateInterface}
-                handleChange={handleChange}
-                errors={fieldErrors}
-              />
-            )}
+            <ContentEditor
+              state={state as ArticleInitialStateInterface}
+              handleChange={handleChange}
+              errors={fieldErrors}
+            />
           </div>
           <div className="w-full lg:w-80 lg:shrink-0 space-y-4 md:space-y-6">
             {/* right column */}
@@ -528,7 +502,7 @@ export default function DashboardEditPost() {
               type={type}
               fieldErrors={fieldErrors}
             />
-            {!["gallery", "sorted-list", "audio", "video"].includes(
+            {!["audio", "video"].includes(
               type || ""
             ) && (
                 <>

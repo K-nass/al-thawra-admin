@@ -110,10 +110,8 @@ export const postsApi = {
     // Map post types to their API endpoints
     const endpointMap: Record<string, string> = {
       'article': 'articles',
-      'gallery': 'galleries',
       'video': 'videos',
       'audio': 'audios',
-      'sorted-list': 'sorted-lists',
     };
     
     const endpoint = endpointMap[postType] || 'articles';
@@ -148,10 +146,8 @@ export const postsApi = {
     // Map post types to their API endpoints
     const endpointMap: Record<string, string> = {
       'article': 'articles',
-      'gallery': 'galleries',
       'video': 'videos',
       'audio': 'audios',
-      'sorted-list': 'sorted-lists',
     };
     
     const endpoint = endpointMap[postType] || 'articles';
@@ -167,22 +163,14 @@ export const postsApi = {
 
   // Delete post (generic method for all post types)
   deletePost: async (categoryId: string, postId: string, postType: string) => {
-    // Normalize post type (API returns "SortedList" which becomes "sortedlist" when lowercased)
-    let normalizedType = postType.toLowerCase();
-    if (normalizedType === 'sortedlist') {
-      normalizedType = 'sorted-list';
-    }
-    
     // Map post types to their API endpoints
     const endpointMap: Record<string, string> = {
       'article': 'articles',
-      'gallery': 'galleries',
       'video': 'videos',
       'audio': 'audios',
-      'sorted-list': 'sorted-lists',
     };
     
-    const endpoint = endpointMap[normalizedType] || 'articles';
+    const endpoint = endpointMap[postType.toLowerCase()] || 'articles';
     const response = await apiClient.delete(`/posts/categories/${categoryId}/${endpoint}/${postId}`);
     return response.data;
   },

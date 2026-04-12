@@ -11,9 +11,10 @@ interface FileModalProps {
   onClose: () => void;
   header: MediaType;
   handleChange: HandleChangeType;
+  forcedMediaType?: string;
 }
 
-export default function FileModal({ onClose, header, handleChange }: FileModalProps) {
+export default function FileModal({ onClose, header, handleChange, forcedMediaType }: FileModalProps) {
   const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,7 +105,7 @@ export default function FileModal({ onClose, header, handleChange }: FileModalPr
   async function handleFileSelect(filesList: FileList | null) {
     if (!filesList || filesList.length === 0) return;
     const file = filesList[0];
-    await upload(file);
+    await upload(file, forcedMediaType);
   }
 
   const handleClose = () => {

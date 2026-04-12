@@ -17,9 +17,6 @@ import { useTranslation } from "react-i18next";
 
 type NameType =
   | "Article"
-  | "Gallery"
-  | "sorted-list"
-  | "Table of Contents"
   | "Video"
   | "Audio"
   | "Reel"
@@ -29,24 +26,6 @@ const getContentTypes = (): ContentType[] => [
     name: "Article",
     icon: faFile,
     descriptionKey: "contentTypes.articleDesc",
-  },
-  {
-    id: 2,
-    name: "Gallery",
-    icon: faImages,
-    descriptionKey: "contentTypes.galleryDesc",
-  },
-  {
-    id: 3,
-    name: "sorted-list",
-    icon: faListCheck,
-    descriptionKey: "contentTypes.sortedListDesc",
-  },
-  {
-    id: 4,
-    name: "Table of Contents",
-    icon: faList,
-    descriptionKey: "contentTypes.tableOfContentsDesc",
   },
   {
     id: 5,
@@ -66,7 +45,6 @@ const getContentTypes = (): ContentType[] => [
     icon: faVideo,
     descriptionKey: "contentTypes.reelDesc",
   },
-
 ];
 
 export interface ContentType {

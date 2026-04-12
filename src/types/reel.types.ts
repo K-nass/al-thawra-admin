@@ -41,6 +41,11 @@ export interface GetReelsParams {
     isPublished?: boolean;
 }
 
+export interface GetReelsFeedParams {
+    cursor?: string;
+    limit?: number;
+}
+
 export interface ReelsResponse {
     pageSize: number;
     pageNumber: number;
@@ -49,6 +54,12 @@ export interface ReelsResponse {
     itemsFrom: number;
     itemsTo: number;
     items: Reel[];
+}
+
+export interface ReelFeedResponse {
+    reels: Reel[];
+    nextCursor: string | null;
+    hasMore: boolean;
 }
 
 // Media Upload Types

@@ -2,9 +2,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import FormHeader from "./FormHeader";
 import PostDetailsForm, { type TagInterface } from "./PostDetailsForm";
 import ContentEditor from "./ContentEditor";
-import GalleryItems from "./GalleryItems";
-import SortedListItems from "./SortedListItems";
 import ReelForm from "./ReelForm";
+import { authApi } from "@/api/auth.api";
 
 import AdditionalImages from "./AdditionalImages";
 import FileUpload from "./FileUpload";
@@ -21,8 +20,6 @@ import ApiNotification from "../../../../Common/ApiNotification";
 import { usePostReducer } from "./usePostReducer/usePostReducer";
 import type {
   ArticleInitialStateInterface,
-  GalleryInitialStateInterface,
-  SortedListInitialStateInterface,
   ReelInitialStateInterface,
 } from "./usePostReducer/postData";
 import { postConfig } from "./usePostReducer/postConfig";
@@ -82,14 +79,9 @@ export default function DashboardForm() {
       payload = e.target.checked;
     } else if (type === "radio" && (value === "true" || value === "false")) {
       payload = value === "true";
-    } else if (name === "tagIds" && newTags) {
+    } else if ((name === "tagIds" || name === "tags") && newTags) {
       payload = newTags;
     }
-    // Handle items array (for gallery)
-    else if (name === "items" && Array.isArray(value)) {
-      payload = value;
-    }
-
     dispatch({ type: "set-field", field: name, payload });
   }
 
@@ -103,6 +95,11 @@ export default function DashboardForm() {
   });
 
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
+
+  const { data: userProfile } = useQuery({
+    queryKey: ["userProfile"],
+    queryFn: authApi.getUserProfile,
+  });
 
   // Validation function for article form
   const validateArticleForm = (payload: any): Record<string, string[]> => {
@@ -137,6 +134,10 @@ export default function DashboardForm() {
 
       // For reels, we don't need categoryId - post directly to /reels
       if (type === "reel") {
+        // Automatically set authorId if available and missing
+        if (!payload.authorId && userProfile?.id) {
+          payload = { ...payload, authorId: userProfile.id };
+        }
         // Reels have different structure, no categoryId needed
         const response = await apiClient.post("/reels", payload);
         return response.data;
@@ -427,19 +428,7 @@ export default function DashboardForm() {
                 fieldErrors={fieldErrors}
               />
             )}
-            {type === "gallery" ? (
-              <GalleryItems
-                state={state as GalleryInitialStateInterface}
-                handleChange={handleChange}
-                errors={fieldErrors}
-              />
-            ) : type === "sorted-list" ? (
-              <SortedListItems
-                state={state as SortedListInitialStateInterface}
-                handleChange={handleChange}
-                errors={fieldErrors}
-              />
-            ) : type === "reel" ? (
+            {type === "reel" ? (
               <ReelForm
                 state={state as ReelInitialStateInterface}
                 handleChange={handleChange}
@@ -465,7 +454,7 @@ export default function DashboardForm() {
                 fieldErrors={fieldErrors}
               />
             )}
-            {!["gallery", "sorted-list", "audio", "video", "reel"].includes(
+            {!["audio", "video", "reel"].includes(
               type || ""
             ) && (
                 <>

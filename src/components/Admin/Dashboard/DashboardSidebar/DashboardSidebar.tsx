@@ -15,6 +15,7 @@ import {
   faFileAlt,
   faUsers,
   faBook,
+  faVideo,
   type IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -80,6 +81,12 @@ const getSidebarItems = (): SidebarItemInterface[] => [
         path: "/admin/posts/breaking-news",
       },
     ],
+  },
+  {
+    id: 12,
+    labelKey: "dashboard.reels",
+    icon: faVideo,
+    path: "/admin/reels",
   },
   {
     id: 8,

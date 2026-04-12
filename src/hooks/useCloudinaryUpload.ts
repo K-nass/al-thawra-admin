@@ -31,7 +31,7 @@ export interface CloudinaryUploadState {
 
 export interface UseCloudinaryUploadReturn extends CloudinaryUploadState {
   /** Trigger the full 3-step upload flow for a given file */
-  upload: (file: File) => Promise<ConfirmUploadResponse | null>;
+  upload: (file: File, forcedMediaType?: string) => Promise<ConfirmUploadResponse | null>;
   /** Reset the hook to idle state */
   reset: () => void;
   /** Whether an upload is currently in progress */
@@ -48,7 +48,7 @@ function deriveMediaType(file: File): string {
   if (file.type.startsWith("image/")) return "Image";
   if (file.type.startsWith("video/")) return "Video";
   if (file.type.startsWith("audio/")) return "Audio";
-  if (file.type === "application/pdf") return "Image"; // PDFs are treated as image/magazine uploads
+  if (file.type === "application/pdf") return "Magazine"; 
   // Fallback: let the backend validate and reject if unsupported
   return "Image";
 }
@@ -88,7 +88,7 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
   }, []);
 
   const upload = useCallback(
-    async (file: File): Promise<ConfirmUploadResponse | null> => {
+    async (file: File, forcedMediaType?: string): Promise<ConfirmUploadResponse | null> => {
       // Reset before starting
       abortRef.current = new AbortController();
 
@@ -104,7 +104,7 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
 
         const signatureData: UploadSignatureResponse =
           await mediaApi.requestUploadSignature({
-            mediaType: deriveMediaType(file),
+            mediaType: forcedMediaType || deriveMediaType(file),
             fileType: file.type,
             fileSize: file.size,
           });

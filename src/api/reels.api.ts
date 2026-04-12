@@ -4,7 +4,9 @@ import type {
     CreateReelRequest,
     UpdateReelRequest,
     GetReelsParams,
+    GetReelsFeedParams,
     ReelsResponse,
+    ReelFeedResponse,
 } from "../types/reel.types";
 
 export const reelsApi = {
@@ -23,6 +25,19 @@ export const reelsApi = {
         if (params?.isPublished !== undefined) queryParams.append("IsPublished", String(params.isPublished));
 
         const response = await apiClient.get<ReelsResponse>(`/reels?${queryParams.toString()}`);
+        return response.data;
+    },
+
+    /**
+     * Get reels feed with infinite scrolling (cursor-based)
+     */
+    getFeed: async (params?: GetReelsFeedParams) => {
+        const queryParams = new URLSearchParams();
+
+        if (params?.cursor) queryParams.append("Cursor", params.cursor);
+        if (params?.limit) queryParams.append("Limit", String(params.limit));
+
+        const response = await apiClient.get<ReelFeedResponse>(`/reels`, { params: queryParams });
         return response.data;
     },
 
@@ -87,5 +102,7 @@ export type {
     CreateReelRequest,
     UpdateReelRequest,
     GetReelsParams,
+    GetReelsFeedParams,
     ReelsResponse,
+    ReelFeedResponse,
 };

@@ -20,6 +20,7 @@ export interface UploadSignatureResponse {
   publicId: string;
   uploadUrl: string;
   expiresAt: string;
+  transformation: string;
 }
 
 /** Request body for POST /api/v1/media/confirm-cloudinary-upload */
@@ -88,7 +89,7 @@ export const mediaApi = {
     
     // The backend signature calculates this transformation parameter automatically.
     // It must be included here so Cloudinary evaluates identical string-to-sign payloads!
-    formData.append("transformation", "q_auto,f_auto");
+    formData.append("transformation", signatureData.transformation || "q_auto,f_auto");
 
     // Use a plain axios call — the uploadUrl points to Cloudinary, not our backend
     const response = await axios.post<CloudinaryUploadResult>(

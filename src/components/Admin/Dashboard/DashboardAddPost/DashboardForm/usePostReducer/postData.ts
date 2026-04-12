@@ -71,57 +71,6 @@ export const audioInitialState: AudioInitialStateInterface = {
   thumbnailUrl: null,
 };
 
-interface Item {
-  title: string;
-  imageUrl: string;
-  imageDescription: string;
-  content: string;
-}
-export interface GalleryInitialStateInterface
-  extends ShardedInitialStateInterface {
-  imageUrl: string;
-  imageDescription: string | null;
-  items: Item[];
-  showItemNumbersInPostDetailsPage: boolean;
-}
-
-export const galleryInitialState: GalleryInitialStateInterface = {
-  ...shardedInitialState,
-  imageUrl: "",
-  imageDescription: null,
-  items: [
-    {
-      title: "",
-      imageUrl: "",
-      imageDescription: "",
-      content: "",
-    },
-  ],
-  showItemNumbersInPostDetailsPage: true,
-};
-
-export interface SortedListInitialStateInterface
-  extends ShardedInitialStateInterface {
-  imageUrl: string;
-  imageDescription: string | null;
-  items: Item[];
-  showNumbers: boolean;
-}
-export const sortedListInitialState: SortedListInitialStateInterface = {
-  ...shardedInitialState,
-  imageUrl: "",
-  imageDescription: "",
-  items: [
-    {
-      title: "",
-      imageUrl: "",
-      imageDescription: "",
-      content: "",
-    },
-  ],
-  showNumbers: true,
-};
-
 export interface VideoInitialStateInterface extends ShardedInitialStateInterface {
   addToBreaking: boolean;
   addToFeatured: boolean;

@@ -24,6 +24,8 @@
     "sliderPosts": "Slider Posts",
     "featuredPosts": "Featured Posts",
     "breakingNews": "Breaking News",
+    "reels": "Reels",
+    "reel": "Reel",
     "logout": "Logout",
     "navigation": "Navigation",
     "themes": "Themes",
@@ -82,6 +84,7 @@
     "notFoundMessage": "The page you are looking for doesn't exist or has been moved.",
     "goHome": "Go to Home",
     "goBack": "Go Back",
+    "noMoreData": "No more data",
     "deleteConfirmTitle": "Confirm Delete",
     "deleteConfirmMessage": "Are you sure you want to delete \"{{item}}\"? This action cannot be undone.",
     "creating": "Creating...",
@@ -111,8 +114,6 @@
     "image": "Image",
     "imageDescription": "Image Description",
     "additionalImages": "Additional Images",
-    "gallery": "Gallery",
-    "sortedList": "Sorted List",
     "publish": "Publish",
     "publishPost": "Submit",
     "saveAsDraft": "Save as Draft",
@@ -129,8 +130,11 @@
     "postType": "Post Type",
     "user": "User",
     "id": "Id",
+    "status": "Status",
     "options": "Options",
-    "createdBy": "Created by"
+    "createdBy": "Created by",
+    "likes": "Likes",
+    "published": "Published"
   },
   "validation": {
     "titleRequired": "Title is required",
@@ -151,7 +155,8 @@
     "resourceNotFound": "Resource not found",
     "conflict": "Data conflict",
     "serverError": "Server error occurred",
-    "tagIdsInvalid": "Invalid tags provided"
+    "tagIdsInvalid": "Invalid tags provided",
+    "failedToLoadReels": "Failed to load reels"
   },
   "filter": {
     "show": "Show",
@@ -165,12 +170,6 @@
   "contentTypes": {
     "article": "Article",
     "articleDesc": "An article with images and embed videos",
-    "gallery": "Gallery",
-    "galleryDesc": "A collection of images",
-    "sortedList": "Sorted List",
-    "sortedListDesc": "A list based article",
-    "tableOfContents": "Table of Contents",
-    "tableOfContentsDesc": "List of links based on the headings",
     "video": "Video",
     "videoDesc": "Upload or embed videos",
     "audio": "Audio",
@@ -219,7 +218,6 @@
     "addToBreaking": "Add to Breaking",
     "addToRecommended": "Add to Recommended",
     "showOnlyToRegisteredUsers": "Show Only to Registered Users",
-    "showItemNumbers": "Show Item Numbers in Post Details Page",
     "metaDescription": "Meta Description",
     "metaKeywords": "Keywords (Meta Tag)",
     "getVideoFromURL": "Get Video from URL",
@@ -274,7 +272,6 @@
     "tags": "Tags",
     "widgets": "Widgets",
     "polls": "Polls",
-    "gallery": "Gallery",
     "commentsAndContactMessages": "Comments & Contact Messages",
     "newsletter": "Newsletter",
     "adSpaces": "Ad Spaces",
@@ -405,5 +402,9 @@
     "creatingMagazineIssue": "Creating magazine issue...",
     "completed": "Completed",
     "processingFile": "Processing... {{percent}}%"
+  },
+  "reels": {
+    "deleteSuccess": "Reel deleted successfully",
+    "deleteError": "Failed to delete reel"
   }
 }

@@ -85,12 +85,10 @@ export const CONTENT_TYPES = {
   ARTICLE: 'article',
   VIDEO: 'video',
   PODCAST: 'podcast',
-  GALLERY: 'gallery',
 } as const;
 
 export const CONTENT_TYPE_OPTIONS = [
   { value: CONTENT_TYPES.ARTICLE, label: 'Article', icon: '📝' },
   { value: CONTENT_TYPES.VIDEO, label: 'Video', icon: '🎥' },
   { value: CONTENT_TYPES.PODCAST, label: 'Podcast', icon: '🎙️' },
-  { value: CONTENT_TYPES.GALLERY, label: 'Gallery', icon: '🖼️' },
 ] as const;

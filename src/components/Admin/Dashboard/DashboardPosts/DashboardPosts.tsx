@@ -108,10 +108,8 @@ export default function DashboardPosts({ label }: { label?: string }) {
             // Build minimal payload required by the update API
             const typeIdMap: Record<string, string> = {
                 article: 'articleId',
-                gallery: 'galleryId',
                 video: 'videoId',
                 audio: 'audioId',
-                'sorted-list': 'sortedListId',
             };
 
             const payload: any = {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { HandleChangeType } from "./types";
-import type { ArticleInitialStateInterface, GalleryInitialStateInterface, SortedListInitialStateInterface } from "./usePostReducer/postData";
+import type { ArticleInitialStateInterface } from "./usePostReducer/postData";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { apiClient } from "@/api/client";
@@ -15,7 +15,7 @@ export interface TagInterface {
   postsCount: number;
 }
 interface PostDetailsForm {
-  state: ArticleInitialStateInterface | GalleryInitialStateInterface | SortedListInitialStateInterface;
+  state: ArticleInitialStateInterface;
   handleChange: HandleChangeType;
   isLoading: boolean;
   tags: TagInterface[];
@@ -330,32 +330,6 @@ export default function PostDetailsForm({
             <span className="ml-2">{t('formLabels.showOnlyToRegisteredUsers')}</span>
           </label>
 
-          {/* Show Item Numbers in Post Details Page */}
-          {type === "gallery" && (
-            <label className="flex items-center">
-              <input
-                className="rounded text-primary focus:ring-primary"
-                type="checkbox"
-                name="showItemNumbersInPostDetailsPage"
-                checked={(state as GalleryInitialStateInterface).showItemNumbersInPostDetailsPage === true}
-                onChange={handleChange}
-              />
-              <span className="ml-2">{t('formLabels.showItemNumbers')}</span>
-            </label>
-          )}
-          {/* Show Numbers (for sorted-list) */}
-          {type === "sorted-list" && (
-            <label className="flex items-center">
-              <input
-                className="rounded text-primary focus:ring-primary"
-                type="checkbox"
-                name="showNumbers"
-                checked={(state as SortedListInitialStateInterface).showNumbers === true}
-                onChange={handleChange}
-              />
-              <span className="ml-2">Show Numbers</span>
-            </label>
-          )}
         </div>
         
         <div data-error-field={fieldErrors.tagIds ? true : undefined}>

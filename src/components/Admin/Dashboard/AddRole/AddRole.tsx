@@ -307,15 +307,6 @@ export default function AddRole() {
                                 <label className="flex items-center cursor-pointer">
                                     <input
                                         type="checkbox"
-                                        checked={permissions.includes("Gallery")}
-                                        onChange={() => handlePermissionToggle("Gallery")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.gallery')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
                                         checked={permissions.includes("CommentsAndContactMessages")}
                                         onChange={() => handlePermissionToggle("CommentsAndContactMessages")}
                                         className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"

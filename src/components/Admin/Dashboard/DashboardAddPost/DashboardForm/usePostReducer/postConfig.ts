@@ -1,19 +1,14 @@
 import {
   articleInitialState,
   audioInitialState,
-  galleryInitialState,
-  sortedListInitialState,
   videoInitialState,
   reelInitialState
 } from "./postData";
 
 export type PostType =
   | "article"
-  | "gallery"
   | "video"
   | "audio"
-  | "sorted-list"
-  | "table-of-contents"
   | "reel";
 
 interface PostConfig {
@@ -27,10 +22,6 @@ export const postConfig: Record<PostType, PostConfig> = {
     endpoint: "articles",
     initialState: articleInitialState,
   },
-  gallery: {
-    endpoint: "galleries",
-    initialState: galleryInitialState,
-  },
   video: {
     endpoint: "videos",
     initialState: videoInitialState,
@@ -38,14 +29,6 @@ export const postConfig: Record<PostType, PostConfig> = {
   audio: {
     endpoint: "audios",
     initialState: audioInitialState,
-  },
-  "sorted-list": {
-    endpoint: "sorted-lists",
-    initialState: sortedListInitialState,
-  },
-  "table-of-contents": {
-    endpoint: "table-of-contents",
-    initialState: {},
   },
   reel: {
     endpoint: "reels",

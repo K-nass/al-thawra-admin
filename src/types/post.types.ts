@@ -45,7 +45,7 @@ export interface PostCategory {
   count?: number;
 }
 
-export type ContentType = 'article' | 'video' | 'podcast' | 'gallery';
+export type ContentType = 'article' | 'video' | 'podcast';
 
 export interface PostFormData {
   title: string;

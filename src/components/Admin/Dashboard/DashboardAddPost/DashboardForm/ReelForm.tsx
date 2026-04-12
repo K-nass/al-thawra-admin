@@ -98,6 +98,9 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
             {/* Video Upload - Use existing MediaUploadComponent */}
             <MediaUploadComponent
                 mediaType="video"
+                forcedMediaType="Reel"
+                hideUrlTab={true}
+                hideEmbedCode={true}
                 onMediaSelect={(media) => {
                     handleChange({
                         target: {

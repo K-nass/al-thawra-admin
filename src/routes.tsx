@@ -7,6 +7,7 @@ import DashboardEditPost from "./components/Admin/Dashboard/DashboardEditPost/Da
 import DashboardPosts from "./components/Admin/Dashboard/DashboardPosts/DashboardPosts";
 import DashboardCategories from "./components/Admin/Dashboard/DashboardCategories/DashboardCategories";
 import DashboardAddCategory from "./components/Admin/Dashboard/DashboardAddCategory/DashboardAddCategory";
+import DashboardReels from "./components/Admin/Dashboard/DashboardReels/DashboardReels";
 import PageForm from "./components/Admin/Dashboard/DashboardPages/PageForm";
 import Magazines from "./components/Admin/Magazines/Magazines";
 import Login from "./components/Auth/Login";
@@ -84,7 +85,8 @@ export const routes = createBrowserRouter([
           { path: "edit-user/:id/:username", element: <EditUser /> },
           { path: "categories", element: <DashboardCategories /> },
           { path: "add-category", element: <DashboardAddCategory /> },
-          { path: "edit-category/:slug", element: <DashboardAddCategory /> }
+          { path: "edit-category/:slug", element: <DashboardAddCategory /> },
+          { path: "reels", element: <DashboardReels /> }
 
         ]
       }

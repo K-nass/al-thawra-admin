@@ -22,14 +22,20 @@ interface MediaItem {
 interface MediaUploadComponentProps {
   mediaType: MediaType;
   onMediaSelect: (media: MediaItem) => void;
+  forcedMediaType?: string;
+  hideUrlTab?: boolean;
+  hideEmbedCode?: boolean;
 }
 
 export default function MediaUploadComponent({
   mediaType,
   onMediaSelect,
+  forcedMediaType,
+  hideUrlTab = false,
+  hideEmbedCode = false,
 }: MediaUploadComponentProps) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"url" | "upload">("url");
+  const [activeTab, setActiveTab] = useState<"url" | "upload">(hideUrlTab ? "upload" : "url");
   const [showFileModal, setShowFileModal] = useState(false);
   const [uploadedMedia, setUploadedMedia] = useState<MediaItem | null>(null);
 
@@ -108,20 +114,22 @@ export default function MediaUploadComponent({
       {/* Tabs Header */}
       <div className="border-b border-slate-200 bg-slate-50">
         <nav className="flex" aria-label="Tabs">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              setActiveTab("url");
-            }}
-            className={`flex-1 px-4 sm:px-6 py-3 text-center font-medium text-sm sm:text-base transition-all ${
-              activeTab === "url"
-                ? "border-b-2 border-primary text-primary bg-white"
-                : "border-b-2 border-transparent text-slate-600 hover:text-primary hover:bg-slate-100"
-            }`}
-          >
-            {t("formLabels.getVideoFromURL")}
-          </button>
+          {!hideUrlTab && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab("url");
+              }}
+              className={`flex-1 px-4 sm:px-6 py-3 text-center font-medium text-sm sm:text-base transition-all ${
+                activeTab === "url"
+                  ? "border-b-2 border-primary text-primary bg-white"
+                  : "border-b-2 border-transparent text-slate-600 hover:text-primary hover:bg-slate-100"
+              }`}
+            >
+              {t("formLabels.getVideoFromURL")}
+            </button>
+          )}
           <button
             type="button"
             onClick={(e) => {
@@ -167,21 +175,23 @@ export default function MediaUploadComponent({
             </div>
 
             {/* Media Embed Field */}
-            <div className="space-y-2">
-              <label
-                htmlFor={`${mediaType}-embed-url`}
-                className="block text-sm font-semibold text-slate-800"
-              >
-                {mediaLabel}
-              </label>
-              <textarea
-                id={`${mediaType}-embed-url`}
-                name={`${mediaType}-embed-url`}
-                placeholder={t("formLabels.pasteVideoEmbedCode")}
-                rows={4}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
-              />
-            </div>
+            {!hideEmbedCode && (
+              <div className="space-y-2">
+                <label
+                  htmlFor={`${mediaType}-embed-url`}
+                  className="block text-sm font-semibold text-slate-800"
+                >
+                  {mediaLabel}
+                </label>
+                <textarea
+                  id={`${mediaType}-embed-url`}
+                  name={`${mediaType}-embed-url`}
+                  placeholder={t("formLabels.pasteVideoEmbedCode")}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -266,21 +276,23 @@ export default function MediaUploadComponent({
             )}
 
             {/* Media Embed Field for Upload */}
-            <div className="space-y-2">
-              <label
-                htmlFor={`${mediaType}-embed-upload`}
-                className="block text-sm font-semibold text-slate-800"
-              >
-                {mediaLabel}
-              </label>
-              <textarea
-                id={`${mediaType}-embed-upload`}
-                name={`${mediaType}-embed-upload`}
-                placeholder={t("formLabels.pasteVideoEmbedCode")}
-                rows={4}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
-              />
-            </div>
+            {!hideEmbedCode && (
+              <div className="space-y-2">
+                <label
+                  htmlFor={`${mediaType}-embed-upload`}
+                  className="block text-sm font-semibold text-slate-800"
+                >
+                  {mediaLabel}
+                </label>
+                <textarea
+                  id={`${mediaType}-embed-upload`}
+                  name={`${mediaType}-embed-upload`}
+                  placeholder={t("formLabels.pasteVideoEmbedCode")}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md bg-white text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition resize-none"
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -291,6 +303,7 @@ export default function MediaUploadComponent({
         <FileModal
           header={mediaType}
           onClose={() => setShowFileModal(false)}
+          forcedMediaType={forcedMediaType}
           handleChange={(e: any) => {
             // Handle the uploaded media URL
             if (e.target.name === "videoUrl" || e.target.name === "audioUrl") {

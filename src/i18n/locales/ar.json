@@ -24,6 +24,8 @@
     "sliderPosts": "مقالات السلايدر",
     "featuredPosts": "المقالات المميزة",
     "breakingNews": "الأخبار العاجلة",
+    "reels": "فيديوهات ريلز",
+    "reel": "فيديو ريلز",
     "logout": "تسجيل الخروج",
     "navigation": "التنقل",
     "themes": "المواضيع",
@@ -81,7 +83,9 @@
     "notFound": "الصفحة غير موجودة",
     "notFoundMessage": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
     "goHome": "الذهاب للرئيسية",
-    "goBack": "العودة"
+    "goBack": "العودة",
+    "noMoreData": "لا يوجد المزيد من البيانات",
+    "createReel": "إنشاء فيديو ريلز"
   },
   "app": {
     "name": "جريدة الثورة",
@@ -105,8 +109,6 @@
     "image": "الصورة",
     "imageDescription": "وصف الصورة",
     "additionalImages": "صور إضافية",
-    "gallery": "المعرض",
-    "sortedList": "قائمة مرتبة",
     "publish": "نشر",
     "publishPost": "إرسال",
     "saveAsDraft": "حفظ كمسودة",
@@ -122,9 +124,12 @@
     "video": "فيديو",
     "postType": "نوع المقال",
     "user": "المستخدم",
+    "status": "الحالة",
     "id": "المعرف",
     "options": "الخيارات",
-    "createdBy": "تم الإنشاء بواسطة"
+    "createdBy": "تم الإنشاء بواسطة",
+    "likes": "الإعجابات",
+    "published": "منشور"
   },
   "validation": {
     "titleRequired": "العنوان مطلوب",
@@ -145,7 +150,8 @@
     "resourceNotFound": "المورد غير موجود",
     "conflict": "تعارض في البيانات",
     "serverError": "حدث خطأ في الخادم",
-    "tagIdsInvalid": "الوسوم المقدمة غير صالحة"
+    "tagIdsInvalid": "الوسوم المقدمة غير صالحة",
+    "failedToLoadReels": "فشل تحميل فيديوهات ريلز"
   },
   "filter": {
     "show": "عرض",
@@ -159,12 +165,7 @@
   "contentTypes": {
     "article": "مقال",
     "articleDesc": "مقال يحتوي على صور وفيديوهات مدمجة",
-    "gallery": "معرض",
-    "galleryDesc": "مجموعة من الصور",
-    "sortedList": "قائمة مرتبة",
-    "sortedListDesc": "مقال قائم على قائمة",
-    "tableOfContents": "جدول المحتويات",
-    "tableOfContentsDesc": "قائمة روابط بناءً على العناوين",
+    "articleDesc": "مقال يحتوي على صور وفيديوهات مدمجة",
     "video": "فيديو",
     "videoDesc": "تحميل أو تضمين مقاطع الفيديو",
     "audio": "صوت",
@@ -207,7 +208,6 @@
     "addToBreaking": "إضافة إلى الأخبار العاجلة",
     "addToRecommended": "إضافة إلى الموصى به",
     "showOnlyToRegisteredUsers": "عرض فقط للمستخدمين المسجلين",
-    "showItemNumbers": "عرض أرقام العناصر في صفحة تفاصيل المقال",
     "metaDescription": "وصف ميتا",
     "metaKeywords": "كلمات مفتاحية (علامة ميتا)",
     "language": "اللغة",
@@ -262,7 +262,6 @@
     "tags": "الوسوم",
     "widgets": "الودجات",
     "polls": "الاستطلاعات",
-    "gallery": "المعرض",
     "commentsAndContactMessages": "التعليقات ورسائل الاتصال",
     "newsletter": "النشرة الإخبارية",
     "adSpaces": "مساحات الإعلانات",
@@ -387,5 +386,9 @@
     "creatingMagazineIssue": "جاري إنشاء عدد المجلة...",
     "completed": "مكتمل",
     "processingFile": "جاري المعالجة... {{percent}}%"
+  },
+  "reels": {
+    "deleteSuccess": "تم حذف فيديو الريلز بنجاح",
+    "deleteError": "فشل حذف فيديو الريلز"
   }
 }
