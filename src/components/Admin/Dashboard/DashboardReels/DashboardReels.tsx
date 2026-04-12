@@ -5,13 +5,15 @@ import Loader from "@/components/Common/Loader";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Reel } from "@/api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faPen, faTrash, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 import { useDeleteReel } from "@/hooks/useDeleteReel";
 import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/Toast/ToastContainer";
 
 export default function DashboardReels() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { 
         data, 
         isLoading, 
@@ -168,6 +170,13 @@ export default function DashboardReels() {
                                                     title={t("common.view")}
                                                 >
                                                     <FontAwesomeIcon icon={faEye} />
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/admin/edit-reel/${reel.id}`)}
+                                                    className="p-1.5 text-[#13967B] hover:bg-[#13967B]/10 rounded-md transition-colors"
+                                                    title={t("common.edit")}
+                                                >
+                                                    <FontAwesomeIcon icon={faPen} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteClick(reel)}

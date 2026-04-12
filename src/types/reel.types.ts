@@ -28,7 +28,7 @@ export interface CreateReelRequest {
 }
 
 export interface UpdateReelRequest extends CreateReelRequest {
-    id: string;
+    reelId: string;
 }
 
 export interface GetReelsParams {

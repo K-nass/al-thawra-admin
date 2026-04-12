@@ -65,7 +65,7 @@ export const reelsApi = {
     update: async (id: string, data: Partial<CreateReelRequest>) => {
         const response = await apiClient.put<Reel>(`/reels/${id}`, {
             ...data,
-            id,
+            reelId: id,
         });
         return response.data;
     },
