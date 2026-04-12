@@ -406,5 +406,26 @@
   "reels": {
     "deleteSuccess": "Reel deleted successfully",
     "deleteError": "Failed to delete reel"
+  },
+  "tags": {
+    "title": "Tags",
+    "addTag": "Add Tag",
+    "editTag": "Edit Tag",
+    "tagName": "Tag Name",
+    "tagNamePlaceholder": "Enter tag name",
+    "language": "Language",
+    "allLanguages": "All Languages",
+    "postsCount": "Posts",
+    "searchPlaceholder": "Search tags...",
+    "deleteTitle": "Delete Tag",
+    "deleteMessage": "Are you sure you want to delete",
+    "createSuccess": "Tag created successfully!",
+    "createError": "Failed to create tag",
+    "updateSuccess": "Tag updated successfully!",
+    "updateError": "Failed to update tag",
+    "deleteSuccess": "Tag deleted successfully!",
+    "deleteError": "Failed to delete tag",
+    "nameRequired": "Tag name is required",
+    "noTagsFound": "No tags found"
   }
 }

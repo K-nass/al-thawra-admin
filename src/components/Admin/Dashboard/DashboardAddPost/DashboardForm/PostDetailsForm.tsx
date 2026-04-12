@@ -4,7 +4,7 @@ import type { ArticleInitialStateInterface } from "./usePostReducer/postData";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { apiClient } from "@/api/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ApiValidationError } from './types';
 import { useTranslation } from "react-i18next";
 
@@ -34,6 +34,7 @@ export default function PostDetailsForm({
   type
 }: PostDetailsForm) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   // store selected tags as objects so we preserve id + name
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string }[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -52,6 +53,9 @@ export default function PostDetailsForm({
       const res = await apiClient.post(`/tags`, payload);
       // according to your example the API returns an array of created tags
       return res.data as Array<{ id: string; name: string; language?: string }>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
     },
   });
 

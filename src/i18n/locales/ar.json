@@ -390,5 +390,28 @@
   "reels": {
     "deleteSuccess": "تم حذف فيديو الريلز بنجاح",
     "deleteError": "فشل حذف فيديو الريلز"
+  },
+  "tags": {
+    "title": "الوسوم",
+    "addTag": "إضافة وسم",
+    "editTag": "تعديل الوسم",
+    "tagName": "اسم الوسم",
+    "tagNamePlaceholder": "أدخل اسم الوسم",
+    "language": "اللغة",
+    "allLanguages": "جميع اللغات",
+    "postsCount": "المقالات",
+    "searchPlaceholder": "البحث عن الوسوم...",
+    "deleteTitle": "حذف الوسم",
+    "deleteMessage": "هل أنت متأكد من حذف",
+    "createSuccess": "تم إنشاء الوسم بنجاح!",
+    "createError": "فشل في إنشاء الوسم",
+    "updateSuccess": "تم تحديث الوسم بنجاح!",
+    "updateError": "فشل في تحديث الوسم",
+    "deleteSuccess": "تم حذف الوسم بنجاح!",
+    "deleteError": "فشل في حذف الوسم",
+    "nameRequired": "اسم الوسم مطلوب",
+    "noTagsFound": "لم يتم العثور على وسوم"
   }
 }
+
+

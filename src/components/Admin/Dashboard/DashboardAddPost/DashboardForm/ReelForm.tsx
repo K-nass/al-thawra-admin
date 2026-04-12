@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
 import { apiClient } from "@/api/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ReelFormProps {
     state: ReelInitialStateInterface;
@@ -17,6 +17,7 @@ interface ReelFormProps {
 }
 
 export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoading }: ReelFormProps) {
+    const queryClient = useQueryClient();
     // EXACT same tag logic as PostDetailsForm
     const [selectedTags, setSelectedTags] = useState<{ id: string; name: string }[]>([]);
     const [inputValue, setInputValue] = useState("");
@@ -35,6 +36,9 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
             const res = await apiClient.post(`/tags`, payload);
             // according to your example the API returns an array of created tags
             return res.data as Array<{ id: string; name: string; language?: string }>;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["tags"] });
         },
     });
 

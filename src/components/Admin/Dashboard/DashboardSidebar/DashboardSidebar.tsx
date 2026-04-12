@@ -16,6 +16,7 @@ import {
   faUsers,
   faBook,
   faVideo,
+  faTags,
   type IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 
@@ -93,6 +94,12 @@ const getSidebarItems = (): SidebarItemInterface[] => [
     labelKey: "dashboard.categories",
     icon: faLayerGroup,
     path: "/admin/categories",
+  },
+  {
+    id: 13,
+    labelKey: "dashboard.tags",
+    icon: faTags,
+    path: "/admin/tags",
   },
   {
     id: 11,

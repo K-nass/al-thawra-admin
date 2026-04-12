@@ -9,6 +9,8 @@ import DashboardCategories from "./components/Admin/Dashboard/DashboardCategorie
 import DashboardAddCategory from "./components/Admin/Dashboard/DashboardAddCategory/DashboardAddCategory";
 import DashboardReels from "./components/Admin/Dashboard/DashboardReels/DashboardReels";
 import DashboardEditReel from "./components/Admin/Dashboard/DashboardReels/DashboardEditReel";
+import DashboardTags from "./components/Admin/Dashboard/DashboardTags/DashboardTags";
+import TagForm from "./components/Admin/Dashboard/DashboardTags/TagForm";
 import PageForm from "./components/Admin/Dashboard/DashboardPages/PageForm";
 import Magazines from "./components/Admin/Magazines/Magazines";
 import Login from "./components/Auth/Login";
@@ -88,7 +90,10 @@ export const routes = createBrowserRouter([
           { path: "add-category", element: <DashboardAddCategory /> },
           { path: "edit-category/:slug", element: <DashboardAddCategory /> },
           { path: "reels", element: <DashboardReels /> },
-          { path: "edit-reel/:id", element: <DashboardEditReel /> }
+          { path: "edit-reel/:id", element: <DashboardEditReel /> },
+          { path: "tags", element: <DashboardTags /> },
+          { path: "add-tag", element: <TagForm /> },
+          { path: "edit-tag/:id", element: <TagForm /> }
 
         ]
       }
