@@ -1,20 +1,15 @@
 import { faImage } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type {
-  ArticleInitialStateInterface,
-  GalleryInitialStateInterface,
-  SortedListInitialStateInterface,
-} from "./usePostReducer/postData";
 import { useState, type ChangeEvent } from "react";
 import FileModal from "./FileModal";
 import { isValidUrl } from "./types";
 import { useTranslation } from "react-i18next";
 
 interface ImageUploadProps {
-  state:
-    | ArticleInitialStateInterface
-    | GalleryInitialStateInterface
-    | SortedListInitialStateInterface;
+  state: {
+    imageUrl?: string;
+    imageDescription?: string[] | string | null;
+  };
   handleChange: (
     e:
       | ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -73,7 +68,7 @@ export default function ImageUpload({
           placeholder="https://example.com/image.jpg"
           type="text"
           name="imageUrl"
-          value={state.imageUrl}
+          value={state.imageUrl || ""}
           onChange={handleChange}
         />
         <p className="text-xs text-slate-500 mt-1">{t('imageUpload.useFullUrl')}</p>
