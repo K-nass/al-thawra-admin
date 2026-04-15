@@ -12,7 +12,7 @@ export type { Role, RolesResponse, GetRolesParams, CreateRoleDto, UpdateRoleDto 
 export type { User, UsersResponse, GetUsersParams } from './users.api';
 export type { Category, GetCategoriesParams } from './categories.api';
 export type { Page, PagesResponse, GetPagesParams, CreatePageRequest } from './pages.api';
-export type { Magazine, MagazinesResponse, GetMagazinesParams } from './magazines.api';
+export type { Magazine, MagazinesResponse, GetMagazinesParams, CreateMagazineRequest, UpdateMagazineRequest } from './magazines.api';
 export type {
     Reel,
     ReelsResponse,

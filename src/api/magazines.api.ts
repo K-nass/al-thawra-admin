@@ -3,7 +3,7 @@ import { apiClient } from "./client";
 export interface Magazine {
   issueNumber: string;
   pdfUrl: string;
-  thumbnailUrl: string;
+  thumbnailUrl: string | null;
   createdAt: string;
 }
 
@@ -25,7 +25,20 @@ export interface MagazinesResponse {
   items: Magazine[];
 }
 
+export interface CreateMagazineRequest {
+  issueNumber: string;
+  pdfUrl: string;
+  thumbnailUrl?: string | null;
+}
+
+export interface UpdateMagazineRequest {
+  issueNumber: string;
+  pdfUrl: string;
+  thumbnailUrl?: string | null;
+}
+
 export const magazinesApi = {
+  /** GET /magazines — paginated list with optional filters */
   getAll: async (params?: GetMagazinesParams) => {
     const queryParams = new URLSearchParams();
 
@@ -41,6 +54,7 @@ export const magazinesApi = {
     return response.data;
   },
 
+  /** GET /magazines/by-date — single magazine by date */
   getByDate: async (date: string) => {
     const queryParams = new URLSearchParams();
     queryParams.append("Date", date);
@@ -49,6 +63,33 @@ export const magazinesApi = {
     return response.data;
   },
 
+  /** GET /magazines/{issueNumber} — single magazine by issue number */
+  getByIssueNumber: async (issueNumber: string) => {
+    const response = await apiClient.get<Magazine>(`/magazines/${issueNumber}`);
+    return response.data;
+  },
+
+  /** POST /magazines — create a new magazine issue (JSON body) */
+  create: async (data: CreateMagazineRequest) => {
+    const response = await apiClient.post<Magazine>("/magazines", {
+      issueNumber: data.issueNumber,
+      pdfUrl: data.pdfUrl,
+      thumbnailUrl: data.thumbnailUrl ?? null,
+    });
+    return response.data;
+  },
+
+  /** PUT /magazines — update an existing magazine issue (JSON body) */
+  update: async (data: UpdateMagazineRequest) => {
+    const response = await apiClient.put<Magazine>("/magazines", {
+      issueNumber: data.issueNumber,
+      pdfUrl: data.pdfUrl,
+      thumbnailUrl: data.thumbnailUrl ?? null,
+    });
+    return response.data;
+  },
+
+  /** DELETE /magazines/{issueNumber} */
   delete: async (issueNumber: string) => {
     const response = await apiClient.delete(`/magazines/${issueNumber}`);
     return response.data;
@@ -66,32 +107,5 @@ export const magazinesApi = {
   getPdfProxyUrl: (issueNumber: string): string => {
     const baseURL = apiClient.defaults.baseURL || '';
     return `${baseURL}/magazines/${issueNumber}/pdf`;
-  },
-
-  // Create new magazine issue
-  create: async (data: { issueNumber: string; pdfFile: File }) => {
-    console.log('magazinesApi.create called with:', data);
-    
-    // Validate input
-    if (!data.issueNumber || !data.pdfFile) {
-      const error = `Invalid data for magazine creation. IssueNumber: ${data.issueNumber}, PdfFile: ${data.pdfFile}`;
-      console.error(error);
-      throw new Error(error);
-    }
-    
-    const formData = new FormData();
-    formData.append("IssueNumber", data.issueNumber);
-    formData.append("Pdf", data.pdfFile); // Send the actual file
-
-    console.log('Sending POST to /magazines with FormData:', {
-      IssueNumber: data.issueNumber,
-      Pdf: `File: ${data.pdfFile.name} (${data.pdfFile.size} bytes)`
-    });
-
-    const response = await apiClient.post("/magazines", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-    console.log('Magazine creation response:', response.data);
-    return response.data;
   },
 };
