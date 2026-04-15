@@ -52,7 +52,7 @@ export interface UpdateUserParams {
   Email?: string;
   Slug?: string;
   AboutMe?: string;
-  AvatarImage?: File;
+  AvatarImage?: File | string;
   Facebook?: string;
   Twitter?: string;
   Instagram?: string;
@@ -69,15 +69,16 @@ export interface UpdateUserParams {
 }
 
 export interface UserProfile {
-  id?: string;
   userName: string;
-  lastSeen: string;
+  lastSeen?: string;
   memberSince: string;
   email: string;
-  profileImageUrl: string;
-  aboutMe: string;
-  socialAccounts: Record<string, string>;
-  posts: any;
+  profileImageUrl?: string;
+  avatarImageUrl?: string | null;
+  slug?: string;
+  aboutMe?: string;
+  socialAccounts?: Record<string, string>;
+  posts?: any;
 }
 
 export interface CurrentUserProfileDto {
@@ -118,9 +119,9 @@ export const usersApi = {
   },
 
   // Get user profile by username
-  getProfile: async (username: string) => {
+  getProfile: async (username: string, params?: { PageNumber?: number; PageSize?: number }) => {
     const response = await apiClient.get<UserProfile>(`/users/profile/${username}`, {
-      params: { UserName: username }
+      params: { UserName: username, ...params },
     });
     return response.data;
   },
@@ -130,16 +131,15 @@ export const usersApi = {
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
+      if (key === 'UserId') return;
       if (value !== undefined && value !== null && value !== '') {
         formData.append(key, value);
       }
     });
+    // Backend requires UserId in the form body and must match route id.
+    formData.append('UserId', id);
 
-    const response = await apiClient.put(`/users/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await apiClient.put(`/users/${id}`, formData);
     return response.data;
   },
 

@@ -81,7 +81,7 @@ export default function DashboardEditPost() {
         });
       } catch (error) {
         console.error("Failed to fetch post:", error);
-        toast.error(t('errors.failedToLoadPost') || "Failed to load post data");
+        toast.error(t("error.failedToLoadPost"));
       } finally {
         setIsLoadingPost(false);
       }
@@ -196,7 +196,7 @@ export default function DashboardEditPost() {
     },
     onError: (error: any) => {
       console.error("Post update error:", error);
-      let message = t('errors.failedToUpdatePost');
+      let message = t("error.failedToUpdatePost");
       const errors: Record<string, string[]> = {};
 
       if (axios.isAxiosError(error)) {
@@ -214,7 +214,7 @@ export default function DashboardEditPost() {
             Object.entries(d.errors).forEach(([field, messages]) => {
               errors[field.toLowerCase()] = Array.isArray(messages) ? messages : [String(messages)];
             });
-            message = Object.values(errors).flat().join('\n') || t('errors.validationErrors');
+            message = Object.values(errors).flat().join('\n') || t("error.validationErrors");
           }
         } else {
           message = d?.title || d?.message || error.message;
@@ -232,7 +232,7 @@ export default function DashboardEditPost() {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-surface">
         <Loader2 size={48} className="text-primary animate-spin mb-4" />
-        <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Hydrating Form Data...</p>
+        <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">{t("post.loadingFormData")}</p>
       </div>
     );
   }
@@ -268,9 +268,9 @@ export default function DashboardEditPost() {
               <button
                 type="button"
                 onClick={() => setActiveTab('main')}
-                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+            className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${
                   activeTab === 'main' 
-                    ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -280,9 +280,9 @@ export default function DashboardEditPost() {
               <button
                 type="button"
                 onClick={() => setActiveTab('advanced')}
-                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${
                   activeTab === 'advanced' 
-                    ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -349,9 +349,9 @@ export default function DashboardEditPost() {
                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                       <Sparkles className="text-primary w-6 h-6" />
                    </div>
-                   <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">Global Sync</h4>
+                   <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">{t("post.globalSync")}</h4>
                    <p className="text-[10px] text-slate-500 font-medium mt-1 leading-relaxed">
-                     Updating this record will synchronize changes across all CDN edges instantly.
+                     {t("post.globalSyncDescription")}
                    </p>
                 </div>
               </div>

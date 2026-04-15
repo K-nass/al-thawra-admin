@@ -235,7 +235,7 @@ export default function MagazineFormModal({
 
           {/* Modal */}
           <motion.div
-            className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+            className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -243,7 +243,7 @@ export default function MagazineFormModal({
           >
             {/* Header */}
             <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">
                 {isEditMode ? t("magazines.editMagazine") : t("magazines.createMagazine")}
               </h2>
               <button
@@ -512,7 +512,7 @@ export default function MagazineFormModal({
                 <button
                   type="submit"
                   disabled={isBusy}
-                  className="flex-1 px-4 py-3 bg-[#13967B] text-white rounded-xl font-medium hover:bg-[#0e7a64] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#13967B]/20 hover:shadow-xl hover:shadow-[#13967B]/30"
+                  className="flex-1 px-4 py-3 bg-[#13967B] text-white rounded-xl font-medium hover:bg-[#0e7a64] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
                 >
                   {isBusy ? (
                     <>

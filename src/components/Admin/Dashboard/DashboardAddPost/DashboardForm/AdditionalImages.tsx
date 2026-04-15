@@ -2,7 +2,7 @@ import { useState } from "react";
 import FileModal from "./FileModal";
 import type { HandleChangeType } from "./types";
 import { useTranslation } from "react-i18next";
-import { ImagePlus, Info, AlertCircle, Plus } from "lucide-react";
+import { ImagePlus, AlertCircle, Plus } from "lucide-react";
 
 interface AdditionalImagesProps {
   handleChange: HandleChangeType;
@@ -22,7 +22,7 @@ export default function AdditionalImages({ handleChange, fieldErrors = {} }: Add
           </div>
           <div>
             <h3 className="text-sm font-black text-slate-900 tracking-tight">{t('imageUpload.additionalImages')}</h3>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">Supplemental Visuals</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">{t("imageUpload.supplementalVisuals")}</p>
           </div>
         </div>
       </div>

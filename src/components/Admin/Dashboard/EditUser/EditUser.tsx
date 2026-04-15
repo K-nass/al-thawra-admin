@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
@@ -12,21 +12,31 @@ import {
   Globe, 
   MessageCircle, 
   Share2,
-  Lock,
   Loader2,
   AlertCircle
 } from "lucide-react";
 import { usersApi, type UpdateUserParams } from "@/api/users.api";
-import Loader from "@/components/Common/Loader";
 import FileModal from "../DashboardAddPost/DashboardForm/FileModal";
 import { useToast } from "@/components/Toast/ToastContainer";
+
+function normalizeSocialAccounts(accounts?: Record<string, string>) {
+    const normalized: Record<string, string> = {};
+    if (!accounts) return normalized;
+    for (const [key, value] of Object.entries(accounts)) {
+        const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (typeof value === "string" && value.trim()) {
+            normalized[normalizedKey] = value;
+        }
+    }
+    return normalized;
+}
 
 export default function EditUser() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const toast = useToast();
-    const { id } = useParams<{ id: string; username: string }>();
+    const { id, username } = useParams<{ id: string; username: string }>();
 
     const [formData, setFormData] = useState<UpdateUserParams>({});
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -34,20 +44,15 @@ export default function EditUser() {
     const [errors, setErrors] = useState<{UserName?: string, Email?: string}>({});
 
     // Fetch user profile
-    const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
-        queryKey: ["currentUserProfile"],
-        queryFn: () => usersApi.getCurrentProfile(),
+    const { data: userProfile, isLoading: isLoadingProfile, isError: isProfileError } = useQuery({
+        queryKey: ["userProfile", username],
+        queryFn: () => usersApi.getProfile(username!, { PageNumber: 1, PageSize: 10 }),
+        enabled: Boolean(username),
     });
 
     useEffect(() => {
         if (userProfile) {
-            const socialData: Record<string, string> = {};
-            if (userProfile.socialAccounts) {
-                Object.entries(userProfile.socialAccounts).forEach(([key, value]) => {
-                    const normalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-                    socialData[normalizedKey] = (value as string) || "";
-                });
-            }
+            const social = normalizeSocialAccounts(userProfile.socialAccounts);
 
             setFormData({
                 UserId: id,
@@ -55,24 +60,23 @@ export default function EditUser() {
                 Email: userProfile.email,
                 Slug: userProfile.slug || "", 
                 AboutMe: userProfile.aboutMe || "",
-                Facebook: socialData.Facebook || "",
-                Twitter: socialData.Twitter || "",
-                Instagram: socialData.Instagram || "",
-                TikTok: socialData.TikTok || "",
-                WhatsApp: socialData.WhatsApp || "",
-                YouTube: socialData.YouTube || "",
-                Discord: socialData.Discord || "",
-                Telegram: socialData.Telegram || "",
-                Pinterest: socialData.Pinterest || "",
-                LinkedIn: socialData.LinkedIn || "",
-                Twitch: socialData.Twitch || "",
-                VK: socialData.Vk || socialData.VK || "",
-                PersonalWebsiteUrl: socialData.PersonalWebsiteUrl || "",
+                Facebook: social.facebook || "",
+                Twitter: social.twitter || "",
+                Instagram: social.instagram || "",
+                TikTok: social.tiktok || "",
+                WhatsApp: social.whatsapp || "",
+                YouTube: social.youtube || "",
+                Discord: social.discord || "",
+                Telegram: social.telegram || "",
+                Pinterest: social.pinterest || "",
+                LinkedIn: social.linkedin || "",
+                Twitch: social.twitch || "",
+                VK: social.vk || "",
+                PersonalWebsiteUrl: social.personalwebsiteurl || "",
             });
 
-            if (userProfile.avatarImageUrl) {
-                setAvatarPreview(userProfile.avatarImageUrl);
-            }
+            const imageUrl = userProfile.profileImageUrl || userProfile.avatarImageUrl || null;
+            setAvatarPreview(imageUrl);
         }
     }, [userProfile, id]);
 
@@ -92,8 +96,8 @@ export default function EditUser() {
         mutationFn: (data: UpdateUserParams) => usersApi.update(id!, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["users"] });
-            queryClient.invalidateQueries({ queryKey: ["currentUserProfile"] });
-            toast.success(t("users.updateSuccess", "User profile updated successfully"));
+            queryClient.invalidateQueries({ queryKey: ["userProfile", username] });
+            toast.success(t("users.updateSuccess"));
             setTimeout(() => navigate("/admin/users"), 1000);
         },
         onError: (err) => {
@@ -102,7 +106,7 @@ export default function EditUser() {
                 const msg = responseData?.title || responseData?.message || err.message;
                 toast.error(msg);
             } else {
-                toast.error(t("users.errors.generic", "An unexpected error occurred"));
+                toast.error(t("users.errors.unexpected"));
             }
         },
     });
@@ -112,22 +116,39 @@ export default function EditUser() {
         const newErrors: {UserName?: string, Email?: string} = {};
         
         if (!formData.UserName || formData.UserName.trim() === "") {
-            newErrors.UserName = t("users.validation.userNameRequired") || "Username is required";
+            newErrors.UserName = t("users.validation.userNameRequired");
         }
 
         if (formData.Email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.Email)) {
-            newErrors.Email = t("users.validation.emailInvalid") || "Invalid email address";
+            newErrors.Email = t("users.validation.emailInvalid");
         }
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            toast.error(t("common.fixErrors") || "Please fix the errors in the form");
+            toast.error(t("common.fixErrors"));
             return;
         }
 
         setErrors({});
-        updateUserMutation.mutate(formData);
+        updateUserMutation.mutate({ ...formData, UserId: id });
     };
+
+    if (!id || !username) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-surface">
+                <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4">
+                    <AlertCircle size={32} />
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">{t("users.invalidUser")}</h2>
+                <button 
+                  onClick={() => navigate("/admin/users")}
+                  className="mt-6 px-4 py-2 bg-primary text-white rounded-lg font-semibold shadow-sm hover:bg-emerald-600 transition-colors duration-200"
+                >
+                  {t("users.returnToUsers")}
+                </button>
+            </div>
+        );
+    }
 
     if (isLoadingProfile) return (
       <div className="flex-1 flex items-center justify-center bg-surface h-full">
@@ -135,31 +156,25 @@ export default function EditUser() {
       </div>
     );
 
-    if (!userProfile) {
+    if (isProfileError || !userProfile) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center p-6 bg-surface">
                 <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4">
                     <AlertCircle size={32} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">User Not Found</h2>
+                <h2 className="text-xl font-bold text-slate-800">{t("users.userNotFound")}</h2>
                 <button 
                   onClick={() => navigate("/admin/users")}
-                  className="mt-6 px-4 py-2 bg-primary text-white rounded-lg font-semibold shadow-sm hover:bg-emerald-600 transition-all"
+                  className="mt-6 px-4 py-2 bg-primary text-white rounded-lg font-semibold shadow-sm hover:bg-emerald-600 transition-colors duration-200"
                 >
-                  Return to Users
+                  {t("users.returnToUsers")}
                 </button>
             </div>
         );
     }
 
-    const socialIcons: Record<string, string> = {
-        Facebook: "facebook", Twitter: "twitter", Instagram: "instagram", TikTok: "tiktok",
-        WhatsApp: "whatsapp", YouTube: "youtube", Discord: "discord", Telegram: "send",
-        Pinterest: "pinterest", LinkedIn: "linkedin", Twitch: "twitch", VK: "vk",
-    };
-
     return (
-        <div className="flex-1 flex flex-col min-h-0 bg-surface h-screen">
+        <div className="flex-1 flex flex-col min-h-0 bg-surface">
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-slate-200 bg-white shadow-sm sticky top-0 z-10">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 max-w-6xl mx-auto w-full">
@@ -172,8 +187,8 @@ export default function EditUser() {
                             <ChevronLeft size={20} />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Edit Profile</h1>
-                            <p className="text-sm text-slate-500 mt-0.5">Manage user details, biography and social connections.</p>
+                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t("users.editProfile")}</h1>
+                            <p className="text-sm text-slate-500 mt-0.5">{t("users.editProfileSubtitle")}</p>
                         </div>
                     </div>
                 </div>
@@ -190,16 +205,16 @@ export default function EditUser() {
                             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                                 <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider">
                                     <User size={16} className="text-primary" />
-                                    Profile Image
+                                    {t("users.profileImage")}
                                 </h3>
                             </div>
                             <div className="p-8 flex flex-col items-center">
                                 <div className="relative group">
-                                    <div className="w-32 h-32 rounded-3xl overflow-hidden bg-slate-100 ring-4 ring-slate-50 shadow-inner group-hover:ring-primary/10 transition-all duration-300">
+                                    <div className="w-32 h-32 rounded-3xl overflow-hidden bg-slate-100 ring-4 ring-slate-50 shadow-inner group-hover:ring-primary/10 transition-colors duration-300">
                                         {avatarPreview ? (
                                             <img
                                                 src={avatarPreview}
-                                                alt="Avatar"
+                                                alt={t("users.profileImage")}
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                             />
                                         ) : (
@@ -211,15 +226,15 @@ export default function EditUser() {
                                     <button
                                         type="button"
                                         onClick={() => setShowAvatarModal(true)}
-                                        className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 active:scale-90 transition-all shadow-lg shadow-primary/30"
+                                        className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:bg-emerald-600 transition-colors duration-200 shadow-sm"
                                     >
                                         <Upload size={18} />
                                     </button>
                                 </div>
                                 <div className="mt-8 text-center space-y-1">
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Image Requirements</p>
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{t("users.imageRequirements")}</p>
                                     <p className="text-xs text-slate-500 leading-relaxed">
-                                        Max size: 3MB. Formats: JPG, PNG, GIF.
+                                        {t("users.imageRequirementsHint")}
                                     </p>
                                 </div>
                             </div>
@@ -230,20 +245,20 @@ export default function EditUser() {
                             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                                 <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider">
                                     <Info size={16} className="text-primary" />
-                                    Account Identity
+                                    {t("users.accountIdentity")}
                                 </h3>
                             </div>
                             <div className="p-6 space-y-6">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                                        Username <span className="text-rose-500">*</span>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ltr:ml-1 rtl:mr-1">
+                                        {t("users.userName")} <span className="text-rose-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         name="UserName"
                                         value={formData.UserName || ""}
                                         onChange={handleInputChange}
-                                        className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all font-semibold text-slate-800 ${
+                                        className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-colors duration-200 font-semibold text-slate-800 ${
                                           errors.UserName ? 'border-rose-400 focus:ring-rose-500/10' : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
                                         }`}
                                     />
@@ -252,15 +267,15 @@ export default function EditUser() {
                                     )}
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                                        Email Address <span className="text-rose-500">*</span>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ltr:ml-1 rtl:mr-1">
+                                        {t("users.emailAddress")} <span className="text-rose-500">*</span>
                                     </label>
                                     <input
                                         type="email"
                                         name="Email"
                                         value={formData.Email || ""}
                                         onChange={handleInputChange}
-                                        className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all font-semibold text-slate-800 ${
+                                        className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-colors duration-200 font-semibold text-slate-800 ${
                                           errors.Email ? 'border-rose-400 focus:ring-rose-500/10' : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
                                         }`}
                                     />
@@ -269,13 +284,13 @@ export default function EditUser() {
                                     )}
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Profile Slug (URL)</label>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ltr:ml-1 rtl:mr-1">{t("users.profileSlug")}</label>
                                     <input
                                         type="text"
                                         name="Slug"
                                         value={formData.Slug || ""}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-semibold text-slate-800"
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-colors duration-200 font-semibold text-slate-800"
                                     />
                                 </div>
                             </div>
@@ -289,32 +304,32 @@ export default function EditUser() {
                             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                                 <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider">
                                     <MessageCircle size={16} className="text-primary" />
-                                    Professional Biography
+                                    {t("users.professionalBiography")}
                                 </h3>
                             </div>
                             <div className="p-6 space-y-6">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">About Me / Bio</label>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ltr:ml-1 rtl:mr-1">{t("users.aboutMe")}</label>
                                     <textarea
                                         name="AboutMe"
                                         value={formData.AboutMe || ""}
                                         onChange={handleInputChange}
                                         rows={5}
-                                        placeholder="Write a short biography about yourself..."
-                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-medium resize-none leading-relaxed"
+                                        placeholder={t("users.placeholders.aboutMe")}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-colors duration-200 font-medium resize-none leading-relaxed"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Personal Website URL</label>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ltr:ml-1 rtl:mr-1">{t("users.personalWebsiteUrl")}</label>
                                     <div className="relative">
-                                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Globe className="absolute left-3.5 rtl:left-auto rtl:right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <input
                                             type="url"
                                             name="PersonalWebsiteUrl"
                                             value={formData.PersonalWebsiteUrl || ""}
                                             onChange={handleInputChange}
-                                            placeholder="https://yourwebsite.com"
-                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                                            placeholder={t("users.placeholders.website")}
+                                            className="w-full pl-10 pr-4 rtl:pl-4 rtl:pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-colors duration-200"
                                         />
                                     </div>
                                 </div>
@@ -326,31 +341,31 @@ export default function EditUser() {
                             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                                 <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider">
                                     <Share2 size={16} className="text-primary" />
-                                    Social Connect
+                                    {t("users.socialConnect")}
                                 </h3>
                             </div>
                             <div className="p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {[
-                                        { name: "Facebook", label: "Facebook" },
-                                        { name: "Twitter", label: "Twitter" },
-                                        { name: "Instagram", label: "Instagram" },
-                                        { name: "TikTok", label: "TikTok" },
-                                        { name: "WhatsApp", label: "WhatsApp" },
-                                        { name: "YouTube", label: "YouTube" },
-                                        { name: "LinkedIn", label: "LinkedIn" },
-                                        { name: "Telegram", label: "Telegram" },
-                                        { name: "Twitch", label: "Twitch" },
+                                        { name: "Facebook", labelKey: "users.socialPlatforms.facebook" },
+                                        { name: "Twitter", labelKey: "users.socialPlatforms.twitter" },
+                                        { name: "Instagram", labelKey: "users.socialPlatforms.instagram" },
+                                        { name: "TikTok", labelKey: "users.socialPlatforms.tikTok" },
+                                        { name: "WhatsApp", labelKey: "users.socialPlatforms.whatsApp" },
+                                        { name: "YouTube", labelKey: "users.socialPlatforms.youTube" },
+                                        { name: "LinkedIn", labelKey: "users.socialPlatforms.linkedIn" },
+                                        { name: "Telegram", labelKey: "users.socialPlatforms.telegram" },
+                                        { name: "Twitch", labelKey: "users.socialPlatforms.twitch" },
                                     ].map((social) => (
                                         <div key={social.name} className="space-y-1.5">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">{social.label}</label>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ltr:ml-1 rtl:mr-1">{t(social.labelKey)}</label>
                                             <input
                                                 type="text"
                                                 name={social.name}
                                                 value={(formData as any)[social.name] || ""}
                                                 onChange={handleInputChange}
-                                                placeholder={`Username`}
-                                                className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-primary/5 focus:border-primary/30 transition-all font-medium"
+                                                placeholder={t("users.placeholders.socialUserName")}
+                                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-colors duration-200 font-medium"
                                             />
                                         </div>
                                     ))}
@@ -359,10 +374,10 @@ export default function EditUser() {
                                     <button
                                         type="submit"
                                         disabled={updateUserMutation.isPending}
-                                        className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-2xl font-bold hover:bg-emerald-600 active:scale-[0.98] transition-all shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-2xl font-bold hover:bg-emerald-600 transition-colors duration-200 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
                                         {updateUserMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                                        {updateUserMutation.isPending ? "Saving..." : "Save Profile Details"}
+                                        {updateUserMutation.isPending ? t("common.saving") : t("users.saveProfileDetails")}
                                     </button>
                                 </div>
                             </div>

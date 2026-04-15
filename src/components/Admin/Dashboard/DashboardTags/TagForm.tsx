@@ -52,11 +52,11 @@ export default function TagForm() {
         }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tags"] });
-            toast.success(t("tags.createSuccess") || "Tag created successfully");
+            toast.success(t("tags.createSuccess"));
             navigate("/admin/tags");
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || t("tags.createError") || "Failed to create tag");
+            toast.error(error.response?.data?.message || t("tags.createError"));
         },
     });
 
@@ -70,11 +70,11 @@ export default function TagForm() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tags"] });
             queryClient.invalidateQueries({ queryKey: ["tag", id] });
-            toast.success(t("tags.updateSuccess") || "Tag updated successfully");
+            toast.success(t("tags.updateSuccess"));
             navigate("/admin/tags");
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || t("tags.updateError") || "Failed to update tag");
+            toast.error(error.response?.data?.message || t("tags.updateError"));
         },
     });
 
@@ -83,12 +83,12 @@ export default function TagForm() {
         const newErrors: {name?: string, language?: string} = {};
         
         if (!formData.name.trim()) {
-            newErrors.name = t("tags.nameRequired") || "Tag name is required";
+            newErrors.name = t("tags.nameRequired");
         }
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            toast.error(t("common.fixErrors") || "Please fix the errors in the form");
+            toast.error(t("common.fixErrors"));
             return;
         }
 
@@ -128,7 +128,7 @@ export default function TagForm() {
                                 {isEditMode ? t("tags.editTag") : t("tags.addTag")}
                             </h1>
                             <p className="text-sm text-slate-500 mt-0.5">
-                                {isEditMode ? "Modify existing tag attributes and properties." : "Create a new tag to help readers find related content."}
+                                {isEditMode ? t("tags.editSubtitle") : t("tags.createSubtitle")}
                             </p>
                         </div>
                     </div>
@@ -144,7 +144,7 @@ export default function TagForm() {
                             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                                 <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm uppercase tracking-wider">
                                     <Info size={16} className="text-primary" />
-                                    {t("tags.tagConfig") || "Tag Information"}
+                                    {t("tags.tagConfig")}
                                 </h3>
                             </div>
                             <div className="p-6 space-y-8">
@@ -160,7 +160,7 @@ export default function TagForm() {
                                             id="name"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            placeholder={t("tags.tagNamePlaceholder") || "Enter tag name..."}
+                                            placeholder={t("tags.tagNamePlaceholder")}
                                             className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all font-medium ${
                                               errors.name ? 'border-rose-400 focus:ring-rose-500/10' : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
                                             }`}
@@ -178,8 +178,8 @@ export default function TagForm() {
                                     </label>
                                     <div className="grid grid-cols-2 gap-4">
                                         {[
-                                            { id: "English", label: "English", desc: "LTR Content" },
-                                            { id: "Arabic", label: "Arabic", desc: "RTL Content" }
+                                            { id: "English", label: t("formLabels.english"), desc: t("tags.ltrContent") },
+                                            { id: "Arabic", label: t("formLabels.arabic"), desc: t("tags.rtlContent") }
                                         ].map((lang) => (
                                             <button
                                                 key={lang.id}
@@ -207,17 +207,17 @@ export default function TagForm() {
                         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 pb-2 border-b border-slate-50 flex items-center gap-2">
                                 <Save size={14} />
-                                {t("common.publishing") || "Management"}
+                                {t("tags.management")}
                             </h3>
 
                             <div className="space-y-3">
                                 <button
                                     type="submit"
                                     disabled={isPending}
-                                    className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-white rounded-xl font-bold hover:bg-emerald-600 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-primary/20"
+                                    className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary text-white rounded-xl font-bold hover:bg-emerald-600 active:scale-[0.98] transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
                                 >
                                     {isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                                    {isPending ? (isEditMode ? "Updating..." : "Creating...") : (isEditMode ? t("common.save") : t("tags.addTag"))}
+                                    {isPending ? (isEditMode ? t("common.updating") : t("common.creating")) : (isEditMode ? t("common.save") : t("tags.addTag"))}
                                 </button>
 
                                 <button
@@ -235,19 +235,19 @@ export default function TagForm() {
                             <div className="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100 space-y-4">
                                 <h4 className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em] flex items-center gap-2">
                                     <BarChart3 size={14} />
-                                    {t("tags.usageStats") || "Usage Statistics"}
+                                    {t("tags.usageStats")}
                                 </h4>
                                 <div className="flex justify-between items-center group">
-                                    <span className="text-sm font-medium text-emerald-800/70">Related Content:</span>
+                                    <span className="text-sm font-medium text-emerald-800/70">{t("tags.relatedContent")}</span>
                                     <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl shadow-sm border border-emerald-100">
                                         <span className="font-bold text-lg text-emerald-600 leading-none">
                                             {tag.postsCount}
                                         </span>
-                                        <span className="text-[10px] font-bold text-emerald-400 uppercase">Items</span>
+                                        <span className="text-[10px] font-bold text-emerald-400 uppercase">{t("tags.items")}</span>
                                     </div>
                                 </div>
                                 <div className="p-3 bg-white/50 rounded-xl border border-emerald-100/50 text-[11px] text-emerald-700/70 italic leading-relaxed">
-                                    This tag is currently used in {tag.postsCount} posts and across multiple categories.
+                                    {t("tags.usageDescription").replace("{{count}}", String(tag.postsCount))}
                                 </div>
                             </div>
                         )}

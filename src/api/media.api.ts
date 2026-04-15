@@ -1,7 +1,7 @@
 import axios from "axios";
 import { apiClient } from "./client";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────
 
 /** Request body for POST /api/v1/media/request-upload-signature */
 export interface UploadSignatureRequest {
@@ -54,7 +54,7 @@ export interface CloudinaryUploadResult {
   duration?: number;
 }
 
-// ─── API Functions ───────────────────────────────────────────────────────────
+// ─── API Functions ────────────────────────────────────────────────────────
 
 export const mediaApi = {
   /**
@@ -77,7 +77,8 @@ export const mediaApi = {
    */
   uploadToCloudinary: async (
     file: File,
-    signatureData: UploadSignatureResponse
+    signatureData: UploadSignatureResponse,
+    mediaType?: string
   ): Promise<CloudinaryUploadResult> => {
     const formData = new FormData();
     formData.append("file", file);
@@ -87,20 +88,28 @@ export const mediaApi = {
     formData.append("folder", signatureData.folder);
     formData.append("public_id", signatureData.publicId);
 
-    // The backend signature calculates this transformation parameter automatically.
-    // It must be included here so Cloudinary evaluates identical string-to-sign payloads!
-    formData.append("transformation", signatureData.transformation || "q_auto,f_auto");
+    // Only include params that were included in the backend signature payload.
+    // Sending extra signed params (like `transformation`) can cause signature mismatch.
+    if (signatureData.transformation) {
+      formData.append("transformation", signatureData.transformation);
+    }
 
-    // Use a plain axios call — the uploadUrl points to Cloudinary, not our backend
-    const response = await axios.post<CloudinaryUploadResult>(
-      signatureData.uploadUrl,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-        // No timeout — large files may take a while
-        timeout: 0,
-      }
-    );
+    // Cloudinary's `resource_type` is chosen by the upload URL path (image/video/raw/auto).
+    // If the intent is to store the original PDF ("Magazine") and no transformation is signed,
+    // prefer `raw/upload` to avoid accidental rasterization/conversion.
+    const uploadUrl =
+      mediaType === "Magazine" &&
+      !signatureData.transformation &&
+      signatureData.uploadUrl.includes("/image/upload")
+        ? signatureData.uploadUrl.replace("/image/upload", "/raw/upload")
+        : signatureData.uploadUrl;
+
+    // Use a plain axios call - the uploadUrl points to Cloudinary, not our backend
+    const response = await axios.post<CloudinaryUploadResult>(uploadUrl, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      // No timeout - large files may take a while
+      timeout: 0,
+    });
 
     return response.data;
   },

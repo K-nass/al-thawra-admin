@@ -48,13 +48,13 @@ export default function LatestUsersSection() {
       <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div>
           <h3 className="text-lg font-bold text-slate-900">{t('dashboard.tables.latestUsers') || "Latest Users"}</h3>
-          <p className="text-sm text-slate-500 mt-0.5">{t('dashboard.tables.recentlyRegisteredUsers') || "Recently registered portal accounts."}</p>
+          <p className="text-sm text-slate-500 mt-0.5">{t('dashboard.tables.recentlyRegisteredUsers')}</p>
         </div>
         <button 
           onClick={() => navigate("/admin/users")}
           className="text-xs font-bold text-primary hover:text-emerald-700 flex items-center gap-1 transition-colors group"
         >
-          {t('common.viewAll') || "View All"}
+          {t('common.viewAll')}
           <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
         </button>
       </div>
@@ -63,12 +63,12 @@ export default function LatestUsersSection() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-48 py-8">
             <Loader />
-            <p className="mt-4 text-sm text-slate-400 animate-pulse">Fetching users...</p>
+            <p className="mt-4 text-sm text-slate-400 animate-pulse">{t("dashboard.fetchingUsers")}</p>
           </div>
         ) : (!data?.items || data.items.length === 0) ? (
           <div className="flex flex-col items-center justify-center h-48 py-8 text-slate-400">
             <Users size={40} className="mb-2 opacity-20" />
-            <p className="text-sm font-medium">No users found.</p>
+            <p className="text-sm font-medium">{t("users.noUsersFound")}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-8">

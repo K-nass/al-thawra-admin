@@ -46,13 +46,13 @@ export default function AddRole() {
         setPermissions(preset.perms);
         setRoleNameEn(preset.name);
         setRoleNameAr(preset.nameAr);
-        toast.info(t('roles.presetApplied', { name: preset.name }) || `Applied ${preset.name} preset`);
+        toast.info(t('roles.presetApplied', { name: preset.name }));
     };
 
     const createRoleMutation = useMutation({
         mutationFn: (data: CreateRoleDto) => rolesApi.create(data),
         onSuccess: () => {
-            toast.success(t('roles.successCreate', 'Role created successfully'));
+            toast.success(t('roles.successCreate'));
             navigate("/admin/roles-permissions");
         },
         onError: (err) => {
@@ -65,14 +65,14 @@ export default function AddRole() {
                         errors[key.toLowerCase()] = Array.isArray(messages) ? messages[0] : messages;
                     });
                     setFieldErrors(errors);
-                    toast.error(t('common.validationError', 'Please check form fields'));
+                    toast.error(t('common.validationError'));
                 } else {
                     const msg = responseData?.title || responseData?.message || err.message;
                     setError(msg);
                     toast.error(msg);
                 }
             } else {
-                setError("An unexpected error occurred");
+                setError(t("users.errors.unexpected"));
             }
         },
     });
@@ -83,13 +83,13 @@ export default function AddRole() {
         setFieldErrors({});
 
         if (!roleNameEn.trim()) {
-            setFieldErrors({ name: "Role name is required" });
+            setFieldErrors({ name: t("roles.roleNameRequired") });
             return;
         }
 
         if (permissions.length === 0) {
-            setError("Please select at least one permission");
-            toast.info("Please select at least one permission");
+            setError(t("roles.selectPermissionRequired"));
+            toast.info(t("roles.selectPermissionRequired"));
             return;
         }
 
@@ -135,13 +135,13 @@ export default function AddRole() {
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t('roles.addRole')}</h1>
-                            <p className="text-sm text-slate-500 mt-0.5">Define a new system role and its specific access rules.</p>
+                            <p className="text-sm text-slate-500 mt-0.5">{t("roles.addRoleSubtitle")}</p>
                         </div>
                     </div>
                     <div className="flex gap-3">
                         <Link
                             to="/admin/roles-permissions"
-                            className="inline-flex items-center justify-center px-4 py-2 border border-slate-200 bg-white text-slate-700 text-sm font-semibold rounded-lg shadow-sm hover:bg-slate-50 transition-all gap-2"
+                            className="inline-flex items-center justify-center px-4 py-2 border border-slate-200 bg-white text-slate-700 text-sm font-semibold rounded-lg shadow-sm hover:bg-slate-50 transition-colors duration-200 gap-2"
                         >
                             {t('roles.rolesAndPermissions')}
                         </Link>
@@ -173,8 +173,8 @@ export default function AddRole() {
                                             type="text"
                                             value={roleNameEn}
                                             onChange={(e) => setRoleNameEn(e.target.value)}
-                                            placeholder="e.g. Moderator"
-                                            className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
+                                            placeholder={t("roles.roleNameExample")}
+                                            className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-colors duration-200 ${
                                                 fieldErrors.name 
                                                   ? 'border-red-300 focus:ring-red-100' 
                                                   : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
@@ -199,7 +199,7 @@ export default function AddRole() {
                                             onChange={(e) => setRoleNameAr(e.target.value)}
                                             placeholder="مثال: مشرف"
                                             dir="rtl"
-                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all text-right"
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-colors duration-200 text-right"
                                         />
                                     </div>
                                 </div>
@@ -216,7 +216,7 @@ export default function AddRole() {
                                             key={preset.name}
                                             type="button"
                                             onClick={() => applyPreset(preset)}
-                                            className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all ${preset.color} active:scale-95`}
+                                            className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-colors duration-200 ${preset.color}`}
                                         >
                                             {preset.name} ({preset.nameAr})
                                         </button>
@@ -238,7 +238,7 @@ export default function AddRole() {
                                 onClick={() => setPermissions(permissions.length === allAvailablePermissions.length ? [] : allAvailablePermissions.map(p => p.id))}
                                 className="text-xs font-bold text-primary hover:underline"
                             >
-                                {permissions.length === allAvailablePermissions.length ? t('common.unselectAll', 'Unselect All') : t('common.selectAll', 'Select All')}
+                                {permissions.length === allAvailablePermissions.length ? t('common.unselectAll') : t('common.selectAll')}
                             </button>
                         </div>
                         <div className="p-8">
@@ -246,7 +246,7 @@ export default function AddRole() {
                                 {allAvailablePermissions.map((perm) => (
                                     <label 
                                         key={perm.id} 
-                                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
+                                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors duration-200 ${
                                             permissions.includes(perm.id) 
                                                 ? 'bg-primary/5 border-primary/20 shadow-sm ring-1 ring-primary/10' 
                                                 : 'bg-white border-slate-100 hover:border-slate-200'
@@ -257,7 +257,7 @@ export default function AddRole() {
                                                 type="checkbox"
                                                 checked={permissions.includes(perm.id)}
                                                 onChange={() => handlePermissionToggle(perm.id)}
-                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-primary checked:bg-primary"
+                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-colors duration-200 checked:border-primary checked:bg-primary"
                                             />
                                             <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100" />
                                         </div>
@@ -277,17 +277,17 @@ export default function AddRole() {
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            className="w-full sm:w-auto px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-semibold text-sm shadow-sm"
+                            className="w-full sm:w-auto px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors duration-200 font-semibold text-sm shadow-sm"
                         >
                             {t('common.cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={createRoleMutation.isPending}
-                            className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white rounded-xl hover:bg-emerald-600 active:scale-[0.98] transition-all font-semibold text-sm shadow-sm shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white rounded-xl hover:bg-emerald-600 transition-colors duration-200 font-semibold text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {createRoleMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                            {createRoleMutation.isPending ? t('roles.creating', 'Creating...') : t('roles.addRole')}
+                            {createRoleMutation.isPending ? t('roles.creating') : t('roles.addRole')}
                         </button>
                     </div>
                 </form>

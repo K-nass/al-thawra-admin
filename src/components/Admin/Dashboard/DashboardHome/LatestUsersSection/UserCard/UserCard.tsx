@@ -1,8 +1,11 @@
 import type { UserInterface } from "../LatestUsersSection";
 import { User as UserIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function UserCard({ user }: { user: UserInterface }) {
-  const formattedDate = new Date(user.createdAt).toLocaleDateString('en-US', {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language?.startsWith("ar") ? "ar-EG" : "en-US";
+  const formattedDate = new Date(user.createdAt).toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric'
   });
@@ -32,7 +35,9 @@ export default function UserCard({ user }: { user: UserInterface }) {
           {user.userName}
         </p>
         <div className="flex items-center justify-center gap-1.5 mt-0.5">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Active</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+            {user.isActive ? t("users.active") : t("users.inactive")}
+          </span>
           <span className="w-1 h-1 rounded-full bg-slate-200" />
           <p className="text-[10px] font-medium text-slate-400">{formattedDate}</p>
         </div>

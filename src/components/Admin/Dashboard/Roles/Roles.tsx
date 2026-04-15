@@ -44,7 +44,7 @@ export default function Roles() {
   const deleteRoleMutation = useMutation({
     mutationFn: (roleId: string) => rolesApi.delete(roleId),
     onSuccess: async () => {
-      toast.success(t("roles.deleteSuccess", "Role deleted successfully"));
+      toast.success(t("roles.deleteSuccess"));
       await queryClient.invalidateQueries({ queryKey: ["roles"] });
       setRoleToDelete(null);
     },
@@ -57,10 +57,10 @@ export default function Roles() {
           queryClient.invalidateQueries({ queryKey: ["roles"] });
           setRoleToDelete(null);
         } else {
-          toast.error(responseData?.title || responseData?.message || "Failed to delete role");
+          toast.error(responseData?.title || responseData?.message || t("roles.deleteError"));
         }
       } else {
-        toast.error("An unexpected error occurred");
+        toast.error(t("users.errors.unexpected"));
       }
     },
   });
@@ -90,18 +90,18 @@ export default function Roles() {
                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                   <ShieldCheck size={16} />
                </div>
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Security Protocol</span>
+               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t("roles.securityProtocol")}</span>
             </div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight">
               {t('roles.rolesAndPermissions')}
             </h1>
             <p className="text-sm text-slate-500 mt-2 font-medium max-w-xl">
-              Define and enforce system-wide access control policies with discrete permission tokens and tiered authorization nodes.
+              {t("roles.rolesPageSubtitle")}
             </p>
           </div>
           <Link 
             to="/admin/add-role" 
-            className="inline-flex items-center justify-center px-6 py-3.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-slate-200 hover:bg-primary hover:shadow-primary/20 transition-all duration-300 gap-3 group active:scale-95"
+            className="inline-flex items-center justify-center px-6 py-3.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-primary transition-colors duration-200 gap-3 group"
           >
             <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
             {t('roles.addRole')}
@@ -130,14 +130,14 @@ export default function Roles() {
         {isLoading ? (
           <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm animate-pulse">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Hydrating ACL Index...</p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("roles.loadingRoles")}</p>
           </div>
         ) : isError ? (
           <div className="p-16 bg-rose-50 border border-rose-100 rounded-[2rem] text-center">
              <div className="w-16 h-16 bg-rose-100/50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500 shadow-sm">
                 <ShieldAlert size={32} />
              </div>
-             <h3 className="text-xl font-black text-rose-900 mb-2 uppercase tracking-tight">Security Handshake Failure</h3>
+             <h3 className="text-xl font-black text-rose-900 mb-2 uppercase tracking-tight">{t("roles.securityHandshakeFailure")}</h3>
              <p className="text-sm text-rose-600/80 max-w-md mx-auto font-medium">
                {axios.isAxiosError(error) && error.response?.status === 403 
                  ? t('roles.accessDenied')
@@ -150,9 +150,9 @@ export default function Roles() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-200">
-                    <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Authorization Node</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Permissions Tier</TableHead>
-                    <TableHead className="text-right px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Registry</TableHead>
+                    <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("roles.authorizationNode")}</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("roles.activePermissionsTier")}</TableHead>
+                    <TableHead className="text-right px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("roles.registry")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -163,7 +163,7 @@ export default function Roles() {
                             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4">
                                <Lock size={24} />
                             </div>
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Vortex: No roles detected</p>
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">{t("roles.noRolesDetected")}</p>
                          </div>
                       </TableCell>
                     </TableRow>
@@ -178,10 +178,12 @@ export default function Roles() {
                               <div className="flex flex-col">
                                 <span className="font-black text-slate-900 group-hover:text-primary transition-colors text-sm uppercase tracking-tight leading-none mb-1.5">{role.name}</span>
                                 <div className="flex items-center gap-2">
-                                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Access Level: Tier {role.id.slice(-1).toUpperCase()}</span>
+                                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                                     {t("roles.accessLevelTier", { tier: role.id.slice(-1).toUpperCase() })}
+                                   </span>
                                    {role.isDefault && (
                                      <Badge variant="info" className="text-[8px] font-black py-0 px-1.5 uppercase bg-blue-50 text-blue-600 border-blue-100 rounded-md">
-                                       System Root
+                                       {t("roles.systemRoot")}
                                      </Badge>
                                    )}
                                 </div>
@@ -193,7 +195,7 @@ export default function Roles() {
                             {role.allPermissions ? (
                               <Badge variant="success" className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
                                 <UserCheck size={14} className="mr-1.5 opacity-70" />
-                                {t('roles.allPermissions')} (Global Access)
+                                {t('roles.allPermissions')} ({t("roles.globalAccess")})
                               </Badge>
                             ) : (
                               role.permissions.map((permission, index) => (
@@ -218,7 +220,7 @@ export default function Roles() {
                                 onClick={() => handleDeleteRole(role.id, role.name)}
                                 disabled={deleteRoleMutation.isPending}
                                 className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100 disabled:opacity-50"
-                                title="Purge Role Record"
+                                title={t("roles.purgeRoleRecord")}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -248,9 +250,9 @@ export default function Roles() {
 
       <ConfirmDialog
         isOpen={!!roleToDelete}
-        title={`Terminate Policy: ${roleToDelete?.name}`}
-        message={`Critical: Permanently purging this authorization node will revoke access for all associated system agents. This action is irreversible.`}
-        confirmText={deleteRoleMutation.isPending ? "Purging Node..." : "Confirm Purge"}
+        title={t("roles.terminatePolicyTitle", { name: roleToDelete?.name || "" })}
+        message={t("roles.terminatePolicyMessage")}
+        confirmText={deleteRoleMutation.isPending ? t("roles.purgingNode") : t("common.confirm")}
         cancelText={t("common.cancel")}
         onConfirm={confirmDelete}
         onCancel={() => setRoleToDelete(null)}

@@ -158,11 +158,11 @@ export default function DashboardAddCategory() {
     }
     
     if (!formData.language) {
-      newErrors.language = "Language is required";
+      newErrors.language = t("categories.languageRequired");
     }
 
     if (!formData.order || formData.order < 1) {
-      newErrors.order = "Order must be a positive number";
+      newErrors.order = t("categories.orderPositive");
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -201,7 +201,7 @@ export default function DashboardAddCategory() {
                 {isEditMode ? t("categories.editCategory") : t("categories.addCategory")}
               </h1>
               <p className="text-sm text-slate-500 mt-0.5">
-                {isEditMode ? "Update category information and configuration." : "Create a new portal section for content classification."}
+                {isEditMode ? t("categories.editSubtitle") : t("categories.createSubtitle")}
               </p>
             </div>
           </div>
@@ -270,11 +270,11 @@ export default function DashboardAddCategory() {
                       value={formData.language}
                       onChange={handleChange}
                       required
-                      disabled={isEditMode}
+                     disabled={isEditMode}
                       className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all appearance-none font-medium disabled:opacity-70 disabled:bg-slate-100"
                     >
-                      <option value="English">English</option>
-                      <option value="Arabic">Arabic</option>
+                      <option value="English">{t("formLabels.english")}</option>
+                      <option value="Arabic">{t("formLabels.arabic")}</option>
                     </select>
                   </div>
                   {errors.language && (

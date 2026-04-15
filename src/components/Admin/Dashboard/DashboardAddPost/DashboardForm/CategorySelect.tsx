@@ -53,7 +53,7 @@ export default memo(function CategorySelect({ categories = [], isLoading, handle
               {t('formLabels.category')} <span className="text-rose-500 ml-1 font-bold">*</span>
             </h3>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              {language} Repository
+              {t("formLabels.languageRepository", { language })}
             </p>
           </div>
         </div>
@@ -106,13 +106,13 @@ export default memo(function CategorySelect({ categories = [], isLoading, handle
         {!errors.categoryId && value && (
           <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-xl border border-emerald-100 animate-in fade-in zoom-in-95">
              <CheckCircle2 size={14} className="text-emerald-500" />
-             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Category Selected</span>
+             <span className="text-xs font-black text-emerald-600 uppercase tracking-widest">{t("formLabels.categorySelected")}</span>
           </div>
         )}
         
         {filteredCategories.length === 0 && !isLoading && (
           <div className="p-4 text-center border-2 border-dashed border-slate-100 rounded-2xl">
-             <p className="text-xs text-slate-400 font-medium italic">No categories found for {language}</p>
+             <p className="text-xs text-slate-400 font-medium italic">{t("categories.noCategoriesForLanguage", { language })}</p>
           </div>
         )}
       </div>

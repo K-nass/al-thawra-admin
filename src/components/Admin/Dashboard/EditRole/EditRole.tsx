@@ -58,7 +58,7 @@ export default function EditRole() {
             rolesApi.update(id!, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["roles"] });
-            toast.success(t('roles.successUpdate', 'Role updated successfully'));
+            toast.success(t('roles.successUpdate'));
             navigate("/admin/roles-permissions");
         },
         onError: (err) => {
@@ -71,14 +71,14 @@ export default function EditRole() {
                         errors[key.toLowerCase()] = Array.isArray(messages) ? messages[0] : messages;
                     });
                     setFieldErrors(errors);
-                    toast.error(t('common.validationError', 'Please check form fields'));
+                    toast.error(t('common.validationError'));
                 } else {
                     const msg = responseData?.title || responseData?.message || err.message;
                     setError(msg);
                     toast.error(msg);
                 }
             } else {
-                setError("An unexpected error occurred");
+                setError(t("users.errors.unexpected"));
             }
         },
     });
@@ -89,13 +89,13 @@ export default function EditRole() {
         setFieldErrors({});
 
         if (!roleNameEn.trim()) {
-            setFieldErrors({ name: "Role name is required" });
+            setFieldErrors({ name: t("roles.roleNameRequired") });
             return;
         }
 
         if (permissions.length === 0) {
-            setError("Please select at least one permission");
-            toast.info("Please select at least one permission");
+            setError(t("roles.selectPermissionRequired"));
+            toast.info(t("roles.selectPermissionRequired"));
             return;
         }
 
@@ -142,13 +142,13 @@ export default function EditRole() {
                 <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4">
                     <AlertCircle size={32} />
                 </div>
-                <h2 className="text-xl font-bold text-slate-800">Role Not Found</h2>
-                <p className="text-slate-500 mt-2">The role may have been deleted or is unavailable.</p>
+                <h2 className="text-xl font-bold text-slate-800">{t("roles.roleNotFound")}</h2>
+                <p className="text-slate-500 mt-2">{t("roles.roleNotFoundMessage")}</p>
                 <button 
                   onClick={() => navigate("/admin/roles-permissions")}
-                  className="mt-6 px-4 py-2 bg-primary text-white rounded-lg font-semibold shadow-sm hover:bg-emerald-600 transition-all"
+                  className="mt-6 px-4 py-2 bg-primary text-white rounded-lg font-semibold shadow-sm hover:bg-emerald-600 transition-colors duration-200"
                 >
-                  Return to Roles
+                  {t("roles.returnToRoles")}
                 </button>
             </div>
         );
@@ -170,10 +170,10 @@ export default function EditRole() {
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                                {t('roles.editRole', 'Edit Role')}
-                                {isSystemRole && <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase tracking-widest font-bold border border-slate-200 ml-2">System</span>}
+                                {t('roles.editRole')}
+                                {isSystemRole && <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase tracking-widest font-bold border border-slate-200 ml-2">{t("roles.systemRoot")}</span>}
                             </h1>
-                            <p className="text-sm text-slate-500 mt-0.5">Modify permissions and configuration for {roleData.name}.</p>
+                            <p className="text-sm text-slate-500 mt-0.5">{t("roles.editRoleSubtitle", { name: roleData.name })}</p>
                         </div>
                     </div>
                 </div>
@@ -203,9 +203,9 @@ export default function EditRole() {
                                             type="text"
                                             value={roleNameEn}
                                             onChange={(e) => setRoleNameEn(e.target.value)}
-                                            placeholder="e.g. Moderator"
+                                            placeholder={t("roles.roleNameExample")}
                                             disabled={isSystemRole}
-                                            className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
+                                            className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-colors duration-200 ${
                                                 isSystemRole ? 'opacity-70 cursor-not-allowed bg-slate-100 border-slate-200' :
                                                 fieldErrors.name 
                                                   ? 'border-red-300 focus:ring-red-100' 
@@ -213,7 +213,7 @@ export default function EditRole() {
                                             }`}
                                         />
                                     </div>
-                                    {isSystemRole && <p className="text-[10px] text-slate-400 mt-1 ml-1">* System roles cannot be renamed</p>}
+                                    {isSystemRole && <p className="text-[10px] text-slate-400 mt-1 ml-1">{t("roles.systemRoleRenameHint")}</p>}
                                     {fieldErrors.name && (
                                         <p className="px-1 text-xs font-medium text-red-500">{fieldErrors.name}</p>
                                     )}
@@ -251,7 +251,7 @@ export default function EditRole() {
                                 onClick={() => setPermissions(permissions.length === allAvailablePermissions.length ? [] : allAvailablePermissions.map(p => p.id))}
                                 className="text-xs font-bold text-primary hover:underline"
                             >
-                                {permissions.length === allAvailablePermissions.length ? t('common.unselectAll', 'Unselect All') : t('common.selectAll', 'Select All')}
+                                {permissions.length === allAvailablePermissions.length ? t('common.unselectAll') : t('common.selectAll')}
                             </button>
                         </div>
                         <div className="p-8">
@@ -259,7 +259,7 @@ export default function EditRole() {
                                 {allAvailablePermissions.map((perm) => (
                                     <label 
                                         key={perm.id} 
-                                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
+                                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors duration-200 ${
                                             permissions.includes(perm.id) 
                                                 ? 'bg-primary/5 border-primary/20 shadow-sm ring-1 ring-primary/10' 
                                                 : 'bg-white border-slate-100 hover:border-slate-200'
@@ -270,7 +270,7 @@ export default function EditRole() {
                                                 type="checkbox"
                                                 checked={permissions.includes(perm.id)}
                                                 onChange={() => handlePermissionToggle(perm.id)}
-                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-primary checked:bg-primary"
+                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-colors duration-200 checked:border-primary checked:bg-primary"
                                             />
                                             <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100" />
                                         </div>
@@ -290,17 +290,17 @@ export default function EditRole() {
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            className="w-full sm:w-auto px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-semibold text-sm shadow-sm"
+                            className="w-full sm:w-auto px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-colors duration-200 font-semibold text-sm shadow-sm"
                         >
                             {t('common.cancel')}
                         </button>
                         <button
                             type="submit"
                             disabled={updateRoleMutation.isPending}
-                            className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white rounded-xl hover:bg-emerald-600 active:scale-[0.98] transition-all font-semibold text-sm shadow-sm shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white rounded-xl hover:bg-emerald-600 transition-colors duration-200 font-semibold text-sm shadow-sm disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {updateRoleMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                            {updateRoleMutation.isPending ? t('common.saving', 'Saving...') : t('common.saveChanges', 'Save Changes')}
+                            {updateRoleMutation.isPending ? t('common.saving') : t('common.saveChanges')}
                         </button>
                     </div>
                 </form>

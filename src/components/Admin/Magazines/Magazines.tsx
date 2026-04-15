@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { useFetchMagazines, useDeleteMagazine, useMagazineByDate } from "@/hooks/useFetchMagazines";
 import { useToast } from "@/components/Toast/ToastContainer";
 import type { Magazine } from "@/api/magazines.api";
@@ -24,9 +24,9 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { useToast } from "@/components/Toast/ToastContainer";
+// import { useToast } from "@/components/Toast/ToastContainer";
 
-// ────────────────────────── Debounce ──────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Debounce â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState<T>(value);
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function Magazines() {
   const toast = useToast();
   const isRTL = i18n.language === "ar";
 
-  // ────────────────────────── State ──────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 400);
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: "", to: "" });
@@ -66,7 +66,7 @@ export default function Magazines() {
     magazine: Magazine | null;
   }>({ isOpen: false, magazine: null });
 
-  // ────────────────────────── Data Hooks ──────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Data Hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const magazines = useFetchMagazines({
     pageNumber,
     pageSize: 15,
@@ -83,12 +83,20 @@ export default function Magazines() {
 
   const deleteMagazine = useDeleteMagazine();
 
-  // ────────────────────────── Derived ──────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Derived â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const hasFilters = !!dateRange.from || !!dateRange.to || !!debouncedSearch;
 
   const dateLocale = useMemo(() => {
     return isRTL ? "ar-EG" : "en-US";
   }, [isRTL]);
+
+  const formatLongDate = (dateValue: Date) =>
+    dateValue.toLocaleDateString(dateLocale, {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
 
   const formatDate = (dateStr: string) => {
     try {
@@ -102,7 +110,7 @@ export default function Magazines() {
     }
   };
 
-  // ────────────────────────── Handlers ──────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDeleteClick = (magazine: Magazine) => {
     setConfirmDialog({
       isOpen: true,
@@ -161,7 +169,7 @@ export default function Magazines() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [pageNumber]);
 
-  // ────────────────────────── Pagination Helpers ──────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Pagination Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const totalPages = magazines.data?.totalPages ?? 0;
 
   const getPageNumbers = () => {
@@ -184,22 +192,22 @@ export default function Magazines() {
     return pages;
   };
 
-  // ────────────────────────── Card animation variants ──────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Card animation variants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
       opacity: 1,
       y: 0,
-      transition: { delay: i * 0.05, duration: 0.35, ease: "easeOut" },
+      transition: { delay: i * 0.04, duration: 0.25, ease: "easeOut" },
     }),
   };
 
-  // ──────────────────────────── RENDER ────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
-        {/* ═══════════ Page Header ═══════════ */}
-        <div className="bg-gradient-to-br from-[#13967B] via-[#0e7a64] to-[#0a5e4d] px-6 py-8 md:px-8">
+        {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Page Header â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
+        <div className="bg-gradient-to-br from-[#13967B] via-[#0e7a64] to-[#0a5e4d] px-4 py-6 sm:px-6 sm:py-8 md:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
@@ -220,7 +228,7 @@ export default function Magazines() {
               <button
                 type="button"
                 onClick={handleCreate}
-                className="px-5 py-2.5 bg-white text-[#13967B] rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 flex items-center gap-2 shadow-lg shadow-black/10 hover:shadow-xl self-start sm:self-auto"
+                className="px-5 py-2.5 bg-white text-[#13967B] rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md self-start sm:self-auto"
               >
                 <FontAwesomeIcon icon={faPlus} />
                 {t("magazines.createMagazine")}
@@ -315,8 +323,8 @@ export default function Magazines() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 md:px-8 py-6 space-y-6">
-          {/* ═══════════ Today's Issue Hero ═══════════ */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-6">
+          {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Today's Issue Hero â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
               <div className="w-8 h-8 bg-[#13967B]/10 rounded-lg flex items-center justify-center">
@@ -324,7 +332,7 @@ export default function Magazines() {
               </div>
               <h2 className="text-lg font-bold text-gray-900">{t("magazines.todaysIssue")}</h2>
               <span className="text-xs text-gray-400 ms-auto">
-                {format(new Date(), "EEEE, MMMM dd, yyyy")}
+                {formatLongDate(new Date())}
               </span>
             </div>
 
@@ -342,7 +350,7 @@ export default function Magazines() {
                         <img
                           src={todayIssue.thumbnailUrl}
                           alt={`${t("magazines.issue")} ${todayIssue.issueNumber}`}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = "none";
                           }}
@@ -354,7 +362,7 @@ export default function Magazines() {
                       )}
                       <div className="absolute top-2 end-2 bg-red-500 text-white px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-sm">
                         <FontAwesomeIcon icon={faFilePdf} className="text-[10px]" />
-                        PDF
+                        {t("magazines.pdf")}
                       </div>
                     </div>
                   </div>
@@ -419,7 +427,7 @@ export default function Magazines() {
                   <button
                     type="button"
                     onClick={handleCreate}
-                    className="px-5 py-2.5 bg-[#13967B] text-white rounded-xl font-medium hover:bg-[#0e7a64] transition-colors inline-flex items-center gap-2 shadow-lg shadow-[#13967B]/20"
+                    className="px-5 py-2.5 bg-[#13967B] text-white rounded-xl font-medium hover:bg-[#0e7a64] transition-colors duration-200 inline-flex items-center gap-2 shadow-sm hover:shadow-md"
                   >
                     <FontAwesomeIcon icon={faPlus} />
                     {t("magazines.createMagazine")}
@@ -429,7 +437,7 @@ export default function Magazines() {
             </div>
           </div>
 
-          {/* ═══════════ Magazine Grid ═══════════ */}
+          {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Magazine Grid â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
           <AnimatePresence mode="wait">
             {magazines.isLoading ? (
               <motion.div
@@ -465,7 +473,7 @@ export default function Magazines() {
                   onClick={() => magazines.refetch()}
                   className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
                 >
-                  {t("common.retry") || "Retry"}
+                  {t("common.retry")}
                 </button>
               </motion.div>
             ) : magazines.data?.items && magazines.data.items.length > 0 ? (
@@ -495,7 +503,7 @@ export default function Magazines() {
                       variants={cardVariants}
                       initial="hidden"
                       animate="visible"
-                      className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group hover:border-gray-200"
+                      className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 group hover:border-gray-200"
                     >
                       {/* Thumbnail */}
                       <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
@@ -503,22 +511,22 @@ export default function Magazines() {
                           <img
                             src={magazine.thumbnailUrl}
                             alt={`${t("magazines.issue")} ${magazine.issueNumber}`}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                           />
                         ) : (
                           <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 gap-2">
                             <FontAwesomeIcon icon={faFilePdf} className="text-4xl" />
-                            <span className="text-xs font-medium text-gray-400">PDF</span>
+                            <span className="text-xs font-medium text-gray-400">{t("magazines.pdf")}</span>
                           </div>
                         )}
 
                         {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-end justify-center pb-6">
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => handleViewPdf(magazine)}
-                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-gray-800 rounded-full hover:bg-[#13967B] hover:text-white transition-all duration-200 flex items-center justify-center shadow-lg"
+                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-gray-800 rounded-full hover:bg-[#13967B] hover:text-white transition-all duration-200 flex items-center justify-center shadow-sm"
                               title={t("magazines.viewPdf")}
                             >
                               <FontAwesomeIcon icon={faEye} className="text-sm" />
@@ -526,7 +534,7 @@ export default function Magazines() {
                             <button
                               type="button"
                               onClick={() => handleEdit(magazine)}
-                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-gray-800 rounded-full hover:bg-blue-500 hover:text-white transition-all duration-200 flex items-center justify-center shadow-lg"
+                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-gray-800 rounded-full hover:bg-blue-500 hover:text-white transition-all duration-200 flex items-center justify-center shadow-sm"
                               title={t("common.edit")}
                             >
                               <FontAwesomeIcon icon={faPen} className="text-sm" />
@@ -534,7 +542,7 @@ export default function Magazines() {
                             <button
                               type="button"
                               onClick={() => handleDeleteClick(magazine)}
-                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-200 flex items-center justify-center shadow-lg"
+                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-200 flex items-center justify-center shadow-sm"
                               title={t("common.delete")}
                             >
                               <FontAwesomeIcon icon={faTrash} className="text-sm" />
@@ -545,7 +553,7 @@ export default function Magazines() {
                         {/* PDF Badge */}
                         <div className="absolute top-3 end-3 bg-red-500/90 backdrop-blur-sm text-white px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1">
                           <FontAwesomeIcon icon={faFilePdf} className="text-[10px]" />
-                          PDF
+                          {t("magazines.pdf")}
                         </div>
                       </div>
 
@@ -567,7 +575,7 @@ export default function Magazines() {
                   ))}
                 </div>
 
-                {/* ═══════════ Pagination ═══════════ */}
+                {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Pagination â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
                 {totalPages > 1 && (
                   <div className="flex justify-center items-center gap-1.5 py-8 mt-4">
                     <button
@@ -588,7 +596,7 @@ export default function Magazines() {
                           key={`ellipsis-${idx}`}
                           className="w-9 h-9 flex items-center justify-center text-gray-400 text-sm"
                         >
-                          ···
+                          ...
                         </span>
                       ) : (
                         <button
@@ -597,7 +605,7 @@ export default function Magazines() {
                           onClick={() => setPageNumber(num)}
                           className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 ${
                             pageNumber === num
-                              ? "bg-[#13967B] text-white shadow-md shadow-[#13967B]/25"
+                              ? "bg-[#13967B] text-white shadow-sm"
                               : "border border-gray-200 text-gray-600 hover:bg-gray-50"
                           }`}
                         >
@@ -623,7 +631,7 @@ export default function Magazines() {
                 )}
               </motion.div>
             ) : (
-              /* ═══════════ Empty State ═══════════ */
+              /* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Empty State â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */
               <motion.div
                 key="empty"
                 initial={{ opacity: 0, y: 10 }}
@@ -659,7 +667,7 @@ export default function Magazines() {
         </div>
       </div>
 
-      {/* ═══════════ Modals ═══════════ */}
+      {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Modals â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         title={t("magazines.confirmDeleteTitle")}
@@ -688,3 +696,4 @@ export default function Magazines() {
     </div>
   );
 }
+

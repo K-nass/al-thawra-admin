@@ -35,9 +35,11 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
 
-export default function DashboardPosts({ label }: { label?: string }) {
+type DashboardPostsMode = "all" | "slider" | "featured" | "breaking" | "pages";
+
+export default function DashboardPosts({ mode = "all" }: { mode?: DashboardPostsMode }) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const toast = useToast();
   const { data: categoriesData } = useCategories();
@@ -66,14 +68,19 @@ export default function DashboardPosts({ label }: { label?: string }) {
     itemTitle: "",
   });
 
-  const isPages = label?.toLowerCase() === "pages";
-  let isSlider: boolean | undefined = undefined;
-  let isFeatured: boolean | undefined = undefined;
-  let isBreaking: boolean | undefined = undefined;
+  const isPages = mode === "pages";
+  const isSlider: boolean | undefined = mode === "slider" ? true : undefined;
+  const isFeatured: boolean | undefined = mode === "featured" ? true : undefined;
+  const isBreaking: boolean | undefined = mode === "breaking" ? true : undefined;
+  const locale = i18n.language?.startsWith("ar") ? "ar-EG" : "en-US";
 
-  if (label === "Slider Posts") isSlider = true;
-  if (label === "Featured Posts") isFeatured = true;
-  if (label === "Breaking News") isBreaking = true;
+  const titleByMode: Record<DashboardPostsMode, string> = {
+    all: t("dashboard.posts"),
+    slider: t("dashboard.sliderPosts"),
+    featured: t("dashboard.featuredPosts"),
+    breaking: t("dashboard.breakingNews"),
+    pages: t("dashboard.pages"),
+  };
 
   // Fetching
   const { data: posts, isLoading: isLoadingPosts } = useFetchPosts({
@@ -104,11 +111,11 @@ export default function DashboardPosts({ label }: { label?: string }) {
       return await postsApi.deletePost(categoryId, postId, postType);
     },
     onSuccess: () => {
-      toast.success(t("success.postDeleted") || "Post deleted successfully");
+      toast.success(t("success.postDeleted"));
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || t("error.deleteFailed") || "Failed to delete post");
+      toast.error(error?.response?.data?.message || t("error.deleteFailed"));
     },
   });
 
@@ -148,11 +155,11 @@ export default function DashboardPosts({ label }: { label?: string }) {
       return await postsApi.updatePost(categoryId, postId, postType, payload);
     },
     onSuccess: () => {
-      toast.success(t('success.postUpdated', 'Post updated successfully'));
+      toast.success(t('success.postUpdated'));
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update post");
+      toast.error(error?.response?.data?.message || t("error.updateFailed"));
     },
   });
 
@@ -176,11 +183,11 @@ export default function DashboardPosts({ label }: { label?: string }) {
     if (isPages) {
       deletePageMutation.mutate(confirmDialog.itemId, {
         onSuccess: () => {
-          toast.success("Page deleted successfully");
+          toast.success(t("success.pageDeleted"));
           setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" });
         },
         onError: (err: any) => {
-          toast.error(err?.response?.data?.message || "Failed to delete page");
+          toast.error(err?.response?.data?.message || t("error.deletePageFailed"));
           setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" });
         }
       });
@@ -206,7 +213,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
     if (!dateString) return "-";
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return "-";
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    return date.toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
   };
 
   useEffect(() => {
@@ -223,13 +230,13 @@ export default function DashboardPosts({ label }: { label?: string }) {
                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                   <Layout size={16} />
                </div>
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Systems Portal</span>
+               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t("dashboardPosts.systemsPortal")}</span>
             </div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight">
-              {label || t("dashboard.posts")}
+              {titleByMode[mode]}
             </h1>
             <p className="text-sm text-slate-500 mt-2 font-medium max-w-xl">
-              {isPages ? "Manage standalone pages and institutional content." : "Control center for all portal articles, news releases, and creative features."}
+              {isPages ? t("dashboardPosts.pagesDescription") : t("dashboardPosts.postsDescription")}
             </p>
           </div>
           <button
@@ -238,7 +245,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
             className="inline-flex items-center justify-center px-6 py-3.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-slate-200 hover:bg-primary hover:shadow-primary/20 transition-all duration-300 gap-3 group active:scale-95"
           >
             <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
-            <span>{isPages ? "Register Page" : t('post.addPost')}</span>
+            <span>{isPages ? t("dashboardPosts.registerPage") : t('post.addPost')}</span>
           </button>
         </div>
 
@@ -248,7 +255,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
           
           <div className="flex items-center gap-2 mb-6 ml-1">
              <Filter size={14} className="text-primary" />
-             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Filters</h3>
+             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("dashboardPosts.activeFilters")}</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-6 relative">
@@ -259,7 +266,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
               </div>
               <input
                 type="text"
-                placeholder="Search by title, author, or ID..."
+                placeholder={t("dashboardPosts.searchPlaceholder")}
                 value={searchPhrase ?? ""}
                 onChange={(e) => { setSearchPhrase(e.target.value); setPageNumber(1); }}
                 className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
@@ -274,7 +281,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
                   onChange={(e) => { setCategory(e.target.value === "all" ? null : e.target.value); setPageNumber(1); }}
                   className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
                 >
-                  <option value="all">{t('filter.category')} (All)</option>
+                  <option value="all">{t("dashboardPosts.allCategories")}</option>
                   {categoriesData?.data.map((opt: any) => (
                     <option key={opt.id} value={opt.slug}>{opt.name}</option>
                   ))}
@@ -288,7 +295,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
                 onChange={(e) => { setLanguage(e.target.value === "all" ? null : e.target.value); setPageNumber(1); }}
                 className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
               >
-                <option value="all">{t('filter.language')} (All)</option>
+                <option value="all">{t("dashboardPosts.allLanguages")}</option>
                 <option value="English">🇬🇧 {t('post.english')}</option>
                 <option value="Arabic">🇸🇦 {t('post.arabic')}</option>
               </select>
@@ -301,7 +308,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
                 onChange={(e) => setPageSize(Number(e.target.value))}
                 className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
               >
-                {[15, 30, 60].map((num) => <option key={num} value={num}>Show {num} Rows</option>)}
+                {[15, 30, 60].map((num) => <option key={num} value={num}>{t("dashboardPosts.showRows", { count: num })}</option>)}
               </select>
             </div>
           </div>
@@ -311,7 +318,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
         {isLoading ? (
           <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm animate-pulse">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Hydrating feed...</p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("dashboardPosts.hydratingFeed")}</p>
           </div>
         ) : hasError ? (
           <div className="p-16 bg-rose-50 border border-rose-100 rounded-[2rem] text-center">
@@ -328,13 +335,13 @@ export default function DashboardPosts({ label }: { label?: string }) {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-200">
-                    <TableHead className="w-[100px] py-6 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Reference</TableHead>
-                    <TableHead className="min-w-[400px] text-[10px] font-black text-slate-400 uppercase tracking-widest">{isPages ? "Document Header" : "Content Identity"}</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global State</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isPages ? "Cluster" : "Taxonomy"}</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Impact</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Timeline</TableHead>
-                    <TableHead className="text-right px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Registry</TableHead>
+                    <TableHead className="w-[100px] py-6 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("dashboardPosts.idReference")}</TableHead>
+                    <TableHead className="min-w-[400px] text-[10px] font-black text-slate-400 uppercase tracking-widest">{isPages ? t("dashboardPosts.documentHeader") : t("dashboardPosts.contentIdentity")}</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("dashboardPosts.globalState")}</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isPages ? t("dashboardPosts.cluster") : t("dashboardPosts.taxonomy")}</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("dashboardPosts.impact")}</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("dashboardPosts.timeline")}</TableHead>
+                    <TableHead className="text-right px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("dashboardPosts.registry")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -345,7 +352,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
                             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4">
                                <Search size={24} />
                             </div>
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No matching records found</p>
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">{t("dashboardPosts.noMatchingRecords")}</p>
                          </div>
                       </TableCell>
                     </TableRow>
@@ -376,11 +383,11 @@ export default function DashboardPosts({ label }: { label?: string }) {
                               <span className="font-black text-slate-900 group-hover:text-primary transition-colors line-clamp-1 text-sm tracking-tight leading-none mb-1.5">{item.title}</span>
                               <div className="flex items-center gap-2">
                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                                    <UserIcon size={10} /> {item.authorName || item.parentName || "System Agent"}
+                                    <UserIcon size={10} /> {item.authorName || item.parentName || t("dashboardPosts.systemAgent")}
                                  </span>
                                  <div className="w-1 h-1 rounded-full bg-slate-300" />
-                                 {item.isSlider && <span className="text-[9px] font-black text-blue-600 uppercase tracking-tighter bg-blue-50 px-1.5 rounded">Slider</span>}
-                                 {item.isFeatured && <span className="text-[9px] font-black text-amber-600 uppercase tracking-tighter bg-amber-50 px-1.5 rounded">Featured</span>}
+                                 {item.isSlider && <span className="text-[9px] font-black text-blue-600 uppercase tracking-tighter bg-blue-50 px-1.5 rounded">{t("dashboard.sliderPosts")}</span>}
+                                 {item.isFeatured && <span className="text-[9px] font-black text-amber-600 uppercase tracking-tighter bg-amber-50 px-1.5 rounded">{t("dashboard.featuredPosts")}</span>}
                               </div>
                             </div>
                           </div>
@@ -411,7 +418,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
                                 />
                               )}
                               <span className="text-xs font-black text-slate-600 uppercase tracking-widest leading-none">
-                                {item.categoryName || item.location || "Unlinked"}
+                                {item.categoryName || item.location || t("dashboardPosts.unlinked")}
                               </span>
                            </div>
                         </TableCell>
@@ -421,13 +428,13 @@ export default function DashboardPosts({ label }: { label?: string }) {
                                  <TrendingUp size={12} className="text-emerald-500" />
                                  {item.viewsCount || item.menuOrder || 0}
                               </div>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Global Impact</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t("dashboardPosts.globalImpact")}</span>
                            </div>
                         </TableCell>
                         <TableCell>
                            <div className="flex flex-col">
                               <span className="text-xs text-slate-900 font-bold tracking-tight">{formatDate(item.createdAt)}</span>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Creation Log</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">{t("dashboardPosts.creationLog")}</span>
                            </div>
                         </TableCell>
                         <TableCell className="px-6 text-right">
@@ -470,9 +477,9 @@ export default function DashboardPosts({ label }: { label?: string }) {
                           <div className="flex items-center gap-2 mb-2">
                              <Badge variant={item.language === "Arabic" ? "warning" : "primary"} className="rounded-lg text-[9px] font-black uppercase tracking-widest">{item.language}</Badge>
                              {item.status === 'Published' ? (
-                               <Badge variant="success" className="rounded-lg text-[9px] font-black uppercase tracking-widest">LIVE</Badge>
+                               <Badge variant="success" className="rounded-lg text-[9px] font-black uppercase tracking-widest">{t("dashboardPosts.live")}</Badge>
                              ) : (
-                               <Badge variant="info" className="rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500">DRAFT</Badge>
+                               <Badge variant="info" className="rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500">{t("dashboardPosts.draft")}</Badge>
                              )}
                           </div>
                           <h3 className="font-black text-slate-900 line-clamp-2 leading-tight tracking-tight text-sm">{item.title}</h3>
@@ -481,14 +488,14 @@ export default function DashboardPosts({ label }: { label?: string }) {
                     
                     <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-100">
                        <div className="space-y-1">
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Taxonomy</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t("dashboardPosts.taxonomy")}</p>
                           <div className="flex items-center gap-1.5">
                              <Layers size={10} className="text-primary" />
-                             <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight truncate">{item.categoryName || item.location || "N/A"}</span>
+                             <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight truncate">{item.categoryName || item.location || t("dashboardPosts.notAvailable")}</span>
                           </div>
                        </div>
                        <div className="space-y-1">
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Timeline</p>
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t("dashboardPosts.timeline")}</p>
                           <div className="flex items-center gap-1.5">
                              <Calendar size={10} className="text-slate-400" />
                              <span className="text-[11px] font-bold text-slate-600">{formatDate(item.createdAt)}</span>
@@ -499,7 +506,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
                     <div className="flex items-center justify-between pt-1">
                        <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
                           <TrendingUp size={14} className="text-emerald-500" />
-                          {item.viewsCount || 0} <span className="text-slate-400 font-bold uppercase text-[9px] tracking-widest ml-1">Impulses</span>
+                          {item.viewsCount || 0} <span className="text-slate-400 font-bold uppercase text-[9px] tracking-widest ml-1">{t("dashboardPosts.impact")}</span>
                        </div>
                        <PostActionsDropdown
                           postId={item.id}
@@ -515,7 +522,7 @@ export default function DashboardPosts({ label }: { label?: string }) {
                ))}
                {((data as any)?.data?.items || (data as any)?.items || []).length === 0 && (
                  <div className="py-20 text-center bg-white rounded-[2rem] border border-slate-200">
-                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Clearance: No Records Detected</p>
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">{t("dashboardPosts.noRecordsDetected")}</p>
                  </div>
                )}
             </div>
@@ -536,10 +543,10 @@ export default function DashboardPosts({ label }: { label?: string }) {
 
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
-        title={`Terminate ${isPages ? 'Document' : 'Content Record'}`}
-        message={`Warning: You are about to permanently delete "${confirmDialog.itemTitle}". This record will be purged from the global archives.`}
-        confirmText="Confirm Purge"
-        cancelText="Cancel"
+        title={t("dashboardPosts.deleteTitle", { type: isPages ? t("dashboardPosts.document") : t("dashboardPosts.contentRecord") })}
+        message={t("dashboardPosts.deleteMessage", { itemTitle: confirmDialog.itemTitle })}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" })}
         type="danger"

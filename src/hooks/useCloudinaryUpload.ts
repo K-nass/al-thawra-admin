@@ -118,7 +118,11 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
         }));
 
         const cloudinaryResult: CloudinaryUploadResult =
-          await mediaApi.uploadToCloudinary(file, signatureData);
+          await mediaApi.uploadToCloudinary(
+            file,
+            signatureData,
+            forcedMediaType || deriveMediaType(file)
+          );
 
         setState((prev) => ({
           ...prev,

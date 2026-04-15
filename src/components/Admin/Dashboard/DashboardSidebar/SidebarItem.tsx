@@ -20,10 +20,11 @@ interface SidebarItemProps {
 export default function SidebarItem({ item }: SidebarItemProps) {
   const { t } = useTranslation();
   const location = useLocation();
-  const { isDesktopSidebarOpen, closeMobileSidebar } = useSidebar();
+  const { isDesktopSidebarOpen, isMobileSidebarOpen, closeMobileSidebar } = useSidebar();
   const [isOpen, setIsOpen] = useState(false);
 
-  const label = t(item.labelKey);
+  const translatedLabel = t(item.labelKey);
+  const label = translatedLabel === item.labelKey ? item.labelKey : translatedLabel;
   const hasChildren = item.children && item.children.length > 0;
 
   // Determine active state, including checking children
@@ -44,7 +45,7 @@ export default function SidebarItem({ item }: SidebarItemProps) {
       setIsOpen(!isOpen);
     } else {
       // Close mobile sidebar on navigation
-      if(window.innerWidth < 768) {
+      if (window.innerWidth < 768) {
         closeMobileSidebar();
       }
     }
@@ -53,20 +54,20 @@ export default function SidebarItem({ item }: SidebarItemProps) {
   const content = (
     <>
       <item.icon
-        size={20}
+        size={21}
         className={`flex-shrink-0 transition-colors ${
           isActive ? 'text-primary' : 'text-slate-400 group-hover:text-slate-100'
         }`}
       />
       
       <AnimatePresence>
-        {isDesktopSidebarOpen && (
+        {(isDesktopSidebarOpen || isMobileSidebarOpen) && (
           <motion.span
             initial={{ opacity: 0, width: 0 }}
             animate={{ opacity: 1, width: 'auto' }}
             exit={{ opacity: 0, width: 0 }}
             transition={{ duration: 0.2 }}
-            className="ml-3 font-medium whitespace-nowrap overflow-hidden flex-1"
+            className="ml-3 text-[15px] font-semibold whitespace-nowrap overflow-hidden flex-1"
           >
             {label}
           </motion.span>
@@ -74,7 +75,7 @@ export default function SidebarItem({ item }: SidebarItemProps) {
       </AnimatePresence>
 
       {/* Dropdown Indicator */}
-      {hasChildren && isDesktopSidebarOpen && (
+      {hasChildren && (isDesktopSidebarOpen || isMobileSidebarOpen) && (
         <span className="ml-auto flex-shrink-0 text-slate-500">
           {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </span>
@@ -91,7 +92,7 @@ export default function SidebarItem({ item }: SidebarItemProps) {
   );
 
   const containerClasses = `
-    flex items-center px-4 py-3 my-1 rounded-lg transition-all duration-200 relative group cursor-pointer
+    flex items-center px-4 py-3.5 my-1 rounded-xl transition-colors duration-200 relative group cursor-pointer
     ${isActive 
       ? 'bg-primary/10 text-primary' 
       : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
@@ -100,7 +101,7 @@ export default function SidebarItem({ item }: SidebarItemProps) {
 
   // Always use the native title attribute to provide a robust tooltip that
   // cannot be clipped by `overflow-y-auto` of the parent sidebar container.
-  const tooltipTitle = !isDesktopSidebarOpen ? label : undefined;
+  const tooltipTitle = !isDesktopSidebarOpen && !isMobileSidebarOpen ? label : undefined;
 
   return (
     <div>
@@ -116,7 +117,7 @@ export default function SidebarItem({ item }: SidebarItemProps) {
 
       {/* Nested Dropdown */}
       <AnimatePresence>
-        {hasChildren && isOpen && isDesktopSidebarOpen && (
+        {hasChildren && isOpen && (isDesktopSidebarOpen || isMobileSidebarOpen) && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}

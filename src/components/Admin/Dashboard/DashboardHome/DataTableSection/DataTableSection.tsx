@@ -42,7 +42,7 @@ export default function DataTableSection({
             onClick={() => navigate(viewAllPath)}
             className="text-xs font-bold text-primary hover:text-emerald-700 flex items-center gap-1 transition-colors group"
           >
-            {t('common.viewAll') || "View All"}
+            {t('common.viewAll')}
             <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
           </button>
         )}
@@ -67,13 +67,13 @@ export default function DataTableSection({
             ) : isError ? (
               <TableRow>
                 <TableCell colSpan={cols.length} className="text-center py-20">
-                  <p className="text-error-hover font-semibold">{error || "Failed to load data"}</p>
+                  <p className="text-error-hover font-semibold">{error || t("common.failedToLoadData")}</p>
                 </TableCell>
               </TableRow>
             ) : (!data || data.length === 0) ? (
               <TableRow>
                 <TableCell colSpan={cols.length} className="text-center py-20 text-slate-500 italic">
-                  No records found.
+                  {t("common.noRecordsFound")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -89,12 +89,14 @@ export default function DataTableSection({
 }
 
 function DataRow({ item }: { item: CommentInterface | MessageInterface }) {
+  const { t, i18n } = useTranslation();
   const isComment = "comment" in item;
   const content = isComment ? (item as CommentInterface).comment : (item as MessageInterface).message;
   // Handle both possible structures for messages
   const name = isComment ? (item as CommentInterface).name : ((item as any).username || (item as any).userName || "-");
   const email = "email" in item ? (item as MessageInterface).email : null;
   const date = item.date;
+  const locale = i18n.language?.startsWith("ar") ? "ar-EG" : "en-US";
 
   return (
     <TableRow>
@@ -102,7 +104,7 @@ function DataRow({ item }: { item: CommentInterface | MessageInterface }) {
       {email && <TableCell className="text-slate-500">{email}</TableCell>}
       <TableCell className="max-w-[300px] truncate" title={content}>{content}</TableCell>
       <TableCell className="whitespace-nowrap text-slate-400 text-xs font-medium">
-        {new Date(date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+        {new Date(date).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
       </TableCell>
     </TableRow>
   );
