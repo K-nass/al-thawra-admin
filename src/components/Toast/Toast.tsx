@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheckCircle, faExclamationCircle, faInfoCircle, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { CheckCircle, AlertCircle, Info, X as XIcon } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -21,9 +20,9 @@ export default function Toast({ message, type, onClose, duration = 5000 }: Toast
   }, [duration, onClose]);
 
   const icons = {
-    success: faCheckCircle,
-    error: faExclamationCircle,
-    info: faInfoCircle,
+    success: CheckCircle,
+    error: AlertCircle,
+    info: Info,
   };
 
   const colors = {
@@ -34,14 +33,17 @@ export default function Toast({ message, type, onClose, duration = 5000 }: Toast
 
   return (
     <div className={`${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md animate-slide-in`}>
-      <FontAwesomeIcon icon={icons[type]} className="text-xl flex-shrink-0" />
+      {(() => {
+        const IconComponent = icons[type];
+        return <IconComponent className="w-5 h-5 flex-shrink-0" />;
+      })()}
       <p className="flex-1 text-sm whitespace-pre-line">{message}</p>
       <button
         type="button"
         onClick={onClose}
         className="text-white hover:text-gray-200 transition-colors flex-shrink-0"
       >
-        <FontAwesomeIcon icon={faXmark} />
+        <XIcon className="w-5 h-5" />
       </button>
     </div>
   );

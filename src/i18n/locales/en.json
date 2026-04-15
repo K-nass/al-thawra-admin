@@ -91,6 +91,8 @@
     "createReel": "Create Reel",
     "caption": "Caption",
     "tags": "Tags",
+    "published": "Published",
+    "draft": "Draft"
     "retry": "Retry"
   },
   "app": {
@@ -101,6 +103,9 @@
     "addPost": "Add Post",
     "posts": "Posts",
     "postDetails": "Post Details",
+    "mainOptions": "Main Options",
+    "advancedOptions": "Advanced Options",
+    "sliderMutualExclusionNote": "Note: Slider articles can be either Featured or Recommended, not both. When you select one, the other will be automatically unchecked.",
     "title": "Title",
     "slug": "Slug",
     "slugHint": "If you leave it blank, it will be generated automatically.",
@@ -116,6 +121,7 @@
     "imageDescription": "Image Description",
     "additionalImages": "Additional Images",
     "publish": "Publish",
+    "visibilityAndScheduling": "Visibility & Scheduling",
     "publishPost": "Submit",
     "saveAsDraft": "Save as Draft",
     "scheduledPost": "Scheduled Post",
@@ -233,7 +239,8 @@
     "videoUpload": "Video Upload",
     "thumbnailUpload": "Thumbnail Upload",
     "caption": "Caption",
-    "tags": "Tags"
+    "tags": "Tags",
+    "status": "Status"
   },
   "roles": {
     "rolesAndPermissions": "Roles & Permissions",

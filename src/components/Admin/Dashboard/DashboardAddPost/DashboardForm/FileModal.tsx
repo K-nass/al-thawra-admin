@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark, faCloudUploadAlt, faCheckCircle, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
+import { X, UploadCloud, CheckCircle, AlertTriangle } from "lucide-react";
 import { useCloudinaryUpload } from "@/hooks/useCloudinaryUpload";
 import type { HandleChangeType } from "./types";
 import { useTranslation } from "react-i18next";
@@ -144,7 +143,7 @@ export default function FileModal({ onClose, header, handleChange, forcedMediaTy
         {/* Success state */}
         {status === "success" && (
           <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
-            <FontAwesomeIcon icon={faCheckCircle} />
+            <CheckCircle className="w-4 h-4" />
             <span>{message}</span>
           </div>
         )}
@@ -153,7 +152,7 @@ export default function FileModal({ onClose, header, handleChange, forcedMediaTy
         {status === "error" && (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-red-600 text-sm">
-              <FontAwesomeIcon icon={faExclamationTriangle} />
+              <AlertTriangle className="w-4 h-4" />
               <span>{error}</span>
             </div>
             <button
@@ -188,7 +187,7 @@ export default function FileModal({ onClose, header, handleChange, forcedMediaTy
             disabled={isUploading}
             className="text-gray-500 hover:text-gray-700 text-xl disabled:opacity-50"
           >
-            <FontAwesomeIcon icon={faXmark} className="cursor-pointer" />
+            <X className="w-5 h-5 cursor-pointer" />
           </button>
         </div>
 
@@ -205,8 +204,7 @@ export default function FileModal({ onClose, header, handleChange, forcedMediaTy
                 onClick={() => fileInputRef.current?.click()}
               >
                 <div className="bg-gray-100 p-4 rounded-full">
-                  <FontAwesomeIcon
-                    icon={faCloudUploadAlt}
+                  <UploadCloud
                     className="w-8 h-8 text-gray-400"
                   />
                 </div>

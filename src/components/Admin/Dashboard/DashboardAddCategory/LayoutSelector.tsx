@@ -1,5 +1,4 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck } from "@fortawesome/free-solid-svg-icons";
+import { Check } from "lucide-react";
 import Layout1Preview from "./LayoutPreviews/Layout1Preview";
 import Layout2Preview from "./LayoutPreviews/Layout2Preview";
 import Layout3Preview from "./LayoutPreviews/Layout3Preview";
@@ -33,7 +32,7 @@ interface LayoutSelectorProps {
 
 export default function LayoutSelector({ selectedLayout, onLayoutChange }: LayoutSelectorProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {AVAILABLE_LAYOUTS.map((layout) => {
         const PreviewComponent = layout.component;
         const isSelected = selectedLayout === layout.id;
@@ -44,25 +43,25 @@ export default function LayoutSelector({ selectedLayout, onLayoutChange }: Layou
             type="button"
             onClick={() => onLayoutChange(layout.id)}
             className={`
-              relative aspect-video rounded-lg border-2 transition-all duration-200
-              hover:shadow-lg hover:scale-105
+              relative aspect-video rounded-2xl border-2 transition-all duration-300 overflow-hidden
+              hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]
               ${
                 isSelected
-                  ? "border-blue-600 bg-blue-50 shadow-md"
-                  : "border-gray-300 bg-white hover:border-blue-400"
+                  ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                  : "border-slate-200 bg-white hover:border-slate-300"
               }
             `}
           >
             {/* Preview */}
-            <div className="w-full h-full">
+            <div className="w-full h-full opacity-80 group-hover:opacity-100 transition-opacity">
               <PreviewComponent />
             </div>
             
             {/* Label */}
             <div
               className={`
-                absolute bottom-0 left-0 right-0 py-2 text-center text-sm font-semibold rounded-b-lg
-                ${isSelected ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}
+                absolute bottom-0 left-0 right-0 py-2 text-center text-[10px] font-black uppercase tracking-widest
+                ${isSelected ? "bg-primary text-white" : "bg-slate-50 text-slate-500"}
               `}
             >
               {layout.name}
@@ -70,8 +69,8 @@ export default function LayoutSelector({ selectedLayout, onLayoutChange }: Layou
             
             {/* Checkmark */}
             {isSelected && (
-              <div className="absolute top-2 right-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                <FontAwesomeIcon icon={faCheck} className="text-white text-xs" />
+              <div className="absolute top-2 right-2 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-in zoom-in-50 duration-300">
+                <Check size={12} strokeWidth={3} />
               </div>
             )}
           </button>

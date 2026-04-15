@@ -24,6 +24,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/components/Toast/ToastContainer";
 
 // ────────────────────────── Debounce ──────────────────────────
 function useDebounce<T>(value: T, delay: number): T {
@@ -668,9 +669,7 @@ export default function Magazines() {
         confirmText={t("common.delete")}
         cancelText={t("common.cancel")}
         onConfirm={handleConfirmDelete}
-        onCancel={() =>
-          setConfirmDialog({ isOpen: false, issueNumber: null, magazineTitle: "" })
-        }
+        onCancel={() => setConfirmDialog({ isOpen: false, issueNumber: null, magazineTitle: "" })}
         type="danger"
       />
 

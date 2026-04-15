@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { AlertTriangle } from 'lucide-react';
 
 export default function NotFound() {
   const { t } = useTranslation();
@@ -12,9 +11,8 @@ export default function NotFound() {
       <div className="max-w-md w-full text-center">
         {/* Icon */}
         <div className="mb-8">
-          <FontAwesomeIcon 
-            icon={faExclamationTriangle} 
-            className="text-8xl text-amber-500 animate-pulse"
+          <AlertTriangle 
+            className="w-24 h-24 text-amber-500 animate-pulse mx-auto"
           />
         </div>
 

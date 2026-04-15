@@ -2,18 +2,15 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import FormHeader from "../DashboardAddPost/DashboardForm/FormHeader";
 import PostDetailsForm, { type TagInterface } from "../DashboardAddPost/DashboardForm/PostDetailsForm";
 import ContentEditor from "../DashboardAddPost/DashboardForm/ContentEditor";
-import AdditionalImages from "../DashboardAddPost/DashboardForm/AdditionalImages";
-import FileUpload from "../DashboardAddPost/DashboardForm/FileUpload";
 import CategorySelect from "../DashboardAddPost/DashboardForm/CategorySelect";
 import PublishSection from "../DashboardAddPost/DashboardForm/PublishSection";
 import ImageUpload from "../DashboardAddPost/DashboardForm/ImageUpload";
-import MediaUploadComponent from "../DashboardAddPost/DashboardForm/MediaUploadComponent";
+import AdvancedOptionsTab from "../DashboardAddPost/DashboardForm/AdvancedOptionsTab";
 import { useEffect, type ChangeEvent, useState } from "react";
 import axios from "axios";
 import { apiClient, getAuthToken } from "@/api/client";
 import { postsApi } from "@/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import ApiNotification from "../../../Common/ApiNotification";
 import { usePostReducer } from "../DashboardAddPost/DashboardForm/usePostReducer/usePostReducer";
 import type {
   ArticleInitialStateInterface,
@@ -22,6 +19,8 @@ import { postConfig } from "../DashboardAddPost/DashboardForm/usePostReducer/pos
 import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
 import Loader from "@/components/Common/Loader";
+import { useToast } from "@/components/Toast/ToastContainer";
+import { ChevronLeft, Layout, Settings, Loader2, Sparkles, Wand2 } from "lucide-react";
 
 interface TagResponse {
   data: {
@@ -31,6 +30,7 @@ interface TagResponse {
 
 export default function DashboardEditPost() {
   const { t } = useTranslation();
+  const toast = useToast();
   const location = useLocation();
   const navigate = useNavigate();
   const { postId } = useParams<{ postId: string }>();
@@ -39,6 +39,7 @@ export default function DashboardEditPost() {
   const [state, dispatch] = usePostReducer(type);
   const token = getAuthToken();
   const [isLoadingPost, setIsLoadingPost] = useState(true);
+  const [activeTab, setActiveTab] = useState<'main' | 'advanced'>('main');
 
   useEffect(() => {
     if (!type) {
@@ -70,7 +71,7 @@ export default function DashboardEditPost() {
         if (categorySlug && slug && type) {
           postData = await postsApi.getPostBySlug(categorySlug, slug, type);
         } else {
-          // Fallback to ID-based API (may not work for all post types)
+          // Fallback to ID-based API
           postData = await postsApi.getById(postId);
         }
 
@@ -80,22 +81,15 @@ export default function DashboardEditPost() {
         });
       } catch (error) {
         console.error("Failed to fetch post:", error);
-        setNotification({
-          type: "error",
-          message: "Failed to load post data"
-        });
+        toast.error(t('errors.failedToLoadPost') || "Failed to load post data");
       } finally {
         setIsLoadingPost(false);
       }
     };
 
     fetchPost();
-  }, [postId, location.state]);
+  }, [postId, location.state, type]);
 
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   type CustomChangeEvent =
@@ -139,7 +133,7 @@ export default function DashboardEditPost() {
     mutationFn: async () => {
       if (!postId) throw new Error("Post ID is required");
 
-      let payload: any = { ...state };
+      let payload: any = JSON.parse(JSON.stringify(state));
       const categoryId = payload.categoryId;
       if (!categoryId) throw new Error("categoryId missing");
       if (!type) throw new Error("Post type is required");
@@ -148,13 +142,9 @@ export default function DashboardEditPost() {
       if (!config) throw new Error(`Unknown post type: ${type}`);
 
       // Add the appropriate ID field based on post type
-      if (type === 'article') {
-        payload.articleId = postId;
-      } else if (type === 'video') {
-        payload.videoId = postId;
-      } else if (type === 'audio') {
-        payload.audioId = postId;
-      }
+      if (type === 'article') payload.articleId = postId;
+      else if (type === 'video') payload.videoId = postId;
+      else if (type === 'audio') payload.audioId = postId;
 
       // Map frontend field names to API field names
       if (payload.addToBreaking !== undefined) {
@@ -173,210 +163,38 @@ export default function DashboardEditPost() {
         payload.isRecommended = payload.addToRecommended;
         delete payload.addToRecommended;
       }
-      // Handle description field - map from summary if exists, otherwise keep description
-      if (payload.summary !== undefined) {
-        payload.description = payload.summary;
-      }
+      
+      if (payload.summary !== undefined) payload.description = payload.summary;
       delete payload.summary;
 
-      // Handle optionalURL vs optionalUrl (case sensitivity)
       if (payload.optionalURL !== undefined) {
         payload.optionalUrl = payload.optionalURL;
         delete payload.optionalURL;
       }
 
-      // Remove fields that shouldn't be sent to the API (read-only response fields)
-      delete payload.id;
-      delete payload.createdAt;
-      delete payload.updatedAt;
-      delete payload.createdBy;
-      delete payload.publishedAt;
-      delete payload.authorName;
-      delete payload.authorImage;
-      delete payload.ownerIsAuthor;
-      delete payload.categoryName;
-      delete payload.categorySlug;
-      delete payload.tags;
-      delete payload.likedByUsers;
-      delete payload.viewsCount;
-      delete payload.likesCount;
-      delete payload.isLikedByCurrentUser;
-      delete payload.postType;
-      delete payload.image; // Response field, not request field
-      delete payload.additionalImages; // Response field, not request field
-      delete payload.summary; // Already mapped to description
+      // Cleanup response-only fields
+      const readOnlyFields = ['id', 'createdAt', 'updatedAt', 'createdBy', 'publishedAt', 'authorName', 'authorImage', 'ownerIsAuthor', 'categoryName', 'categorySlug', 'tags', 'likedByUsers', 'viewsCount', 'likesCount', 'isLikedByCurrentUser', 'postType', 'image', 'additionalImages'];
+      readOnlyFields.forEach(f => delete payload[f]);
 
-      // Client-side validation for articles - imageUrl cannot be null
-      if (type === "article" && payload.imageUrl === null) {
-        payload.imageUrl = "";
-      }
+      if (type === "article" && payload.imageUrl === null) payload.imageUrl = "";
+      if (!payload.metaDescription) payload.metaDescription = "";
+      if (!payload.metaKeywords) payload.metaKeywords = "";
+      
+      payload.authorId = null; // System preference
 
-      // Handle imageDescription - API expects null or string, not array
-      if (payload.imageDescription && Array.isArray(payload.imageDescription)) {
-        payload.imageDescription = payload.imageDescription.length > 0 ? payload.imageDescription[0] : null;
-      }
-      if (payload.imageDescription === "") {
-        payload.imageDescription = null;
-      }
+      if (type === "video" && "imageUrl" in payload) payload.videoThumbnailUrl = payload.imageUrl || null;
+      if (type === "audio" && "imageUrl" in payload) payload.thumbnailUrl = payload.imageUrl || null;
 
-      // Ensure required string fields are not null
-      // metaDescription and metaKeywords must be empty strings, not null
-      if (payload.slug === "") {
-        payload.slug = null;
-      }
-      if (!payload.metaDescription || payload.metaDescription === null) {
-        payload.metaDescription = "";
-      }
-      if (!payload.metaKeywords || payload.metaKeywords === null) {
-        payload.metaKeywords = "";
-      }
-      if (payload.description === "") {
-        payload.description = "";
-      }
-      if (payload.content === "") {
-        payload.content = "";
-      }
-
-      // Handle authorId - set to null to use current user as author
-      // This prevents 403 errors when the authorId doesn't have the Author role
-      payload.authorId = null;
-
-      // Client-side validation for video posts
-      const hasVideoUrl = payload.videoUrl && payload.videoUrl.trim() !== '';
-      const hasVideoFiles = payload.videoFileUrls && Array.isArray(payload.videoFileUrls) &&
-        payload.videoFileUrls.some((url: string) => url && url.trim() !== '');
-      const hasEmbedCode = payload.videoEmbedCode && payload.videoEmbedCode.trim() !== '';
-
-      if (type === "video" && !hasVideoUrl && !hasVideoFiles && !hasEmbedCode) {
-        const validationError = new Error("Please provide at least one video source: Video URL, video file, or embed code");
-        (validationError as any).isAxiosError = true;
-        (validationError as any).response = {
-          status: 422,
-          data: {
-            errors: {
-              VideoUrl: ["Please provide at least one video source: Video URL, video file, or embed code"]
-            },
-            message: "Please provide at least one video source: Video URL, video file, or embed code"
-          }
-        };
-        throw validationError;
-      }
-
-      // Client-side validation for audio posts
-      if (type === "audio" && !payload.audioUrl && !payload.audioFileUrls?.length) {
-        const validationError = new Error("Audio URL or audio file is required");
-        (validationError as any).isAxiosError = true;
-        (validationError as any).response = {
-          status: 422,
-          data: {
-            errors: {
-              AudioUrl: ["Audio URL or audio file is required"]
-            },
-            message: "Audio URL or audio file is required"
-          }
-        };
-        throw validationError;
-      }
-
-      // For video posts, copy imageUrl to videoThumbnailUrl
-      if (type === "video" && "imageUrl" in payload) {
-        payload = {
-          ...payload,
-          videoThumbnailUrl: payload.imageUrl || null,
-        };
-      }
-
-      // For audio posts, copy imageUrl to thumbnailUrl
-      if (type === "audio" && "imageUrl" in payload) {
-        payload = {
-          ...payload,
-          thumbnailUrl: payload.imageUrl || null,
-        };
-      }
-
-      // Clean up empty strings from array fields
-      if (payload.additionalImageUrls) {
-        payload.additionalImageUrls = payload.additionalImageUrls.filter((url: string) => url && url.trim() !== '');
-        if (payload.additionalImageUrls.length === 0) {
-          payload.additionalImageUrls = null;
-        }
-      }
-
-      if (payload.fileUrls) {
-        payload.fileUrls = payload.fileUrls.filter((url: string) => url && url.trim() !== '');
-        if (payload.fileUrls.length === 0) {
-          payload.fileUrls = null;
-        }
-      }
-
-      if (payload.videoFileUrls) {
-        payload.videoFileUrls = payload.videoFileUrls.filter((url: string) => url && url.trim() !== '');
-        if (payload.videoFileUrls.length === 0) {
-          payload.videoFileUrls = null;
-        }
-      }
-
-      if (payload.audioFileUrls) {
-        payload.audioFileUrls = payload.audioFileUrls.filter((url: string) => url && url.trim() !== '');
-        if (payload.audioFileUrls.length === 0) {
-          payload.audioFileUrls = null;
-        }
-      }
-
-      // Clean up empty strings in tagIds array
-      // Backend expects array or field to be omitted, not null
-      if (payload.tagIds) {
-        payload.tagIds = payload.tagIds.filter((id: string) => id && id.trim() !== '');
-        if (payload.tagIds.length === 0) {
-          delete payload.tagIds;
-        }
-      } else if (payload.tagIds === null) {
-        delete payload.tagIds;
-      }
-
-      // Clean up empty string values for single URL fields
-      if (type === "video") {
-        if (payload.videoThumbnailUrl === '') {
-          payload.videoThumbnailUrl = null;
-        }
-        if (payload.videoUrl === '') {
-          payload.videoUrl = null;
-        }
-      }
-
-      if (type === "audio") {
-        if (payload.thumbnailUrl === '') {
-          payload.thumbnailUrl = null;
-        }
-        if (payload.audioUrl === '') {
-          payload.audioUrl = null;
-        }
-      }
-
-      // For articles, keep imageUrl as empty string if not provided
-      if (type !== "article" && payload.imageUrl === '') {
-        payload.imageUrl = null;
-      }
-
-      // Log the cleaned payload for debugging
-      console.log('Cleaned payload being sent to API:', payload);
-
-      // Use the generic update method for all post types
       const response = await postsApi.updatePost(categoryId, postId, type, payload);
       return response;
     },
     onSuccess: (data) => {
-      const msg =
-        (data && (data.message || data.title)) ?? t('success.articleUpdated');
+      const msg = (data && (data.message || data.title)) ?? t('success.articleUpdated');
       setFieldErrors({});
-      setNotification({ type: "success", message: String(msg) });
-
-      // Redirect to posts list after 2 seconds
-      setTimeout(() => {
-        navigate('/admin/posts/all');
-      }, 2000);
+      toast.success(String(msg));
+      setTimeout(() => navigate('/admin/posts/all'), 1500);
     },
-    onError: (error: unknown) => {
+    onError: (error: any) => {
       console.error("Post update error:", error);
       let message = t('errors.failedToUpdatePost');
       const errors: Record<string, string[]> = {};
@@ -384,177 +202,174 @@ export default function DashboardEditPost() {
       if (axios.isAxiosError(error)) {
         const d = error.response?.data;
         const status = error.response?.status;
-        console.error("API Error Response:", { status, data: d });
 
-        // Handle 401 Unauthorized
         if (status === 401) {
-          message = t('common.sessionExpired');
-          setNotification({ type: "error", message });
-          setTimeout(() => {
-            navigate('/login');
-          }, 2000);
+          toast.error(t('common.sessionExpired'));
+          navigate('/login');
           return;
         }
 
-        // Handle 403 Forbidden (Author role issue)
-        if (status === 403) {
-          if (d?.title && d.title.includes('Author role')) {
-            message = "The selected author does not have the Author role. Please select a valid author or leave it empty to use your account.";
-          } else {
-            message = d?.title || "You don't have permission to perform this action";
-          }
-        }
-
-        // Handle 500 Internal Server Error
-        else if (status === 500) {
-          // Check for specific ArgumentNullException related to tagIds
-          if (d?.detail && d.detail.includes('Value cannot be null')) {
-            message = t('errors.serverError') + ': ' + (d.detail || 'Unknown error');
-          } else {
-            message = d?.title || d?.detail || t('errors.serverError');
-          }
-        }
-
-        // Handle validation errors (422)
-        else if (status === 422 && d?.errors) {
-          // Extract field-level errors from API response
+        if (status === 422 && d?.errors) {
           if (typeof d.errors === 'object') {
-            const errorMessages: string[] = [];
             Object.entries(d.errors).forEach(([field, messages]) => {
-              const normalizedField = field.toLowerCase();
-              if (Array.isArray(messages)) {
-                errors[normalizedField] = messages;
-                // Add to error messages for notification (without field prefix)
-                messages.forEach(msg => errorMessages.push(msg));
-              } else if (typeof messages === 'string') {
-                errors[normalizedField] = [messages];
-                errorMessages.push(messages);
-              }
+              errors[field.toLowerCase()] = Array.isArray(messages) ? messages : [String(messages)];
             });
-            // Show all validation errors in the notification
-            if (errorMessages.length > 0) {
-              message = errorMessages.join('\n');
-            }
+            message = Object.values(errors).flat().join('\n') || t('errors.validationErrors');
           }
+        } else {
+          message = d?.title || d?.message || error.message;
         }
-        // Check for title first (general error message)
-        else if (d?.title) message = String(d.title);
-        else if (d?.message) message = String(d.message);
-        else if (d?.detail) message = String(d.detail);
-        else message = error.message;
-      } else if (error instanceof Error) {
+      } else {
         message = error.message;
       }
 
       setFieldErrors(errors);
-      setNotification({ type: "error", message });
+      toast.error(message);
     },
   });
 
   if (isLoadingPost) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader />
+      <div className="flex-1 flex flex-col items-center justify-center bg-surface">
+        <Loader2 size={48} className="text-primary animate-spin mb-4" />
+        <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Hydrating Form Data...</p>
       </div>
     );
   }
 
   return (
-    <>
-      {notification && (
-        <ApiNotification
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
-      )}
-
-      <form
-        className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6"
-        onSubmit={(e) => {
-          e.preventDefault();
-          mutation.mutate();
-        }}
-      >
-        <FormHeader type={type} isEditMode={true} />
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
-          <div className="grow space-y-4 md:space-y-6">
-            {/* left column */}
-            <PostDetailsForm
-              type={type}
-              state={state}
-              handleChange={handleChange}
-              tags={tags?.data.items ?? []}
-              isLoading={isLoadingTags}
-              fieldErrors={fieldErrors}
-            />
-            <ContentEditor
-              state={state as ArticleInitialStateInterface}
-              handleChange={handleChange}
-              errors={fieldErrors}
-            />
+    <div className="flex-1 flex flex-col min-h-0 bg-surface">
+      {/* Header Area */}
+      <div className="p-4 sm:p-6 border-b border-slate-200 bg-white sticky top-0 z-20 shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all border border-slate-200/50"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div>
+              <FormHeader type={type} isEditMode={true} />
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded border border-primary/10 tracking-widest uppercase">
+                  ID: {postId?.slice(-6)}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Revision Mode
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="w-full lg:w-80 lg:shrink-0 space-y-4 md:space-y-6">
-            {/* right column */}
-            <ImageUpload
-              state={state}
-              handleChange={handleChange}
-              type={type}
-              fieldErrors={fieldErrors}
-            />
-            {!["audio", "video"].includes(
-              type || ""
-            ) && (
-                <>
-                  <AdditionalImages handleChange={handleChange} fieldErrors={fieldErrors} />
-                  <FileUpload handleChange={handleChange} fieldErrors={fieldErrors} />
-                </>
-              )}
-            {type === "video" && (
-              <MediaUploadComponent
-                mediaType="video"
-                onMediaSelect={(media) => {
-                  handleChange({
-                    target: {
-                      name: "videoUrl",
-                      value: media.url,
-                      type: "text",
-                    },
-                  } as any);
-                }}
-              />
-            )}
-            {type === "audio" && (
-              <MediaUploadComponent
-                mediaType="audio"
-                onMediaSelect={(media) => {
-                  handleChange({
-                    target: {
-                      name: "audioUrl",
-                      value: media.url,
-                      type: "text",
-                    },
-                  } as any);
-                }}
-              />
-            )}
-            <CategorySelect
-              handleChange={handleChange}
-              categories={categories?.data ?? []}
-              isLoading={isLoadingCategories}
-              value={state.categoryId}
-              errors={fieldErrors}
-            />
-            <PublishSection
-              mutation={mutation}
-              isEditMode={true}
-              state={state}
-              handleChange={handleChange}
-              fieldErrors={fieldErrors}
-            />
-          </div>
+          
+          {/* Tab Switcher */}
+          {type !== "reel" && (
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/50">
+              <button
+                type="button"
+                onClick={() => setActiveTab('main')}
+                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'main' 
+                    ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Layout size={14} className={activeTab === 'main' ? 'text-primary' : ''} />
+                {t('post.mainOptions')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('advanced')}
+                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'advanced' 
+                    ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Settings size={14} className={activeTab === 'advanced' ? 'text-primary' : ''} />
+                {t('post.advancedOptions')}
+              </button>
+            </div>
+          )}
         </div>
-      </form>
-    </>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <form
+          className="max-w-7xl mx-auto"
+          onSubmit={(e) => {
+            e.preventDefault();
+            mutation.mutate();
+          }}
+        >
+          {activeTab === 'main' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column - Main Content */}
+              <div className="lg:col-span-8 space-y-6">
+                <PostDetailsForm
+                  type={type}
+                  state={state}
+                  handleChange={handleChange}
+                  fieldErrors={fieldErrors}
+                />
+                <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200">
+                   <ContentEditor
+                     state={state as ArticleInitialStateInterface}
+                     handleChange={handleChange}
+                     errors={fieldErrors}
+                   />
+                </div>
+              </div>
+
+              {/* Right Column - Sidebar Settings */}
+              <div className="lg:col-span-4 space-y-6">
+                <CategorySelect
+                  handleChange={handleChange}
+                  categories={categories?.data ?? []}
+                  isLoading={isLoadingCategories}
+                  value={state.categoryId}
+                  errors={fieldErrors}
+                  language={state.language}
+                />
+                <ImageUpload
+                  state={state}
+                  handleChange={handleChange}
+                  type={type}
+                  fieldErrors={fieldErrors}
+                />
+                <PublishSection
+                  mutation={mutation}
+                  isEditMode={true}
+                  state={state}
+                  handleChange={handleChange}
+                  fieldErrors={fieldErrors}
+                />
+
+                <div className="bg-white/50 backdrop-blur-sm p-6 rounded-[2rem] border border-slate-200 border-dashed text-center">
+                   <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Sparkles className="text-primary w-6 h-6" />
+                   </div>
+                   <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">Global Sync</h4>
+                   <p className="text-[10px] text-slate-500 font-medium mt-1 leading-relaxed">
+                     Updating this record will synchronize changes across all CDN edges instantly.
+                   </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="animate-in fade-in duration-500">
+               <AdvancedOptionsTab
+                 type={type}
+                 state={state as ArticleInitialStateInterface}
+                 handleChange={handleChange}
+                 tags={tags?.data.items ?? []}
+                 isLoading={isLoadingTags}
+                 fieldErrors={fieldErrors}
+               />
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
   );
 }

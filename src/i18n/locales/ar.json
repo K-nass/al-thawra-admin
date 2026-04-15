@@ -86,6 +86,8 @@
     "goBack": "العودة",
     "noMoreData": "لا يوجد المزيد من البيانات",
     "createReel": "إنشاء فيديو ريلز",
+    "published": "منشور",
+    "draft": "مسودة"
     "retry": "إعادة المحاولة"
   },
   "app": {
@@ -96,6 +98,9 @@
     "addPost": "إضافة مقال",
     "posts": "المقالات",
     "postDetails": "تفاصيل المقال",
+    "mainOptions": "الخيارات الرئيسية",
+    "advancedOptions": "الخيارات المتقدمة",
+    "sliderMutualExclusionNote": "ملاحظة: مقالات السلايدر يمكن أن تكون إما مميزة أو موصى بها، وليس كلاهما. عند تحديد واحدة، سيتم إلغاء تحديد الأخرى تلقائياً.",
     "title": "العنوان",
     "slug": "الرابط الودود",
     "slugHint": "إذا تركته فارغاً، سيتم إنشاؤه تلقائياً.",
@@ -111,6 +116,7 @@
     "imageDescription": "وصف الصورة",
     "additionalImages": "صور إضافية",
     "publish": "نشر",
+    "visibilityAndScheduling": "الرؤية والجدولة",
     "publishPost": "إرسال",
     "saveAsDraft": "حفظ كمسودة",
     "scheduledPost": "مقال مجدول",
@@ -165,7 +171,6 @@
   },
   "contentTypes": {
     "article": "مقال",
-    "articleDesc": "مقال يحتوي على صور وفيديوهات مدمجة",
     "articleDesc": "مقال يحتوي على صور وفيديوهات مدمجة",
     "video": "فيديو",
     "videoDesc": "تحميل أو تضمين مقاطع الفيديو",
@@ -223,7 +228,8 @@
     "enterVideoURL": "أدخل رابط الفيديو",
     "videoEmbedCode": "كود تضمين الفيديو",
     "audioEmbedCode": "كود تضمين الصوت",
-    "pasteVideoEmbedCode": "الصق كود تضمين الفيديو هنا..."
+    "pasteVideoEmbedCode": "الصق كود تضمين الفيديو هنا...",
+    "status": "الحالة"
   },
   "roles": {
     "rolesAndPermissions": "الأدوار والصلاحيات",

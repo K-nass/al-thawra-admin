@@ -10,7 +10,13 @@ interface ContentEditorProps {
 
 export default function ContentEditor({ state, handleChange, errors = {} }: ContentEditorProps) {
   return (
-    <div className="border border-gray-200 rounded-md overflow-hidden" data-error-field={errors.content ? true : undefined}>
+    <div className="space-y-1.5" data-error-field={errors.content ? true : undefined}>
+      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+        Content <span className="text-rose-500 ml-1 font-bold">*</span>
+      </label>
+      <div className={`border rounded-2xl overflow-hidden transition-all ${
+        errors.content ? 'border-rose-200 ring-4 ring-rose-500/5' : 'border-slate-200'
+      }`}>
       <Editor
         apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
         value={state.content}
@@ -33,12 +39,13 @@ export default function ContentEditor({ state, handleChange, errors = {} }: Cont
           uploadcare_public_key: import.meta.env.VITE_UPLOADCARE_PUBLIC_KEY,
         }}
       />
+      </div>
       {errors.content && (
-        <ul className="mt-1 px-4 pb-2 space-y-1 bg-red-50">
+        <div className="mt-2 space-y-1 ml-1">
           {errors.content.map((error, idx) => (
-            <li key={idx} className="text-red-600 text-xs">• {error}</li>
+            <p key={idx} className="text-rose-500 text-[10px] font-black uppercase tracking-tight">{error}</p>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

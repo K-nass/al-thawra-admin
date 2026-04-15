@@ -11,13 +11,13 @@ import DashboardReels from "./components/Admin/Dashboard/DashboardReels/Dashboar
 import DashboardEditReel from "./components/Admin/Dashboard/DashboardReels/DashboardEditReel";
 import DashboardTags from "./components/Admin/Dashboard/DashboardTags/DashboardTags";
 import TagForm from "./components/Admin/Dashboard/DashboardTags/TagForm";
-import PageForm from "./components/Admin/Dashboard/DashboardPages/PageForm";
 import Magazines from "./components/Admin/Magazines/Magazines";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
+import { SidebarProvider } from "./contexts/SidebarContext";
 import { getAuthToken } from "./api/client";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
 import Roles from "./components/Admin/Dashboard/Roles/Roles";
@@ -66,7 +66,7 @@ export const routes = createBrowserRouter([
       },
       {
         path: "admin",
-        element: <AdminProtectedRoute><ErrorBoundary><DashboardLayout /></ErrorBoundary></AdminProtectedRoute>,
+        element: <AdminProtectedRoute><ErrorBoundary><SidebarProvider><DashboardLayout /></SidebarProvider></ErrorBoundary></AdminProtectedRoute>,
         children: [
           { index: true, element: <DashboardHome /> },
           { path: "post-format", element: <DashboardAddPost /> },
@@ -76,9 +76,6 @@ export const routes = createBrowserRouter([
           { path: "posts/slider-posts", element: <DashboardPosts label="Slider Posts" /> },
           { path: "posts/featured-posts", element: <DashboardPosts label="Featured Posts" /> },
           { path: "posts/breaking-news", element: <DashboardPosts label="Breaking News" /> },
-          { path: "pages", element: <DashboardPosts label="pages" /> },
-          { path: "add-page", element: <PageForm /> },
-          { path: "edit-page/:id", element: <PageForm /> },
           { path: "magazines", element: <Magazines /> },
           { path: "roles-permissions", element: <Roles /> },
 

@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faPencil, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { ChevronDown, Pencil, Plus, Trash2 as Trash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface PostActionsDropdownProps {
@@ -55,9 +54,8 @@ export default function PostActionsDropdown({
         className="flex items-center space-x-1 px-4 py-2 text-sm font-medium bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-all duration-200 shadow-sm hover:shadow-md"
       >
         <span>{t('common.manage')}</span>
-        <FontAwesomeIcon
-          icon={faChevronDown}
-          className={`text-xs transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        <ChevronDown
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -69,7 +67,7 @@ export default function PostActionsDropdown({
             onClick={() => handleAction(onEdit)}
             className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faPencil} className="text-slate-600 w-4" />
+            <Pencil className="text-slate-600 w-4 h-4" />
             <span>{t('common.edit')}</span>
           </button>
 
@@ -81,7 +79,7 @@ export default function PostActionsDropdown({
             onClick={() => handleAction(onAddToSlider)}
             className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faPlus} className="text-slate-600 w-4" />
+            <Plus className="text-slate-600 w-4 h-4" />
             <span>{t('formLabels.addToSlider')}</span>
           </button>
 
@@ -90,7 +88,7 @@ export default function PostActionsDropdown({
             onClick={() => handleAction(onAddToFeatured)}
             className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faPlus} className="text-slate-600 w-4" />
+            <Plus className="text-slate-600 w-4 h-4" />
             <span>{t('formLabels.addToFeatured')}</span>
           </button>
 
@@ -99,7 +97,7 @@ export default function PostActionsDropdown({
             onClick={() => handleAction(onAddToBreaking)}
             className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faPlus} className="text-slate-600 w-4" />
+            <Plus className="text-slate-600 w-4 h-4" />
             <span>{t('formLabels.addToBreaking')}</span>
           </button>
 
@@ -108,7 +106,7 @@ export default function PostActionsDropdown({
             onClick={() => handleAction(onAddToRecommended)}
             className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faPlus} className="text-slate-600 w-4" />
+            <Plus className="text-slate-600 w-4 h-4" />
             <span>{t('formLabels.addToRecommended')}</span>
           </button>
 
@@ -120,7 +118,7 @@ export default function PostActionsDropdown({
             onClick={() => handleAction(onDelete)}
             className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faTrash} className="text-red-600 w-4" />
+            <Trash className="text-red-600 w-4 h-4" />
             <span>{t('common.delete')}</span>
           </button>
         </div>

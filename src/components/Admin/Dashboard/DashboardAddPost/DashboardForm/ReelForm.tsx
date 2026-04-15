@@ -2,8 +2,7 @@ import type { ReelInitialStateInterface } from "./usePostReducer/postData";
 import type { TagInterface } from "./PostDetailsForm";
 import MediaUploadComponent from "./MediaUploadComponent";
 import ImageUpload from "./ImageUpload";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { X, Tag, MessageSquare, Loader2, Plus, Hash } from "lucide-react";
 import { useState } from "react";
 import { apiClient } from "@/api/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -18,23 +17,15 @@ interface ReelFormProps {
 
 export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoading }: ReelFormProps) {
     const queryClient = useQueryClient();
-    // EXACT same tag logic as PostDetailsForm
     const [selectedTags, setSelectedTags] = useState<{ id: string; name: string }[]>([]);
     const [inputValue, setInputValue] = useState("");
 
-    // use react-query mutation to create tags on server
     const createTagMutation = useMutation({
         mutationFn: async (name: string) => {
             const payload = {
-                tags: [
-                    {
-                        name,
-                        language: "English",
-                    },
-                ],
+                tags: [{ name, language: "English" }],
             };
             const res = await apiClient.post(`/tags`, payload);
-            // according to your example the API returns an array of created tags
             return res.data as Array<{ id: string; name: string; language?: string }>;
         },
         onSuccess: () => {
@@ -42,7 +33,6 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
         },
     });
 
-    // adds an existing tag (from tags list) by id
     const handleAddExistingTag = (tag: TagInterface) => {
         if (selectedTags.find((t) => t.id === tag.id)) return;
         const newSelected = [...selectedTags, { id: tag.id, name: tag.name }];
@@ -53,10 +43,8 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
         setInputValue("");
     };
 
-    // adds a tag typed by the user: create it on server then add
     const handleAddTag = async (tagName: string) => {
         if (!tagName) return;
-        // if an existing tag with same name exists, add that one
         const existing = tags.find((t) => t.name.toLowerCase() === tagName.toLowerCase());
         if (existing) {
             handleAddExistingTag(existing);
@@ -65,7 +53,6 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
 
         try {
             const created = await createTagMutation.mutateAsync(tagName);
-            // created is expected to be an array; pick first created item's id
             const createdItem = Array.isArray(created) ? created[0] : created;
             const createdId: string | undefined = createdItem?.id;
             if (!createdId) throw new Error("Tag creation returned no id");
@@ -98,126 +85,157 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
     };
 
     return (
-        <div className="space-y-6">
-            {/* Video Upload - Use existing MediaUploadComponent */}
-            <MediaUploadComponent
-                mediaType="video"
-                forcedMediaType="Reel"
-                hideUrlTab={true}
-                hideEmbedCode={true}
-                onMediaSelect={(media) => {
-                    handleChange({
-                        target: {
-                            name: "videoUrl",
-                            value: media.url,
-                            type: "text",
-                        },
-                    });
-                }}
-            />
-
-            {/* Thumbnail Upload - Use existing ImageUpload */}
-            <ImageUpload
-                state={{
-                    ...state,
-                    imageUrl: state.thumbnailUrl || "",
-                    imageDescription: null,
-                } as any}
-                handleChange={(e: any) => {
-                    // Map imageUrl to thumbnailUrl
-                    if (e.target.name === "imageUrl") {
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex items-center gap-2 mb-2 ml-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Reel Resources</p>
+                <span className="text-rose-500 font-bold">*</span>
+            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <MediaUploadComponent
+                    mediaType="video"
+                    forcedMediaType="Reel"
+                    hideUrlTab={true}
+                    hideEmbedCode={true}
+                    onMediaSelect={(media) => {
                         handleChange({
-                            target: {
-                                name: "thumbnailUrl",
-                                value: e.target.value,
-                                type: "text",
-                            },
+                            target: { name: "videoUrl", value: media.url, type: "text" },
                         });
-                    }
-                }}
-                type="video"
-                fieldErrors={fieldErrors}
-            />
+                    }}
+                />
+
+                <ImageUpload
+                    state={{
+                        ...state,
+                        imageUrl: state.thumbnailUrl || "",
+                        imageDescription: null,
+                    } as any}
+                    handleChange={(e: any) => {
+                        if (e.target.name === "imageUrl") {
+                            handleChange({
+                                target: { name: "thumbnailUrl", value: e.target.value, type: "text" },
+                            });
+                        }
+                    }}
+                    type="video"
+                    fieldErrors={fieldErrors}
+                />
+            </div>
 
             {/* Caption Section */}
-            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200">
-                <h3 className="text-base sm:text-lg font-semibold border-b border-slate-200 pb-3 sm:pb-4 mb-4 sm:mb-6">
-                    Caption
-                </h3>
-                <div data-error-field={fieldErrors.caption ? true : undefined}>
-                    <textarea
-                        name="caption"
-                        value={state.caption || ""}
-                        onChange={handleChange}
-                        placeholder="Enter a caption for your reel..."
-                        rows={4}
-                        className={`w-full bg-slate-50 border rounded focus:ring-primary focus:border-primary p-2 resize-none ${
-                            fieldErrors.caption ? 'border-red-500' : 'border-slate-300'
-                        }`}
-                    />
-                    {fieldErrors.caption && (
-                        <p className="text-red-500 text-xs mt-1">{fieldErrors.caption[0]}</p>
-                    )}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                        <MessageSquare size={16} className="text-primary" />
+                        Reel Caption <span className="text-rose-500">*</span>
+                    </h3>
+                </div>
+                <div className="p-6">
+                    <div className="space-y-1.5 flex flex-col" data-error-field={fieldErrors.caption ? true : undefined}>
+                        <textarea
+                            name="caption"
+                            value={state.caption || ""}
+                            onChange={handleChange}
+                            placeholder="Hook your audience with a catchy caption..."
+                            rows={4}
+                            className={`w-full px-4 py-3 bg-slate-50 border rounded-2xl text-sm focus:outline-none focus:ring-2 transition-all font-medium leading-relaxed resize-none ${
+                                fieldErrors.caption ? 'border-rose-300 focus:ring-rose-100' : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
+                            }`}
+                        />
+                        {fieldErrors.caption && (
+                            <p className="px-1 text-[11px] font-semibold text-rose-500 mt-1 flex items-center gap-1.5">
+                                <span className="w-1 h-1 rounded-full bg-rose-500" /> {fieldErrors.caption[0]}
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Tags Section - EXACT same as PostDetailsForm */}
-            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-slate-200">
-                <h3 className="text-base sm:text-lg font-semibold border-b border-slate-200 pb-3 sm:pb-4 mb-4 sm:mb-6">
-                    Tags
-                </h3>
+            {/* Tags Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
+                        <Tag size={16} className="text-primary" />
+                        Discovery Tags
+                    </h3>
+                </div>
 
-                <div data-error-field={fieldErrors.tags ? true : undefined}>
-                    <label className="block text-sm font-medium mb-1" htmlFor="tags">
-                        Tags
-                    </label>
+                <div className="p-6 space-y-6">
+                    <div className="space-y-4" data-error-field={fieldErrors.tags ? true : undefined}>
+                        <div className={`p-4 bg-slate-50 border rounded-2xl transition-all ${fieldErrors.tags ? 'border-rose-300 ring-4 ring-rose-50' : 'border-slate-200 focus-within:ring-4 focus-within:ring-primary/5 focus-within:border-primary/30'}`}>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {selectedTags.map((tag) => (
+                                    <span
+                                        key={tag.id}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg shadow-sm animate-in zoom-in-95 duration-200"
+                                    >
+                                        <Hash size={12} />
+                                        {tag.name}
+                                        <button 
+                                            type="button"
+                                            onClick={() => handleRemoveTag(tag.id)}
+                                            className="ml-1 hover:bg-white/20 rounded p-0.5 transition-colors"
+                                        >
+                                            <X size={12} />
+                                        </button>
+                                    </span>
+                                ))}
+                                <div className="flex-1 min-w-[200px] relative">
+                                    <input
+                                        className="w-full bg-transparent outline-none p-1 text-sm font-medium text-slate-700 placeholder:text-slate-400"
+                                        id="tags"
+                                        name="tags"
+                                        placeholder="Add tag and hit Enter..."
+                                        type="text"
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onKeyDown={handleInputKeyDown}
+                                    />
+                                    {createTagMutation.isPending && (
+                                        <Loader2 size={14} className="absolute right-0 top-1/2 -translate-y-1/2 animate-spin text-primary" />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
 
-                    <div className={`flex flex-wrap items-center gap-2 border p-2 sm:p-3 rounded bg-slate-50 ${fieldErrors.tags ? 'border-red-500' : ''
-                        }`}>
-                        {selectedTags.map((tag) => (
-                            <span
-                                key={tag.id}
-                                className="bg-primary px-2 py-1 rounded cursor-pointer"
-                                title="Click to remove"
-                            >
-                                {tag.name}
-                                <FontAwesomeIcon icon={faXmark} className="ml-1 text-sm hover:text-red-400" onClick={() => handleRemoveTag(tag.id)} />
-                            </span>
-                        ))}
-
-                        <input
-                            className="flex-1 bg-transparent outline-none p-1"
-                            id="tags"
-                            name="tags"
-                            placeholder="Type tag and hit Enter"
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyDown={handleInputKeyDown}
-                        />
+                        {/* Recent/Popular Tags */}
+                        <div className="space-y-3">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-1">Recent Tags</p>
+                            <div className="flex flex-wrap gap-2">
+                                {isLoading ? (
+                                    <div className="flex gap-2">
+                                        {[1,2,3].map(i => <div key={i} className="h-8 w-16 bg-slate-100 rounded-lg animate-pulse" />)}
+                                    </div>
+                                ) : (
+                                    tags.slice(0, 15).map((tag) => {
+                                        const isSelected = selectedTags.find((t) => t.id === tag.id);
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={tag.id}
+                                                disabled={!!isSelected}
+                                                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all border flex items-center gap-1.5 active:scale-95 ${
+                                                    isSelected
+                                                        ? "bg-emerald-50 border-emerald-100 text-emerald-600 opacity-60"
+                                                        : "bg-white border-slate-200 text-slate-600 hover:border-primary hover:text-primary hover:bg-primary/5"
+                                                }`}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleAddExistingTag(tag);
+                                                }}
+                                            >
+                                                {!isSelected && <Plus size={12} />}
+                                                {tag.name}
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+                        
+                        {fieldErrors.tags && (
+                            <p className="text-rose-500 text-[11px] font-bold mt-1 px-1">{fieldErrors.tags}</p>
+                        )}
                     </div>
-
-                    <div className="mt-2 sm:mt-3 flex flex-wrap gap-2">
-                        {tags.map((tag) => (
-                            <button
-                                type="button"
-                                key={tag.id}
-                                className={`px-2 sm:px-3 py-1.5 sm:p-2 text-sm sm:text-base rounded font-semibold cursor-pointer ${selectedTags.find((t) => t.id === tag.id)
-                                    ? "bg-green-500 text-white"
-                                    : "bg-gray-300 text-black hover:bg-gray-400"
-                                    }`}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleAddExistingTag(tag);
-                                }}
-                            >
-                                {tag.name}
-                            </button>
-                        ))}
-                    </div>
-                    {fieldErrors.tags && (
-                        <p className="text-red-500 text-xs mt-1">{fieldErrors.tags}</p>
-                    )}
                 </div>
             </div>
         </div>

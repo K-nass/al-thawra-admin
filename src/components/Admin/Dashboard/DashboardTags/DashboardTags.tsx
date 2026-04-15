@@ -5,15 +5,24 @@ import { tagsApi } from "@/api/tags.api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/components/Toast/ToastContainer";
 import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-    faPlus,
-    faEdit,
-    faTrash,
-    faSearch,
-    faSpinner,
-    faTags,
-} from "@fortawesome/free-solid-svg-icons";
+import { 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  Search, 
+  Hash,
+  Globe2,
+  FileText,
+  Loader2,
+  TrendingUp,
+  Tag as TagIcon,
+  Filter,
+  Activity,
+  ChevronRight
+} from "lucide-react";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function DashboardTags() {
     const navigate = useNavigate();
@@ -28,7 +37,7 @@ export default function DashboardTags() {
     const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
 
     // Fetch tags
-    const { data: tagResponse, isLoading } = useQuery({
+    const { data: tagResponse, isLoading, isError, error } = useQuery({
         queryKey: ["tags", languageFilter, searchTerm, pageNumber, pageSize],
         queryFn: () =>
             tagsApi.getAll({
@@ -44,10 +53,11 @@ export default function DashboardTags() {
         mutationFn: (id: string) => tagsApi.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["tags"] });
-            toast.success(t("tags.deleteSuccess"));
+            toast.success(t("tags.deleteSuccess") || "Tag deleted successfully");
+            setDeleteConfirm(null);
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || t("tags.deleteError"));
+            toast.error(error.response?.data?.message || t("tags.deleteError") || "Failed to delete tag");
         },
     });
 
@@ -58,194 +68,186 @@ export default function DashboardTags() {
     const confirmDelete = () => {
         if (deleteConfirm) {
             deleteMutation.mutate(deleteConfirm.id);
-            setDeleteConfirm(null);
         }
     };
 
     return (
-        <div className="p-6">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl">
-                        <FontAwesomeIcon icon={faTags} />
-                    </div>
+        <div className="flex-1 flex flex-col min-h-0 bg-slate-50/50">
+            <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
+                {/* Header - Premium Alignment */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-800">
+                        <div className="flex items-center gap-2 mb-2">
+                           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                              <Hash size={16} />
+                           </div>
+                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Metadata Index</span>
+                        </div>
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tight">
                             {t("tags.title")}
                         </h1>
-                        <p className="text-sm text-gray-500">Manage your portal tags and keywords</p>
+                        <p className="text-sm text-slate-500 mt-2 font-medium max-w-xl">
+                            Curate and scale your portal's taxonomy keywords for high-precision content discovery.
+                        </p>
                     </div>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => navigate("/admin/add-tag")}
-                    className="px-4 py-2 bg-[#605CA8] text-white rounded-lg hover:bg-[#4a478a] transition-colors flex items-center gap-2 w-fit shadow-sm"
-                >
-                    <FontAwesomeIcon icon={faPlus} />
-                    {t("tags.addTag")}
-                </button>
-            </div>
-
-            {/* Filters */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Search */}
-                    <div className="relative">
-                        <FontAwesomeIcon
-                            icon={faSearch}
-                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                        />
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setPageNumber(1);
-                            }}
-                            placeholder={t("tags.searchPlaceholder")}
-                            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                        />
-                    </div>
-
-                    {/* Language Filter */}
-                    <select
-                        value={languageFilter}
-                        onChange={(e) => {
-                            setLanguageFilter(e.target.value);
-                            setPageNumber(1);
-                        }}
-                        className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    <button
+                        type="button"
+                        onClick={() => navigate("/admin/add-tag")}
+                        className="inline-flex items-center justify-center px-6 py-3.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-slate-200 hover:bg-primary hover:shadow-primary/20 transition-all duration-300 gap-3 group active:scale-95"
                     >
-                        <option value="all">{t("tags.allLanguages")}</option>
-                        <option value="English">{t("formLabels.english")}</option>
-                        <option value="Arabic">{t("formLabels.arabic")}</option>
-                    </select>
+                        <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
+                        {t("tags.addTag")}
+                    </button>
                 </div>
-            </div>
 
-            {/* Tags Table */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+                {/* Filters Card - Premium Redesign */}
+                <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 p-8 mb-10 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 pointer-events-none opacity-50" />
+                    
+                    <div className="flex flex-col md:flex-row gap-6 relative">
+                        <div className="flex-1 relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors">
+                                <Search size={16} />
+                            </div>
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setPageNumber(1);
+                                }}
+                                placeholder={t("tags.searchPlaceholder")}
+                                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+                            />
+                        </div>
+                        <div className="w-full md:w-72">
+                            <select
+                                value={languageFilter}
+                                onChange={(e) => {
+                                    setLanguageFilter(e.target.value);
+                                    setPageNumber(1);
+                                }}
+                                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
+                            >
+                                <option value="all">{t("tags.allLanguages")}</option>
+                                <option value="English">🇬🇧 English</option>
+                                <option value="Arabic">🇸🇦 Arabic</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content Section */}
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center p-20 gap-3">
-                        <FontAwesomeIcon icon={faSpinner} className="animate-spin text-4xl text-blue-600" />
-                        <span className="text-gray-500 font-medium">{t("common.loading")}</span>
+                    <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm animate-pulse">
+                        <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Scanning Registry...</p>
+                    </div>
+                ) : isError ? (
+                    <div className="p-16 bg-rose-50 border border-rose-100 rounded-[2rem] text-center">
+                         <div className="w-16 h-16 bg-rose-100/50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500">
+                            <Hash size={32} />
+                         </div>
+                         <h3 className="text-xl font-black text-rose-900 mb-2 uppercase tracking-tight">Index Corruption</h3>
+                         <p className="text-sm text-rose-600/80 max-w-md mx-auto font-medium">{error instanceof Error ? error.message : "Handshake with metadata service failed."}</p>
                     </div>
                 ) : !tagResponse?.items || tagResponse.items.length === 0 ? (
-                    <div className="text-center p-20 flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 text-3xl">
-                            <FontAwesomeIcon icon={faTags} />
+                    <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm text-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300">
+                            <TagIcon size={32} />
                         </div>
-                        <div className="text-gray-500 text-lg font-medium">
-                            {t("tags.noTagsFound")}
-                        </div>
+                        <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">Vortex: Empty</h3>
+                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none italic">{t("tags.noTagsFound")}</p>
                     </div>
                 ) : (
-                    <>
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-slate-50 border-b border-slate-200">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                            {t("tags.tagName")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                            {t("tags.language")}
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                            {t("tags.postsCount")}
-                                        </th>
-                                        <th className="px-6 py-4 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                            {t("common.actions")}
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
+                    <div className="space-y-8">
+                        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-200">
+                                        <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Metadata Token</TableHead>
+                                        <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Localization</TableHead>
+                                        <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Impact Analytics</TableHead>
+                                        <TableHead className="text-right px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">Registry</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {tagResponse.items.map((tag) => (
-                                        <tr key={tag.id} className="hover:bg-slate-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="font-medium text-slate-900">
-                                                    {tag.name}
+                                        <TableRow key={tag.id} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                                            <TableCell className="px-8 flex items-center gap-3">
+                                                <div className="flex items-center gap-4 py-4">
+                                                   <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                      <Hash size={16} />
+                                                   </div>
+                                                   <div className="flex flex-col">
+                                                      <span className="font-black text-slate-900 group-hover:text-primary transition-colors text-sm uppercase tracking-tight leading-none mb-1.5">
+                                                        {tag.name}
+                                                      </span>
+                                                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Keyword Token</span>
+                                                   </div>
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                                                    tag.language === "Arabic" 
-                                                        ? "bg-amber-100 text-amber-800"
-                                                        : "bg-blue-100 text-blue-800"
-                                                }`}>
-                                                    {tag.language}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="bg-slate-100 px-2 py-0.5 rounded text-xs font-bold text-slate-700">
-                                                        {tag.postsCount}
-                                                    </span>
-                                                    <span>{t("dashboard.posts")}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div className="flex items-center justify-end gap-3 text-lg">
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={tag.language === "Arabic" ? "warning" : "primary"} className="rounded-lg px-2.5 py-1">
+                                                    <Globe2 className="w-3 h-3 mr-1.5 opacity-70" />
+                                                    {tag.language === 'Arabic' ? 'AR' : 'EN'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                               <div className="flex flex-col gap-1">
+                                                  <div className="flex items-center gap-1.5 text-slate-900 font-black tracking-tight text-xs">
+                                                     <TrendingUp size={12} className="text-emerald-500" />
+                                                     {tag.postsCount}
+                                                  </div>
+                                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Global Pulse Count</span>
+                                               </div>
+                                            </TableCell>
+                                            <TableCell className="px-8">
+                                                <div className="flex items-center justify-end gap-2">
                                                     <button
                                                         type="button"
                                                         onClick={() => navigate(`/admin/edit-tag/${tag.id}`)}
-                                                        className="text-blue-500 hover:text-blue-700 transition-colors"
+                                                        className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all border border-transparent hover:border-primary/20"
                                                         title={t("common.edit")}
                                                     >
-                                                        <FontAwesomeIcon icon={faEdit} />
+                                                        <Pencil className="w-4 h-4" />
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => handleDelete(tag.id, tag.name)}
-                                                        className="text-red-400 hover:text-red-600 transition-colors"
+                                                        className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100 disabled:opacity-50"
                                                         title={t("common.delete")}
                                                         disabled={deleteMutation.isPending}
                                                     >
-                                                        <FontAwesomeIcon icon={faTrash} />
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </div>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
 
-                        {/* Pagination */}
-                        {tagResponse.totalPages > 1 && (
-                            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                                <div className="text-sm text-slate-500">
-                                    {t("roles.showing")} <span className="font-semibold text-slate-900">{tagResponse.itemsFrom}</span> {t("roles.to")} <span className="font-semibold text-slate-900">{tagResponse.itemsTo}</span> {t("roles.of")} <span className="font-semibold text-slate-900">{tagResponse.totalCount}</span>
-                                </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setPageNumber(p => Math.max(1, p - 1))}
-                                        disabled={pageNumber === 1}
-                                        className="px-3 py-1 bg-white border border-slate-200 rounded text-sm font-medium hover:bg-slate-50 disabled:bg-slate-50 disabled:text-slate-300 transition-colors"
-                                    >
-                                        {t("roles.previous")}
-                                    </button>
-                                    <button
-                                        onClick={() => setPageNumber(p => Math.min(tagResponse.totalPages, p + 1))}
-                                        disabled={pageNumber === tagResponse.totalPages}
-                                        className="px-3 py-1 bg-white border border-slate-200 rounded text-sm font-medium hover:bg-slate-50 disabled:bg-slate-50 disabled:text-slate-300 transition-colors"
-                                    >
-                                        {t("roles.next")}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </>
+                        <div className="pt-6">
+                            <Pagination
+                                pageNumber={tagResponse.pageNumber}
+                                totalPages={tagResponse.totalPages}
+                                itemsFrom={tagResponse.itemsFrom}
+                                itemsTo={tagResponse.itemsTo}
+                                totalCount={tagResponse.totalCount}
+                                onPageChange={setPageNumber}
+                            />
+                        </div>
+                    </div>
                 )}
             </div>
 
-            {/* Delete Confirmation Dialog */}
             <ConfirmDialog
                 isOpen={!!deleteConfirm}
-                title={t("tags.deleteTitle")}
-                message={`${t("tags.deleteMessage")} "${deleteConfirm?.name}"? This action cannot be undone.`}
-                confirmText={t("common.delete")}
+                title={`Purge Token: ${deleteConfirm?.name}`}
+                message={`Warning: You are about to permanently delete this taxonomy keyword. This action will fragment associated search data.`}
+                confirmText={deleteMutation.isPending ? "Purging..." : "Confirm Purge"}
                 cancelText={t("common.cancel")}
                 onConfirm={confirmDelete}
                 onCancel={() => setDeleteConfirm(null)}
