@@ -1,5 +1,4 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faExclamationTriangle, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { AlertTriangle, X as XIcon } from 'lucide-react';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -46,17 +45,14 @@ export default function ConfirmDialog({
           onClick={onCancel}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
-          <FontAwesomeIcon icon={faXmark} className="text-xl" />
+          <XIcon className="w-5 h-5" />
         </button>
 
         {/* Content */}
         <div className="p-6">
           {/* Icon */}
           <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 rounded-full bg-red-100">
-            <FontAwesomeIcon
-              icon={faExclamationTriangle}
-              className="text-2xl text-red-600"
-            />
+            <AlertTriangle className="w-6 h-6 text-red-600" />
           </div>
 
           {/* Title */}

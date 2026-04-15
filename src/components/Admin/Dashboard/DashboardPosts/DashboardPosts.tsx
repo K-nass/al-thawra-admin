@@ -1,600 +1,564 @@
-import Loader from "@/components/Common/Loader";
-import PostActionsDropdown from "@/components/Common/PostActionsDropdown";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  Plus, 
+  Search, 
+  Filter, 
+  Eye, 
+  Calendar, 
+  User as UserIcon, 
+  Layers, 
+  Globe2, 
+  FileText,
+  Loader2,
+  CheckCircle2,
+  Clock,
+  Layout,
+  ChevronRight,
+  TrendingUp,
+  Activity,
+  Zap,
+  Star,
+  MoreHorizontal
+} from "lucide-react";
+
 import { useCategories } from "@/hooks/useCategories";
 import { useFetchPosts } from "@/hooks/useFetchPosts";
 import { useFetchPages, useDeletePage } from "@/hooks/useFetchPages";
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { postsApi } from "@/api";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import ApiNotification from "@/components/Common/ApiNotification";
+import PostActionsDropdown from "@/components/Common/PostActionsDropdown";
 import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
+import { useToast } from "@/components/Toast/ToastContainer";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function DashboardPosts({ label }: { label?: string }) {
-    const navigate = useNavigate();
-    const { t } = useTranslation();
-    const queryClient = useQueryClient();
-    const { data: categories } = useCategories();
-    const [category, setCategory] = useState<string | null>(null);
-    const [language, setLanguage] = useState<string | null>(null);
-    const [searchPhrase, setSearchPhrase] = useState<string | null>(null);
-    const [searchParams, setSearchParams] = useSearchParams();
-    const pageNumber = Number(searchParams.get("page")) || 1;
-    const setPageNumber = (page: number | ((prev: number) => number)) => {
-        const newPage = typeof page === "function" ? page(pageNumber) : page;
-        setSearchParams((prev) => {
-            prev.set("page", newPage.toString());
-            return prev;
-        });
-    };
-    const [pageSize, setPageSize] = useState<number>(15);
-    const [notification, setNotification] = useState<{
-        type: "success" | "error";
-        message: string;
-    } | null>(null);
-    const [confirmDialog, setConfirmDialog] = useState<{
-        isOpen: boolean;
-        itemId: string | null;
-        itemTitle: string;
-    }>({
-        isOpen: false,
-        itemId: null,
-        itemTitle: "",
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const { data: categoriesData } = useCategories();
+  
+  const [category, setCategory] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string | null>(null);
+  const [searchPhrase, setSearchPhrase] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const pageNumber = Number(searchParams.get("page")) || 1;
+  const setPageNumber = (page: number) => {
+    setSearchParams((prev) => {
+      prev.set("page", page.toString());
+      return prev;
     });
-    let isSlider: boolean | undefined = undefined;
-    let isFeatured: boolean | undefined = undefined;
-    let isBreaking: boolean | undefined = undefined;
-    const isPages = label === "pages";
+  };
+  const [pageSize, setPageSize] = useState<number>(15);
+  
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    itemId: string | null;
+    itemTitle: string;
+  }>({
+    isOpen: false,
+    itemId: null,
+    itemTitle: "",
+  });
 
+  const isPages = label?.toLowerCase() === "pages";
+  let isSlider: boolean | undefined = undefined;
+  let isFeatured: boolean | undefined = undefined;
+  let isBreaking: boolean | undefined = undefined;
 
+  if (label === "Slider Posts") isSlider = true;
+  if (label === "Featured Posts") isFeatured = true;
+  if (label === "Breaking News") isBreaking = true;
 
-    if (label == "Slider Posts") isSlider = true;
-    if (label === "Featured Posts") isFeatured = true
-    if (label === "Breaking News") isBreaking = true
+  // Fetching
+  const { data: posts, isLoading: isLoadingPosts } = useFetchPosts({
+    category: category ?? undefined,
+    language,
+    searchPhrase,
+    pageNumber,
+    pageSize,
+    isSlider,
+    isFeatured,
+    isBreaking,
+  });
 
-    // Use different API based on label
-    const { data: posts, isLoading: isLoadingPosts } = useFetchPosts({
-        category: category ?? undefined,
-        language,
-        searchPhrase,
-        pageNumber,
-        pageSize,
-        isSlider,
-        isFeatured,
-        isBreaking,
+  const { data: pages, isLoading: isLoadingPages, error: pagesError } = useFetchPages({
+    language: language === "all" ? null : language,
+    pageNumber,
+    pageSize,
+    visibility: true,
+  });
+
+  const data = isPages ? pages : posts;
+  const isLoading = isPages ? isLoadingPages : isLoadingPosts;
+  const hasError = isPages && !!pagesError;
+
+  // Mutations
+  const deletePostMutation = useMutation({
+    mutationFn: async ({ postId, categoryId, postType }: { postId: string; categoryId: string; postType: string }) => {
+      return await postsApi.deletePost(categoryId, postId, postType);
+    },
+    onSuccess: () => {
+      toast.success(t("success.postDeleted") || "Post deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || t("error.deleteFailed") || "Failed to delete post");
+    },
+  });
+
+  const toggleFlagMutation = useMutation({
+    mutationFn: async ({ postId, flag }: { postId: string; flag: 'isSlider' | 'isFeatured' | 'isBreaking' | 'isRecommended' }) => {
+      const items = (data as any)?.data?.items || (data as any)?.items;
+      const post = items?.find((p: any) => p.id === postId);
+      if (!post) throw new Error("Post not found");
+
+      const postType = post?.postType?.toLowerCase() || 'article';
+      const categoryId = post?.categoryId;
+      if (!categoryId) throw new Error("Category ID not found");
+
+      const typeIdMap: Record<string, string> = {
+        article: 'articleId',
+        video: 'videoId',
+        audio: 'audioId',
+      };
+
+      const payload: any = {
+        [typeIdMap[postType] || 'articleId']: postId,
+        title: post.title || '',
+        slug: post.slug || null,
+        description: post.description || post.summary || '',
+        content: post.content || '',
+        categoryId,
+        tagIds: post.tagIds || [],
+        status: post.status || 'Published',
+        isSlider: post.isSlider ?? false,
+        isFeatured: post.isFeatured ?? false,
+        isBreaking: post.isBreaking ?? false,
+        isRecommended: post.isRecommended ?? false,
+        imageUrl: post.image || post.imageUrl || '',
+        [flag]: !post[flag], 
+      };
+
+      return await postsApi.updatePost(categoryId, postId, postType, payload);
+    },
+    onSuccess: () => {
+      toast.success(t('success.postUpdated', 'Post updated successfully'));
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to update post");
+    },
+  });
+
+  const deletePageMutation = useDeletePage();
+
+  const handleDeleteClick = (itemId: string) => {
+    const items = (data as any)?.data?.items || (data as any)?.items;
+    const item = items?.find((p: any) => p.id === itemId);
+    if (!item) return;
+
+    setConfirmDialog({
+      isOpen: true,
+      itemId: itemId,
+      itemTitle: item.title,
     });
+  };
 
-    const { data: pages, isLoading: isLoadingPages, error: pagesError } = useFetchPages({
-        language: language === "all" ? null : language,
-        pageNumber,
-        pageSize,
-        visibility: true,
-    });
+  const handleConfirmDelete = () => {
+    if (!confirmDialog.itemId) return;
 
-    // Use pages data if label is "pages", otherwise use posts data
-    // Note: The new articles API returns data directly, not nested in data.data
-    const data = isPages ? pages : posts;
-    const isLoading = isPages ? isLoadingPages : isLoadingPosts;
-    const hasError = isPages && pagesError;
-
-    // Delete mutation for posts
-    const deletePostMutation = useMutation({
-        mutationFn: async ({ postId, categoryId, postType }: { postId: string; categoryId: string; postType: string }) => {
-            return await postsApi.deletePost(categoryId, postId, postType);
-        },
+    if (isPages) {
+      deletePageMutation.mutate(confirmDialog.itemId, {
         onSuccess: () => {
-            setNotification({ type: "success", message: "Post deleted successfully" });
-            queryClient.invalidateQueries({ queryKey: ["posts"] });
+          toast.success("Page deleted successfully");
+          setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" });
         },
-        onError: (error: any) => {
-            const message = error?.response?.data?.title || error?.response?.data?.message || "Failed to delete post";
-            setNotification({ type: "error", message });
-        },
-    });
-
-    // Toggle flag mutation (Slider, Featured, Breaking, Recommended)
-    const toggleFlagMutation = useMutation({
-        mutationFn: async ({ postId, flag }: { postId: string; flag: 'isSlider' | 'isFeatured' | 'isBreaking' | 'isRecommended' }) => {
-            const items = (data as any)?.data?.items || (data as any)?.items;
-            const post = items?.find((p: any) => p.id === postId);
-            if (!post) throw new Error("Post not found");
-
-            const postType = post?.postType?.toLowerCase() || 'article';
-            const categoryId = post?.categoryId;
-            if (!categoryId) throw new Error("Category ID not found");
-
-            // Build minimal payload required by the update API
-            const typeIdMap: Record<string, string> = {
-                article: 'articleId',
-                video: 'videoId',
-                audio: 'audioId',
-            };
-
-            const payload: any = {
-                [typeIdMap[postType] || 'articleId']: postId,
-                title: post.title || '',
-                slug: post.slug || null,
-                description: post.description || post.summary || '',
-                metaDescription: post.metaDescription || '',
-                metaKeywords: post.metaKeywords || '',
-                content: post.content || '',
-                categoryId,
-                tagIds: post.tagIds || [],
-                optionalUrl: post.optionalUrl || null,
-                scheduledAt: post.scheduledAt || null,
-                authorId: null,
-                status: post.status || 'Published',
-                isSlider: post.isSlider ?? false,
-                isFeatured: post.isFeatured ?? false,
-                isBreaking: post.isBreaking ?? false,
-                isRecommended: post.isRecommended ?? false,
-                showOnlyToRegisteredUsers: post.showOnlyToRegisteredUsers ?? false,
-                direction: post.direction ?? null,
-                imageUrl: post.image || post.imageUrl || '',
-                imageDescription: post.imageDescription || null,
-                additionalImageUrls: post.additionalImageUrls?.length ? post.additionalImageUrls : null,
-                fileUrls: post.fileUrls?.length ? post.fileUrls : null,
-                // Toggle the target flag to true
-                [flag]: true,
-            };
-
-            return await postsApi.updatePost(categoryId, postId, postType, payload);
-        },
-        onSuccess: () => {
-            setNotification({ type: "success", message: t('success.postUpdated', 'Post updated successfully') });
-            queryClient.invalidateQueries({ queryKey: ["posts"] });
-        },
-        onError: (error: any) => {
-            const message = error?.response?.data?.title || error?.response?.data?.message || "Failed to update post";
-            setNotification({ type: "error", message });
-        },
-    });
-
-    // Delete mutation for pages
-    const deletePageMutation = useDeletePage();
-
-    const handleDelete = (itemId: string) => {
-        if (isPages) {
-            // Handle page deletion
-            const page = (data as any)?.items?.find((p: any) => p.id === itemId);
-            if (!page) return;
-
-            setConfirmDialog({
-                isOpen: true,
-                itemId: itemId,
-                itemTitle: page.title,
-            });
-        } else {
-            // Handle post deletion
-            // Handle both old and new API response structures
-            const items = (data as any)?.data?.items || (data as any)?.items;
-            const post = items?.find((p: any) => p.id === itemId);
-            if (!post) return;
-
-            console.log('Post data for deletion:', post);
-
-            const postType = post?.postType?.toLowerCase() || 'article';
-            const categoryId = post?.categoryId || post?.category_id;
-
-            if (!categoryId) {
-                console.error('Category ID not found in post:', post);
-                setNotification({ type: "error", message: "Category ID not found. Please refresh the page and try again." });
-                return;
-            }
-
-            console.log('Deleting post:', { postId: itemId, categoryId, postType });
-
-            setConfirmDialog({
-                isOpen: true,
-                itemId: itemId,
-                itemTitle: post.title,
-            });
+        onError: (err: any) => {
+          toast.error(err?.response?.data?.message || "Failed to delete page");
+          setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" });
         }
-    };
+      });
+    } else {
+      const items = (data as any)?.data?.items || (data as any)?.items;
+      const post = items?.find((p: any) => p.id === confirmDialog.itemId);
+      if (!post) return;
 
-    const handleConfirmDelete = () => {
-        if (!confirmDialog.itemId) return;
+      const postType = post?.postType?.toLowerCase() || 'article';
+      const categoryId = post?.categoryId || post?.category_id;
 
-        if (isPages) {
-            deletePageMutation.mutate(confirmDialog.itemId, {
-                onSuccess: () => {
-                    setNotification({ type: "success", message: "Page deleted successfully" });
-                    setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" });
-                },
-                onError: (error: any) => {
-                    const message = error?.response?.data?.title || error?.response?.data?.message || "Failed to delete page";
-                    setNotification({ type: "error", message });
-                    setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" });
-                },
-            });
-        } else {
-            // Handle both old and new API response structures
-            const items = (data as any)?.data?.items || (data as any)?.items;
-            const post = items?.find((p: any) => p.id === confirmDialog.itemId);
-            if (!post) return;
-
-            const postType = post?.postType?.toLowerCase() || 'article';
-            const categoryId = post?.categoryId || post?.category_id;
-
-            deletePostMutation.mutate(
-                { postId: confirmDialog.itemId, categoryId, postType },
-                {
-                    onSuccess: () => {
-                        setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" });
-                    },
-                    onError: () => {
-                        setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" });
-                    },
-                }
-            );
+      deletePostMutation.mutate(
+        { postId: confirmDialog.itemId, categoryId, postType },
+        { 
+          onSuccess: () => setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" }),
+          onError: () => setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" }) 
         }
-    };
+      );
+    }
+  };
 
-    const formatDate = (dateString: string) => {
-        if (!dateString) return "-";
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return "-";
-        return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        });
-    };
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "-";
+    return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  };
 
-    useEffect(() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    }, [pageNumber]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [pageNumber]);
 
-    return (
-        <div className="flex-1 flex flex-col overflow-hidden">
-            {notification && (
-                <ApiNotification
-                    type={notification.type}
-                    message={notification.message}
-                    onClose={() => setNotification(null)}
-                />
-            )}
-            <div className="flex-1 overflow-y-auto p-6">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-semibold text-gray-800">{label}</h2>
-                    <button
-                        type="button"
-                        className="flex items-center space-x-2 px-4 py-2 text-sm font-semibold bg-[#13967B] hover:bg-[#0e7a64] text-white rounded-lg shadow-md transition-all"
-                        onClick={() => navigate(isPages ? "/admin/add-page" : "/admin/add-post")}
-                    >
-                        <span>{isPages ? "Add Page" : t('post.addPost')}</span>
-                    </button>
-                </div>
+  return (
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50/50">
+      <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
+        {/* Header - Premium Alignment */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                  <Layout size={16} />
+               </div>
+               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Systems Portal</span>
+            </div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+              {label || t("dashboard.posts")}
+            </h1>
+            <p className="text-sm text-slate-500 mt-2 font-medium max-w-xl">
+              {isPages ? "Manage standalone pages and institutional content." : "Control center for all portal articles, news releases, and creative features."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(isPages ? "/admin/add-page" : "/admin/add-post")}
+            className="inline-flex items-center justify-center px-6 py-3.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-slate-200 hover:bg-primary hover:shadow-primary/20 transition-all duration-300 gap-3 group active:scale-95"
+          >
+            <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
+            <span>{isPages ? "Register Page" : t('post.addPost')}</span>
+          </button>
+        </div>
 
+        {/* Filters Card - Premium Redesign */}
+        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 p-8 mb-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 pointer-events-none opacity-50" />
+          
+          <div className="flex items-center gap-2 mb-6 ml-1">
+             <Filter size={14} className="text-primary" />
+             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Filters</h3>
+          </div>
 
-                {/* Filters */}
-                <form className="bg-white p-5 rounded-lg shadow-sm mb-6 border border-gray-100">
-                    <div className={`grid grid-cols-1 ${label === "pages" ? "md:grid-cols-2 lg:grid-cols-2" : "md:grid-cols-4 lg:grid-cols-8"} gap-4`}>
-                        {/* Page size */}
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">{t('filter.show')}</label>
-                            <select
-                                value={pageSize}
-                                onChange={(e) => setPageSize(Number(e.target.value))}
-                                className="mt-1 block w-full rounded-md border-gray-300 focus:ring-[#13967B] focus:border-[#13967B] sm:text-sm text-gray-900"
-                            >
-                                {[15, 30, 60, 90].map((num) => (
-                                    <option key={num} value={num}>
-                                        {num}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Language */}
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">{t('filter.language')}</label>
-                            <select
-                                onChange={(e) => setLanguage(e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 focus:ring-[#13967B] focus:border-[#13967B] sm:text-sm text-gray-900"
-                            >
-                                <option value="all">{t('common.all')}</option>
-                                <option value="English">{t('post.english')}</option>
-                                <option value="Arabic">{t('post.arabic')}</option>
-                            </select>
-                        </div>
-
-                        {/* Show remaining filters only if NOT pages */}
-                        {label !== "pages" && (
-                            <>
-                                {/* Post Type */}
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">{t('filter.postType')}</label>
-                                    <select className="mt-1 block w-full rounded-md border-gray-300 focus:ring-[#13967B] focus:border-[#13967B] sm:text-sm text-gray-900">
-                                        <option>{t('common.all')}</option>
-                                        <option>{t('post.article')}</option>
-                                        <option>{t('post.video')}</option>
-                                    </select>
-                                </div>
-
-                                {/* Category */}
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">{t('filter.category')}</label>
-                                    <select
-                                        value={category ?? ""}
-                                        onChange={(e) => setCategory(e.target.value)}
-                                        className="mt-1 block w-full rounded-md border-gray-300 focus:ring-[#13967B] focus:border-[#13967B] sm:text-sm text-gray-900"
-                                    >
-                                        <option value="all">{t('common.all')}</option>
-                                        {categories?.data.map((option: { id: string; slug: string; name: string }) => (
-                                            <option key={option.id} value={option.slug}>
-                                                {option.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* Subcategory */}
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">{t('filter.subcategory')}</label>
-                                    <select className="mt-1 block w-full rounded-md border-gray-300 focus:ring-[#13967B] focus:border-[#13967B] sm:text-sm text-gray-900">
-                                        <option>{t('common.all')}</option>
-                                    </select>
-                                </div>
-
-                                {/* User */}
-                                <div>
-                                    <label className="text-sm font-medium text-gray-700">{t('filter.user')}</label>
-                                    <select className="mt-1 block w-full rounded-md border-gray-300 focus:ring-[#13967B] focus:border-[#13967B] sm:text-sm text-gray-900">
-                                        <option>{t('common.select')}</option>
-                                    </select>
-                                </div>
-
-                                {/* Search */}
-                                <div className="col-span-2 flex items-end space-x-2">
-                                    <input
-                                        id="search"
-                                        placeholder={t('filter.search')}
-                                        value={searchPhrase ?? ""}
-                                        onChange={(e) => setSearchPhrase(e.target.value)}
-                                        className="grow mt-1 block p-2 border-gray-300 rounded-md focus:ring-[#13967B] focus:border-[#13967B] sm:text-sm"
-                                        type="text"
-                                    />
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </form>
-
-                {/* Table */}
-                <div className="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
-                    <div className="overflow-x-auto overflow-y-visible">
-                        <table className="w-full text-sm text-left text-gray-600 border-collapse table-auto">
-                            <thead className="text-xs uppercase text-gray-700 bg-gray-100 sticky top-0 z-10">
-                                <tr>
-                                    <th className="p-4"><input type="checkbox" className="rounded border-gray-300 text-[#13967B]" /></th>
-                                    <th className="px-6 py-3">{t('post.id')}</th>
-                                    <th className="px-6 py-3 min-w-[300px]">{t('post.posts')}</th>
-                                    <th className="px-6 py-3">{t('post.language')}</th>
-                                    <th className="px-6 py-3">{t('post.type')}</th>
-                                    <th className="px-6 py-3">{t('post.category')}</th>
-                                    <th className="px-6 py-3">{t('post.author')}</th>
-                                    <th className="px-6 py-3">{t('post.views')}</th>
-                                    <th className="px-6 py-3">{t('post.date')}</th>
-                                    <th className="px-6 py-3 text-right">{t('post.options')}</th>
-                                </tr>
-                            </thead>
-
-                            <AnimatePresence mode="wait">
-                                {isLoading ? (
-                                    <motion.tbody
-                                        key="loader"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                    >
-                                        <tr>
-                                            <td colSpan={10} className="text-center py-10">
-                                                <Loader />
-                                            </td>
-                                        </tr>
-                                    </motion.tbody>
-                                ) : hasError ? (
-                                    <motion.tbody
-                                        key="error"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                    >
-                                        <tr>
-                                            <td colSpan={10} className="text-center py-16">
-                                                <div className="flex flex-col items-center space-y-4">
-                                                    <svg
-                                                        className="h-16 w-16 text-red-500"
-                                                        fill="none"
-                                                        viewBox="0 0 24 24"
-                                                        stroke="currentColor"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            strokeWidth={2}
-                                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                                                        />
-                                                    </svg>
-                                                    <div>
-                                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                                            {t('error.apiNotAvailable') || 'API Endpoint Not Available'}
-                                                        </h3>
-                                                        <p className="text-gray-600 mb-4">
-                                                            {t('error.pagesEndpointNotFound') || 'The pages endpoint is not yet implemented on the backend.'}
-                                                        </p>
-                                                        <p className="text-sm text-gray-500">
-                                                            {t('error.contactDeveloper') || 'Please contact your system administrator.'}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </motion.tbody>
-                                ) : (
-                                    <motion.tbody
-                                        key="table"
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -20 }}
-                                        transition={{ duration: 0.4, ease: "easeOut" }}
-                                    >
-                                        {isPages ? (
-                                            // Render pages data
-                                            (data as any)?.items?.map((item: any) => (
-                                                <tr
-                                                    key={item.id}
-                                                    className="hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <td className="p-4"><input type="checkbox" className="rounded border-gray-300 text-[#13967B]" /></td>
-                                                    <td className="px-6 py-4 text-gray-700">
-                                                        <div style={{ overflowX: 'auto', whiteSpace: 'nowrap', maxWidth: "150px" }}>
-                                                            {item.id}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 flex items-center space-x-3 cursor-pointer">
-                                                        <span className="font-medium text-gray-900">{item.title}</span>
-                                                    </td>
-                                                    <td className="px-6 py-4">{item.language}</td>
-                                                    <td className="px-6 py-4">Page</td>
-                                                    <td className="px-6 py-4">
-                                                        <span className="px-2 py-1 text-xs font-medium text-white bg-[#13967B] rounded-full">
-                                                            {item.location || "N/A"}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">{item.parentName || "-"}</td>
-                                                    <td className="px-6 py-4">{item.menuOrder}</td>
-                                                    <td className="px-6 py-4">
-                                                        {formatDate(item.createdAt)}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <PostActionsDropdown
-                                                            postId={item.id}
-                                                            onEdit={(id) => navigate(`/admin/edit-page/${id}`)}
-                                                            onDelete={handleDelete}
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            // Render posts data
-                                            // Handle both old API structure (data.data.items) and new API structure (data.items)
-                                            ((data as any)?.data?.items || (data as any)?.items)?.map((item: any) => (
-                                                <tr
-                                                    key={item.id}
-                                                    className="hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <td className="p-4"><input type="checkbox" className="rounded border-gray-300 text-[#13967B]" /></td>
-                                                    <td className="px-6 py-4 text-gray-700">
-                                                        <div style={{ overflowX: 'auto', whiteSpace: 'nowrap', maxWidth: "150px" }}>
-                                                            {item.id}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 flex items-center space-x-3 cursor-pointer">
-                                                        <img
-                                                            src={item.image}
-                                                            alt={item.imageDescription}
-                                                            className="w-24 h-16 object-cover rounded-md shadow-sm"
-                                                        />
-                                                        <span className="font-medium text-gray-900">{item.title}</span>
-                                                    </td>
-                                                    <td className="px-6 py-4">{item.language}</td>
-                                                    <td className="px-6 py-4">{item.postType || 'Article'}</td>
-                                                    <td className="px-6 py-4">
-                                                        <span
-                                                            className="px-2 py-1 text-xs font-medium text-white rounded-full inline-block"
-                                                            style={{
-                                                                backgroundColor: categories?.data?.find((c: any) => c.slug === item.categorySlug || c.name === item.categoryName)?.colorHex || "#13967B",
-                                                                whiteSpace: "nowrap"
-                                                            }}
-                                                        >
-                                                            {item.categoryName}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">{item.authorName || "Created by"}</td>
-                                                    <td className="px-6 py-4">{item.viewsCount}</td>
-                                                    <td className="px-6 py-4">
-                                                        {formatDate(item.createdAt)}
-                                                    </td>
-                                                    <td className="px-6 py-4 text-right">
-                                                        <PostActionsDropdown
-                                                            postId={item.id}
-                                                            onEdit={(id) => {
-                                                                // Handle both old and new API response structures
-                                                                const items = (data as any)?.data?.items || (data as any)?.items;
-                                                                const post = items?.find((p: any) => p.id === id);
-                                                                // Convert postType to lowercase (API returns "Article", "Gallery", etc.)
-                                                                // Default to 'article' if postType is not present
-                                                                const postType = post?.postType?.toLowerCase() || 'article';
-                                                                navigate(`/admin/edit-post/${id}?type=${postType}`, {
-                                                                    state: {
-                                                                        post,
-                                                                        categorySlug: post?.categorySlug,
-                                                                        slug: post?.slug
-                                                                    }
-                                                                });
-                                                            }}
-                                                            onAddToSlider={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isSlider' })}
-                                                            onAddToFeatured={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isFeatured' })}
-                                                            onAddToBreaking={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isBreaking' })}
-                                                            onAddToRecommended={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isRecommended' })}
-                                                            onDelete={handleDelete}
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </motion.tbody>
-                                )}
-                            </AnimatePresence>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    {((isPages && (data as any)?.totalPages && (data as any).totalPages > 1) ||
-                        (!isPages && ((data as any)?.data?.totalPages || (data as any)?.totalPages) && ((data as any)?.data?.totalPages || (data as any)?.totalPages) > 1)) && (
-                            <div className="flex items-center justify-between py-4 px-6 bg-gray-50">
-                                <div className="text-sm text-gray-600">
-                                    {t('roles.showing')} {isPages ? (data as any)?.itemsFrom : ((data as any)?.data?.itemsFrom || (data as any)?.itemsFrom)} {t('roles.to')} {isPages ? (data as any)?.itemsTo : ((data as any)?.data?.itemsTo || (data as any)?.itemsTo)} {t('roles.of')} {isPages ? (data as any)?.totalCount : ((data as any)?.data?.totalCount || (data as any)?.totalCount)} {isPages ? t('roles.rolesText') : t('post.posts')}
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        onClick={() => setPageNumber((prev) => Math.max(1, prev - 1))}
-                                        disabled={pageNumber === 1}
-                                        className="px-3 py-1.5 text-sm bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t('roles.previous')}
-                                    </button>
-                                    <span className="text-sm text-slate-600">
-                                        {t('roles.page')} {pageNumber} {t('roles.of')} {isPages ? (data as any)?.totalPages : ((data as any)?.data?.totalPages || (data as any)?.totalPages)}
-                                    </span>
-                                    <button
-                                        onClick={() => setPageNumber((prev) => Math.min(isPages ? (data as any)?.totalPages : ((data as any)?.data?.totalPages || (data as any)?.totalPages), prev + 1))}
-                                        disabled={pageNumber === (isPages ? (data as any)?.totalPages : ((data as any)?.data?.totalPages || (data as any)?.totalPages))}
-                                        className="px-3 py-1.5 text-sm bg-slate-100 text-slate-600 rounded-md hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {t('roles.next')}
-                                    </button>
-                                </div>
-                            </div>
-                        )}                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-6 relative">
+            {/* Search - Primary focus */}
+            <div className="lg:col-span-5 relative group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors">
+                <Search size={16} />
+              </div>
+              <input
+                type="text"
+                placeholder="Search by title, author, or ID..."
+                value={searchPhrase ?? ""}
+                onChange={(e) => { setSearchPhrase(e.target.value); setPageNumber(1); }}
+                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+              />
             </div>
 
-            {/* Confirm Delete Dialog */}
-            <ConfirmDialog
-                isOpen={confirmDialog.isOpen}
-                title={`Delete ${isPages ? 'Page' : 'Post'}`}
-                message={`Are you sure you want to delete "${confirmDialog.itemTitle}"? This action cannot be undone.`}
-                confirmText="Delete"
-                cancelText="Cancel"
-                onConfirm={handleConfirmDelete}
-                onCancel={() => setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" })}
-                type="danger"
-            />
+            {/* Category */}
+            {!isPages && (
+              <div className="lg:col-span-3">
+                <select
+                  value={category ?? ""}
+                  onChange={(e) => { setCategory(e.target.value === "all" ? null : e.target.value); setPageNumber(1); }}
+                  className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
+                >
+                  <option value="all">{t('filter.category')} (All)</option>
+                  {categoriesData?.data.map((opt: any) => (
+                    <option key={opt.id} value={opt.slug}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Language */}
+            <div className="lg:col-span-2">
+              <select
+                onChange={(e) => { setLanguage(e.target.value === "all" ? null : e.target.value); setPageNumber(1); }}
+                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
+              >
+                <option value="all">{t('filter.language')} (All)</option>
+                <option value="English">🇬🇧 {t('post.english')}</option>
+                <option value="Arabic">🇸🇦 {t('post.arabic')}</option>
+              </select>
+            </div>
+
+            {/* PageSize */}
+            <div className="lg:col-span-2">
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
+              >
+                {[15, 30, 60].map((num) => <option key={num} value={num}>Show {num} Rows</option>)}
+              </select>
+            </div>
+          </div>
         </div>
-    );
+
+        {/* Content Section */}
+        {isLoading ? (
+          <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm animate-pulse">
+            <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Hydrating feed...</p>
+          </div>
+        ) : hasError ? (
+          <div className="p-16 bg-rose-50 border border-rose-100 rounded-[2rem] text-center">
+             <div className="w-16 h-16 bg-rose-100/50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500">
+                <Layout size={32} />
+             </div>
+             <h3 className="text-xl font-black text-rose-900 mb-2 uppercase tracking-tight">{t('error.apiNotAvailable')}</h3>
+             <p className="text-sm text-rose-600/80 max-w-md mx-auto font-medium">{t('error.pagesEndpointNotFound')}</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Desktop Table View */}
+            <div className="hidden lg:block bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-200">
+                    <TableHead className="w-[100px] py-6 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">ID Reference</TableHead>
+                    <TableHead className="min-w-[400px] text-[10px] font-black text-slate-400 uppercase tracking-widest">{isPages ? "Document Header" : "Content Identity"}</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global State</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{isPages ? "Cluster" : "Taxonomy"}</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Impact</TableHead>
+                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Timeline</TableHead>
+                    <TableHead className="text-right px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Registry</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {((data as any)?.data?.items || (data as any)?.items || []).length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="py-24 text-center">
+                         <div className="flex flex-col items-center">
+                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-4">
+                               <Search size={24} />
+                            </div>
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No matching records found</p>
+                         </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    ((data as any)?.data?.items || (data as any)?.items).map((item: any) => (
+                      <TableRow key={item.id} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                        <TableCell className="px-6 py-5">
+                          <code className="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-200 group-hover:bg-white group-hover:text-primary transition-colors">
+                            #{item.id.slice(-6).toUpperCase()}
+                          </code>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-4 py-2">
+                            {!isPages && (
+                               <div className="relative shrink-0">
+                                  <img 
+                                    src={item.image || "/placeholder-post.jpg"} 
+                                    className="w-14 h-14 rounded-2xl object-cover bg-slate-100 border border-slate-100 shadow-sm transition-transform group-hover:scale-110" 
+                                    alt="" 
+                                    onError={(e) => (e.currentTarget.src = "https://placehold.co/400x400/f8fafc/64748b?text=Post")}
+                                  />
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
+                                     {item.postType === 'video' ? <Zap size={10} className="text-amber-500" /> : <FileText size={10} className="text-primary" />}
+                                  </div>
+                               </div>
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-black text-slate-900 group-hover:text-primary transition-colors line-clamp-1 text-sm tracking-tight leading-none mb-1.5">{item.title}</span>
+                              <div className="flex items-center gap-2">
+                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                                    <UserIcon size={10} /> {item.authorName || item.parentName || "System Agent"}
+                                 </span>
+                                 <div className="w-1 h-1 rounded-full bg-slate-300" />
+                                 {item.isSlider && <span className="text-[9px] font-black text-blue-600 uppercase tracking-tighter bg-blue-50 px-1.5 rounded">Slider</span>}
+                                 {item.isFeatured && <span className="text-[9px] font-black text-amber-600 uppercase tracking-tighter bg-amber-50 px-1.5 rounded">Featured</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                           <div className="flex items-center gap-3">
+                              <Badge variant={item.language === "Arabic" ? "warning" : "primary"} className="rounded-lg px-2.5 py-1">
+                                <Globe2 className="w-3 h-3 mr-1.5 opacity-70" />
+                                {item.language === 'Arabic' ? 'AR' : 'EN'}
+                              </Badge>
+                              {item.status === 'Published' ? (
+                                <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm border border-emerald-100" title="Published">
+                                   <CheckCircle2 size={14} />
+                                </div>
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center shadow-sm border border-amber-100" title="Draft">
+                                   <Clock size={14} />
+                                </div>
+                              )}
+                           </div>
+                        </TableCell>
+                        <TableCell>
+                           <div className="flex items-center gap-2">
+                              {!isPages && (
+                                <div 
+                                  className="w-2.5 h-2.5 rounded-full shadow-sm ring-1 ring-white" 
+                                  style={{ backgroundColor: categoriesData?.data?.find((c: any) => c.slug === item.categorySlug || c.name === item.categoryName)?.colorHex || "#cbd5e1" }} 
+                                />
+                              )}
+                              <span className="text-xs font-black text-slate-600 uppercase tracking-widest leading-none">
+                                {item.categoryName || item.location || "Unlinked"}
+                              </span>
+                           </div>
+                        </TableCell>
+                        <TableCell>
+                           <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-1.5 text-slate-900 font-black tracking-tight text-xs">
+                                 <TrendingUp size={12} className="text-emerald-500" />
+                                 {item.viewsCount || item.menuOrder || 0}
+                              </div>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Global Impact</span>
+                           </div>
+                        </TableCell>
+                        <TableCell>
+                           <div className="flex flex-col">
+                              <span className="text-xs text-slate-900 font-bold tracking-tight">{formatDate(item.createdAt)}</span>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Creation Log</span>
+                           </div>
+                        </TableCell>
+                        <TableCell className="px-6 text-right">
+                           <PostActionsDropdown
+                             postId={item.id}
+                             onEdit={(id) => onEditHandler(id, item, isPages, navigate)}
+                             onAddToSlider={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isSlider' })}
+                             onAddToFeatured={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isFeatured' })}
+                             onAddToBreaking={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isBreaking' })}
+                             onAddToRecommended={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isRecommended' })}
+                             onDelete={handleDeleteClick}
+                           />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile View - Enhanced Cards */}
+            <div className="lg:hidden space-y-4">
+               {((data as any)?.data?.items || (data as any)?.items || []).map((item: any) => (
+                 <div key={item.id} className="bg-white rounded-[1.5rem] border border-slate-200 p-5 shadow-sm space-y-4 relative overflow-hidden group active:scale-[0.98] transition-all">
+                    <div className="flex items-start gap-4">
+                       {!isPages && item.image && (
+                         <div className="relative">
+                            <img 
+                              src={item.image} 
+                              className="w-20 h-20 rounded-2xl object-cover bg-slate-100 shadow-sm" 
+                              alt="" 
+                              onError={(e) => (e.currentTarget.src = "https://placehold.co/400x400/f8fafc/64748b?text=Post")}
+                            />
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
+                               <Activity size={12} className="text-primary" />
+                            </div>
+                         </div>
+                       )}
+                       <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                             <Badge variant={item.language === "Arabic" ? "warning" : "primary"} className="rounded-lg text-[9px] font-black uppercase tracking-widest">{item.language}</Badge>
+                             {item.status === 'Published' ? (
+                               <Badge variant="success" className="rounded-lg text-[9px] font-black uppercase tracking-widest">LIVE</Badge>
+                             ) : (
+                               <Badge variant="info" className="rounded-lg text-[9px] font-black uppercase tracking-widest text-slate-500">DRAFT</Badge>
+                             )}
+                          </div>
+                          <h3 className="font-black text-slate-900 line-clamp-2 leading-tight tracking-tight text-sm">{item.title}</h3>
+                       </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-100">
+                       <div className="space-y-1">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Taxonomy</p>
+                          <div className="flex items-center gap-1.5">
+                             <Layers size={10} className="text-primary" />
+                             <span className="text-[11px] font-black text-slate-700 uppercase tracking-tight truncate">{item.categoryName || item.location || "N/A"}</span>
+                          </div>
+                       </div>
+                       <div className="space-y-1">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Timeline</p>
+                          <div className="flex items-center gap-1.5">
+                             <Calendar size={10} className="text-slate-400" />
+                             <span className="text-[11px] font-bold text-slate-600">{formatDate(item.createdAt)}</span>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                       <div className="flex items-center gap-1.5 text-xs font-black text-slate-900">
+                          <TrendingUp size={14} className="text-emerald-500" />
+                          {item.viewsCount || 0} <span className="text-slate-400 font-bold uppercase text-[9px] tracking-widest ml-1">Impulses</span>
+                       </div>
+                       <PostActionsDropdown
+                          postId={item.id}
+                          onEdit={(id) => onEditHandler(id, item, isPages, navigate)}
+                          onAddToSlider={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isSlider' })}
+                          onAddToFeatured={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isFeatured' })}
+                          onAddToBreaking={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isBreaking' })}
+                          onAddToRecommended={(id) => toggleFlagMutation.mutate({ postId: id, flag: 'isRecommended' })}
+                          onDelete={handleDeleteClick}
+                       />
+                    </div>
+                 </div>
+               ))}
+               {((data as any)?.data?.items || (data as any)?.items || []).length === 0 && (
+                 <div className="py-20 text-center bg-white rounded-[2rem] border border-slate-200">
+                    <p className="text-slate-400 font-bold uppercase tracking-widest text-xs italic">Clearance: No Records Detected</p>
+                 </div>
+               )}
+            </div>
+
+            <div className="pt-6">
+               <Pagination
+                 pageNumber={pageNumber}
+                 totalPages={isPages ? (data as any)?.totalPages : ((data as any)?.data?.totalPages || (data as any)?.totalPages)}
+                 itemsFrom={isPages ? (data as any)?.itemsFrom : ((data as any)?.data?.itemsFrom || (data as any)?.itemsFrom)}
+                 itemsTo={isPages ? (data as any)?.itemsTo : ((data as any)?.data?.itemsTo || (data as any)?.itemsTo)}
+                 totalCount={isPages ? (data as any)?.totalCount : ((data as any)?.data?.totalCount || (data as any)?.totalCount)}
+                 onPageChange={setPageNumber}
+               />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={`Terminate ${isPages ? 'Document' : 'Content Record'}`}
+        message={`Warning: You are about to permanently delete "${confirmDialog.itemTitle}". This record will be purged from the global archives.`}
+        confirmText="Confirm Purge"
+        cancelText="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "" })}
+        type="danger"
+      />
+    </div>
+  );
 }
+
+const onEditHandler = (id: string, item: any, isPages: boolean, navigate: any) => {
+  if (isPages) {
+    navigate(`/admin/edit-page/${id}`);
+  } else {
+    const postType = item?.postType?.toLowerCase() || 'article';
+    navigate(`/admin/edit-post/${id}?type=${postType}`, {
+      state: {
+        post: item,
+        categorySlug: item?.categorySlug,
+        slug: item?.slug
+      }
+    });
+  }
+};

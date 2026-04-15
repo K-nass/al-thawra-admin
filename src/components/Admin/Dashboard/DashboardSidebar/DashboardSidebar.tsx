@@ -1,269 +1,196 @@
+import React, { useEffect } from 'react';
 import {
-  faHouse,
-  faFileText,
-  faFile,
-  faBars,
-  faRss,
-  faStar,
-  faBolt,
-  faLayerGroup,
-  faChevronDown,
-  faChevronUp,
-  faXmark,
-  faSignOutAlt,
-  faKey,
-  faFileAlt,
-  faUsers,
-  faBook,
-  faVideo,
-  faTags,
-  type IconDefinition,
-} from "@fortawesome/free-solid-svg-icons";
+  Home,
+  FileText,
+  FilePlus,
+  Files,
+  Rss,
+  Star,
+  Zap,
+  Video,
+  Layers,
+  Tags,
+  BookOpen,
+  Users,
+  Key,
+  LogOut,
+  Menu,
+  X,
+  SidebarClose,
+  SidebarOpen
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 
+import { useSidebar } from '@/contexts/SidebarContext';
+import { useLogout } from '@/hooks/useLogout';
+import DashboardProfileCard from './DashboardProfileCard/DashboardProfileCard';
+import SidebarItem, { type SidebarItemData } from './SidebarItem';
+import SidebarToggleButton from './SidebarToggleButton';
+import LanguageToggle from '@/components/LanguageToggle/LanguageToggle';
 
-import DashboardProfileCard from "./DashboardProfileCard/DashboardProfileCard";
-import DashboardSidebarItem from "./DashboardSidebarItem/DashboardSidebarItem";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
-import { useLogout } from "@/hooks/useLogout";
-import { useLanguage } from "@/contexts/LanguageContext";
-import LanguageToggle from "@/components/LanguageToggle/LanguageToggle";
-
-export interface SidebarItemInterface {
-  id: number;
-  labelKey: string;
-  icon: IconDefinition;
-  path?: string;
-  children?: SidebarItemInterface[];
-}
-
-const getSidebarItems = (): SidebarItemInterface[] => [
-  { id: 0, labelKey: "dashboard.home", icon: faHouse, path: "" },
- 
-  {
-    id: 1,
-    labelKey: "dashboard.pages",
-    icon: faFileText,
-    path: "/admin/pages",
-  },
-  {
-    id: 2,
-    labelKey: "dashboard.addPost",
-    icon: faFile,
-    path: "/admin/post-format",
-  },
-  {
-    id: 3,
-    labelKey: "dashboard.posts",
-    icon: faBars,
-    children: [
-      {
-        id: 4,
-        labelKey: "dashboard.allPosts",
-        icon: faFileAlt,
-        path: "/admin/posts/all",
-      },
-      {
-        id: 5,
-        labelKey: "dashboard.sliderPosts",
-        icon: faRss,
-        path: "/admin/posts/slider-posts",
-      },
-      {
-        id: 6,
-        labelKey: "dashboard.featuredPosts",
-        icon: faStar,
-        path: "/admin/posts/featured-posts",
-      },
-      {
-        id: 7,
-        labelKey: "dashboard.breakingNews",
-        icon: faBolt,
-        path: "/admin/posts/breaking-news",
-      },
-    ],
-  },
-  {
-    id: 12,
-    labelKey: "dashboard.reels",
-    icon: faVideo,
-    path: "/admin/reels",
-  },
-  {
-    id: 8,
-    labelKey: "dashboard.categories",
-    icon: faLayerGroup,
-    path: "/admin/categories",
-  },
-  {
-    id: 13,
-    labelKey: "dashboard.tags",
-    icon: faTags,
-    path: "/admin/tags",
-  },
-  {
-    id: 11,
-    labelKey: "dashboard.magazines",
-    icon: faBook,
-    path: "/admin/magazines",
-  },
-  {
-    id: 9,
-    labelKey: "Roles&Permissions",
-    icon: faKey,
-    path: "/admin/roles-permissions",
-  },
-  {
-    id: 10,
-    labelKey: "dashboard.users",
-    icon: faUsers,
-    path: "/admin/users",
-  },
+const getSidebarItems = (): SidebarItemData[] => [
+  { id: 0, labelKey: 'dashboard.home', icon: Home, path: '/admin' },
+  { id: 2, labelKey: 'dashboard.addPost', icon: FilePlus, path: '/admin/post-format' },
+  { id: 3, labelKey: 'dashboard.allPosts', icon: Files, path: '/admin/posts/all' },
+  { id: 4, labelKey: 'dashboard.sliderPosts', icon: Rss, path: '/admin/posts/slider-posts' },
+  { id: 5, labelKey: 'dashboard.featuredPosts', icon: Star, path: '/admin/posts/featured-posts' },
+  { id: 6, labelKey: 'dashboard.breakingNews', icon: Zap, path: '/admin/posts/breaking-news' },
+  { id: 7, labelKey: 'dashboard.reels', icon: Video, path: '/admin/reels' },
+  { id: 8, labelKey: 'dashboard.categories', icon: Layers, path: '/admin/categories' },
+  { id: 9, labelKey: 'dashboard.tags', icon: Tags, path: '/admin/tags' },
+  { id: 10, labelKey: 'dashboard.magazines', icon: BookOpen, path: '/admin/magazines' },
+  { id: 11, labelKey: 'dashboard.users', icon: Users, path: '/admin/users' },
+  { id: 12, labelKey: 'Roles&Permissions', icon: Key, path: '/admin/roles-permissions' },
 ];
 
-
 export default function DashboardSidebar() {
-  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
   const { logout, isLoading } = useLogout();
-  const { t } = useLanguage();
+  const { 
+    isDesktopSidebarOpen, 
+    toggleDesktopSidebar, 
+    isMobileSidebarOpen, 
+    toggleMobileSidebar, 
+    closeMobileSidebar 
+  } = useSidebar();
+  
   const sidebarItems = getSidebarItems();
 
-  const toggleItem = (itemId: number) => {
-    setExpandedItems((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else {
-        newSet.add(itemId);
+  // Handle keyboard navigation (escape key to close mobile menu)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileSidebarOpen) {
+        closeMobileSidebar();
       }
-      return newSet;
-    });
-  };
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileSidebarOpen, closeMobileSidebar]);
 
   return (
     <>
-      {/* Mobile Menu Button */}
+      {/* Mobile Toggle Button (Fixed on top left) */}
       <button
         type="button"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-[#222E33] text-white rounded-lg shadow-lg"
+        onClick={toggleMobileSidebar}
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-[#1A1F2B] text-white rounded-lg shadow-lg hover:bg-slate-800 transition-colors"
         aria-label="Toggle menu"
       >
-        <FontAwesomeIcon
-          icon={isMobileMenuOpen ? faXmark : faBars}
-          className="text-xl"
-        />
+        {isMobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Sidebar */}
-      <div
+      {/* Main Sidebar Container */}
+      <motion.aside
+        initial={false}
+        animate={{
+           width: isDesktopSidebarOpen ? 256 : 80, // 256px = 16rem = w-64, 80px = 5rem = w-20
+        }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
         className={`
-          fixed md:static
-          inset-y-0 left-0
-          w-20 md:w-64
-          p-3 md:p-5 bg-[#222E33] text-slate-300
-          flex flex-col
-          transform transition-transform duration-300 ease-in-out
-          z-40
-          overflow-hidden
-          ${
-            isMobileMenuOpen
-              ? "translate-x-0"
-              : "-translate-x-full md:translate-x-0"
-          }
+          fixed inset-y-0 left-0 z-40 flex flex-col
+          bg-[#1A1F2B] text-slate-300 border-r border-[#2A3143]
+          transform md:translate-x-0 transition-transform duration-300 ease-in-out
+          ${isMobileSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:w-auto'}
         `}
       >
-        <div className="flex items-center justify-center md:justify-between mb-4 md:mb-6">
-          <div className="md:flex md:items-center">
-            <h1 className="hidden md:block text-xl text-white ml-2">
-              {t("dashboard.adminPanel")}
-            </h1>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="md:hidden text-white hover:text-gray-300"
-            aria-label="Close menu"
-          >
-            <FontAwesomeIcon icon={faXmark} />
-          </button>
-        </div>
-        <div className="md:block hidden">
-          <DashboardProfileCard />
-        </div>
-        <ul className="flex flex-col gap-1 md:gap-2 mt-3 flex-1 overflow-y-auto scrollbar-hide">
-          {sidebarItems.map((item) => {
-            const isExpanded = expandedItems.has(item.id);
-            return (
-              <div key={item.id} className="p-1.5 md:p-2 rounded-xl my-1">
-                <div className="flex items-center justify-center md:justify-between relative">
-                  <DashboardSidebarItem
-                    item={item}
-                    handleToggle={
-                      item.children ? () => toggleItem(item.id) : undefined
-                    }
-                  />
-                  {item.children && (
-                    <button
-                      type="button"
-                      onClick={() => toggleItem(item.id)}
-                      className="hidden md:block text-gray-400 hover:text-gray-100 cursor-pointer ml-auto"
-                    >
-                      <FontAwesomeIcon
-                        icon={isExpanded ? faChevronUp : faChevronDown}
-                        className="text-sm"
-                      />
-                    </button>
-                  )}
+        {/* Header section */}
+        <div className="flex items-center justify-between p-4 h-16 shrink-0">
+          <AnimatePresence>
+            {isDesktopSidebarOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center overflow-hidden whitespace-nowrap"
+              >
+                {/* Placeholder Logo / Brand */}
+                <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold mr-3">
+                  AT
                 </div>
-                {item.children && isExpanded && (
-                  <ul className="flex flex-col gap-1.5 md:gap-2.5 mt-1 md:mt-5 md:ms-5">
-                    {item.children.map((child) => (
-                      <div
-                        key={child.id}
-                        className="rounded-lg transition p-1 md:p-1.5"
-                      >
-                        <DashboardSidebarItem item={child} />
-                      </div>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
-        </ul>
+                <h1 className="text-lg font-bold text-white tracking-wide">
+                  {t('dashboard.adminPanel')}
+                </h1>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        {/* Language Toggle */}
-        <div className="mt-4 border-t border-gray-600 pt-4">
-          <div className="flex justify-center md:justify-start mb-3">
-            <LanguageToggle variant="dark" />
+          {/* Desktop Toggle Button embedded in header */}
+          <div className="hidden md:flex flex-1 justify-end">
+            <SidebarToggleButton 
+              onClick={toggleDesktopSidebar} 
+              icon={isDesktopSidebarOpen ? SidebarClose : SidebarOpen} 
+            />
           </div>
         </div>
 
-        {/* Logout Button */}
-        <div className="border-t border-gray-600 pt-4">
+        {/* Profile Section */}
+        <div className="px-4 py-2 shrink-0 hidden md:block">
+           <AnimatePresence>
+             {isDesktopSidebarOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  <DashboardProfileCard />
+                </motion.div>
+             )}
+           </AnimatePresence>
+        </div>
+
+        {/* Navigation Items */}
+        <div className="flex-1 overflow-y-auto px-2 py-4 scrollbar-hide space-y-1">
+          {sidebarItems.map((item) => (
+            <SidebarItem key={item.id} item={item} />
+          ))}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-4 shrink-0 border-t border-[#2A3143] flex flex-col gap-4">
+          <div className={`flex ${isDesktopSidebarOpen || isMobileSidebarOpen ? 'justify-start' : 'justify-center'} px-2`}>
+             <LanguageToggle variant="dark" showLabel={isDesktopSidebarOpen || isMobileSidebarOpen} />
+          </div>
+
           <button
             type="button"
             onClick={() => logout()}
             disabled={isLoading}
-            className="w-full flex items-center justify-center md:justify-start gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-red-600/20 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title={!isDesktopSidebarOpen ? t('dashboard.logout') : undefined}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:opacity-50 group"
           >
-            <FontAwesomeIcon icon={faSignOutAlt} className="text-lg" />
-            <span className="hidden md:inline font-medium">
-              {isLoading ? t("common.loading") : t("dashboard.logout")}
-            </span>
+            <LogOut size={20} className="flex-shrink-0" />
+            <AnimatePresence>
+              {isDesktopSidebarOpen && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="font-medium whitespace-nowrap overflow-hidden"
+                >
+                  {isLoading ? t('common.loading') : t('dashboard.logout')}
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
         </div>
-      </div>
+      </motion.aside>
 
-      {/* Mobile Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/50 z-30"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+      {/* Mobile Overlay Backdrop */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+            onClick={closeMobileSidebar}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

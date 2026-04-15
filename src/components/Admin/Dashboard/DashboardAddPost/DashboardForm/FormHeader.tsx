@@ -15,13 +15,6 @@ export default function FormHeader({ type, isEditMode = false }: { type: string 
       <h2 className="text-xl sm:text-2xl font-bold">
         {isEditMode ? t('post.editPost', 'Edit Post') : t('post.addPost')} {getTranslatedType(type)}
       </h2>
-      <button 
-        type="button"
-        className="flex items-center space-x-2 px-3 py-1.5 text-sm border border-slate-300 rounded text-slate-600 dark:text-slate-300 hover:bg-slate-100 w-full sm:w-auto"
-      >
-        <span className="material-icons-sharp text-base">article</span>
-        <span>{t('post.posts')}</span>
-      </button>
     </div>
   );
 }

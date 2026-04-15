@@ -1,48 +1,28 @@
-import {
-  faCloudUpload,
-  faFile,
-  faFileLines,
-  faFlag,
-  faImages,
-  faLightbulb,
-  faList,
-  faListCheck,
-  faPlay,
-  faUser,
-  faVideo,
-  type IconDefinition,
-} from "@fortawesome/free-solid-svg-icons";
+import { FileText, Play, Video as VideoIcon, type LucideIcon } from "lucide-react";
 import ContentTypeSelector from "./ContentTypeSelector/ContentTypeSelector";
 import { useTranslation } from "react-i18next";
 
 type NameType =
   | "Article"
-  | "Video"
   | "Audio"
   | "Reel"
 const getContentTypes = (): ContentType[] => [
   {
     id: 1,
     name: "Article",
-    icon: faFile,
+    icon: FileText,
     descriptionKey: "contentTypes.articleDesc",
-  },
-  {
-    id: 5,
-    name: "Video",
-    icon: faCloudUpload,
-    descriptionKey: "contentTypes.videoDesc",
   },
   {
     id: 6,
     name: "Audio",
-    icon: faPlay,
+    icon: Play,
     descriptionKey: "contentTypes.audioDesc",
   },
   {
     id: 7,
     name: "Reel",
-    icon: faVideo,
+    icon: VideoIcon,
     descriptionKey: "contentTypes.reelDesc",
   },
 ];
@@ -50,7 +30,7 @@ const getContentTypes = (): ContentType[] => [
 export interface ContentType {
   id: number;
   name: NameType;
-  icon: IconDefinition;
+  icon: LucideIcon;
   descriptionKey: string;
 }
 

@@ -16,18 +16,18 @@ export interface ShardedInitialStateInterface {
 
 export const shardedInitialState: ShardedInitialStateInterface = {
   categoryId: "",
-  language: "English",
+  language: "Arabic",
   title: "",
   slug: null,
   metaDescription: "",
   metaKeywords: "",
   optionalURL: null,
   scheduledAt: null,
-  status: "Draft",
+  status: "Published",
   visibility: true,
-  showOnlyToRegisteredUsers: true,
+  showOnlyToRegisteredUsers: false,
   tagIds: [],
-  addToRecommended: true,
+  addToRecommended: false,
 };
 
 export interface ArticleInitialStateInterface
@@ -43,9 +43,9 @@ export interface ArticleInitialStateInterface
 }
 export const articleInitialState: ArticleInitialStateInterface = {
   ...shardedInitialState,
-  addToBreaking: true,
-  addToFeatured: true,
-  addToSlider: true,
+  addToBreaking: false,
+  addToFeatured: false,
+  addToSlider: false,
   content: "",
   imageUrl: "",
   imageDescription: null,
@@ -63,9 +63,9 @@ export interface AudioInitialStateInterface extends ShardedInitialStateInterface
 }
 export const audioInitialState: AudioInitialStateInterface = {
   ...shardedInitialState,
-  addToBreaking: true,
-  addToFeatured: true,
-  addToSlider: true,
+  addToBreaking: false,
+  addToFeatured: false,
+  addToSlider: false,
   audioUrl: null,
   imageUrl: "",
   thumbnailUrl: null,
@@ -85,9 +85,9 @@ export interface VideoInitialStateInterface extends ShardedInitialStateInterface
 }
 export const videoInitialState: VideoInitialStateInterface = {
   ...shardedInitialState,
-  addToBreaking: true,
-  addToFeatured: true,
-  addToSlider: true,
+  addToBreaking: false,
+  addToFeatured: false,
+  addToSlider: false,
   content: "",
   duration: null,
   videoUrl: null,

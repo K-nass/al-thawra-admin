@@ -1,18 +1,18 @@
-import Loader from "@/components/Common/Loader";
-import type { CommentInterface, MessageInterface } from "../DashboardHome";
-import DataTableHeader from "./DataTableHeader";
-import TableRow from "./TableRow";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ChevronRight } from "lucide-react";
+import Loader from "@/components/Common/Loader";
+import type { CommentInterface, MessageInterface } from "../DashboardHome";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 
 interface DataTableSectionInterFace {
   label: string;
   description: string;
   cols: string[];
   data: CommentInterface[] | MessageInterface[];
-  isLoading: boolean,
-  isError: boolean
-  error?:string
+  isLoading: boolean;
+  isError: boolean;
+  error?: string;
   viewAllPath?: string;
 }
 
@@ -30,46 +30,80 @@ export default function DataTableSection({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white  rounded-lg shadow">
-      <DataTableHeader label={label} description={description} />
-      <div className="p-4">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-[#717478]">
-              {cols.map((col, index) => (
-                <th key={index} className="py-2 px-3 font-medium">{col}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading && !isError ? (
-              <tr>
-                <td colSpan={cols.length} className="text-center py-30">
-                  <Loader />
-                </td>
-              </tr>
-            ) : (
-              data?.map((item) => <TableRow key={item.id} item={item} />)
-            )}
-            {isError && <tr>
-              <td colSpan={cols.length} className="text-center py-30">
-                <p className="text-red-400 text-2xl font-bold">{error}</p>
-              </td>
-            </tr>}
-          </tbody>
-        </table>
-      </div>
-      {viewAllPath && (
-        <div className="p-4 border-t border-slate-200 flex justify-end">
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full">
+      <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div>
+          <h3 className="text-lg font-bold text-slate-900">{label}</h3>
+          <p className="text-sm text-slate-500 mt-0.5">{description}</p>
+        </div>
+        {viewAllPath && (
           <button 
             type="button"
             onClick={() => navigate(viewAllPath)}
-            className="text-sm px-4 py-2 rounded-md bg-slate-100 hover:bg-slate-200 cursor-pointer transition-colors"
+            className="text-xs font-bold text-primary hover:text-emerald-700 flex items-center gap-1 transition-colors group"
           >
-            {t('common.show')}
+            {t('common.viewAll') || "View All"}
+            <ChevronRight size={14} className="transition-transform group-hover:translate-x-0.5" />
           </button>
-        </div>
-      )}
+        )}
+      </div>
+
+      <div className="flex-1 overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              {cols.map((col, index) => (
+                <TableHead key={index} className="bg-transparent border-none py-4">{col}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={cols.length} className="text-center py-20">
+                  <Loader />
+                </TableCell>
+              </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={cols.length} className="text-center py-20">
+                  <p className="text-error-hover font-semibold">{error || "Failed to load data"}</p>
+                </TableCell>
+              </TableRow>
+            ) : (!data || data.length === 0) ? (
+              <TableRow>
+                <TableCell colSpan={cols.length} className="text-center py-20 text-slate-500 italic">
+                  No records found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((item) => (
+                <DataRow key={item.id} item={item} />
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
+  );
+}
+
+function DataRow({ item }: { item: CommentInterface | MessageInterface }) {
+  const isComment = "comment" in item;
+  const content = isComment ? (item as CommentInterface).comment : (item as MessageInterface).message;
+  // Handle both possible structures for messages
+  const name = isComment ? (item as CommentInterface).name : ((item as any).username || (item as any).userName || "-");
+  const email = "email" in item ? (item as MessageInterface).email : null;
+  const date = item.date;
+
+  return (
+    <TableRow>
+      <TableCell className="font-semibold text-slate-900">{name}</TableCell>
+      {email && <TableCell className="text-slate-500">{email}</TableCell>}
+      <TableCell className="max-w-[300px] truncate" title={content}>{content}</TableCell>
+      <TableCell className="whitespace-nowrap text-slate-400 text-xs font-medium">
+        {new Date(date).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+      </TableCell>
+    </TableRow>
   );
 }

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { X, Shield, Loader2, Save } from 'lucide-react';
 import { usersApi, type ChangeUserRoleDto } from '@/api/users.api';
 import { rolesApi } from '@/api/roles.api';
 
@@ -71,24 +70,30 @@ export default function ChangeRoleModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-10000 flex items-center justify-center">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div 
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+        onClick={onClose} 
+      />
 
       {/* Dialog */}
-      <div className="relative bg-white rounded-lg shadow-2xl max-w-sm w-full mx-4">
-        {/* Close button */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <FontAwesomeIcon icon={faXmark} className="text-xl" />
-        </button>
-
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">{t('users.changeRole')}</h2>
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+               <Shield size={18} />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900">{t('users.changeRole')}</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Form */}
@@ -96,53 +101,59 @@ export default function ChangeRoleModal({
           <div className="p-6 space-y-4">
             {/* API Error */}
             {apiError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+              <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">
                 {apiError}
               </div>
             )}
 
             {/* Role dropdown */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
                 {t('users.newRole')}
               </label>
-              <select
-                value={selectedRole}
-                onChange={(e) => {
-                  setSelectedRole(e.target.value);
-                  setRoleError(null);
-                }}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm ${
-                  roleError ? 'border-red-400' : 'border-slate-300'
-                }`}
-              >
-                <option value="">{t('users.selectRole')}</option>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.name}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <select
+                  value={selectedRole}
+                  onChange={(e) => {
+                    setSelectedRole(e.target.value);
+                    setRoleError(null);
+                  }}
+                  className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all appearance-none ${
+                    roleError 
+                      ? 'border-red-300 focus:ring-red-100' 
+                      : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
+                  }`}
+                >
+                  <option value="">{t('users.selectRole')}</option>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.name}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               {roleError && (
-                <p className="mt-1 text-xs text-red-600">{roleError}</p>
+                <p className="px-1 text-xs font-medium text-red-500">{roleError}</p>
               )}
             </div>
           </div>
 
           {/* Footer */}
-          <div className="flex gap-3 p-6 border-t">
+          <div className="px-6 py-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium text-sm"
+              className="flex-1 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-semibold text-sm shadow-sm"
             >
               {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-primary text-white rounded-xl hover:bg-emerald-600 active:scale-[0.98] transition-all font-semibold text-sm shadow-sm shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
+              {isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               {isPending ? t('common.saving') : t('common.save')}
             </button>
           </div>

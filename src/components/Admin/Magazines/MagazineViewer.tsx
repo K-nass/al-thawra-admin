@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faTimes,
-  faChevronLeft,
-  faChevronRight,
-  faSearchPlus,
-  faSearchMinus,
-} from "@fortawesome/free-solid-svg-icons";
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Loader2,
+  AlertCircle,
+  FileText
+} from "lucide-react";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
@@ -40,7 +43,6 @@ export default function MagazineViewer({
       setIsLoading(true);
       setError(null);
       
-      // If URL is absolute and matches our backend, convert to relative to use proxy
       let fetchUrl = pdfUrl;
       if (pdfUrl.includes('new-cms-dev.runasp.net/uploads')) {
         fetchUrl = pdfUrl.replace('https://new-cms-dev.runasp.net', '');
@@ -59,18 +61,16 @@ export default function MagazineViewer({
       setBlobUrl(url);
     } catch (err) {
       console.error('Error loading PDF:', err);
-      setError('Failed to load PDF. Please try again.');
+      setError('Failed to synchronize with the PDF repository. Please verify connectivity.');
       setIsLoading(false);
     }
   };
 
-  // Load PDF when component opens or URL changes
   useEffect(() => {
     if (isOpen && pdfUrl) {
       loadPdf();
     }
     
-    // Cleanup blob URL when component unmounts or closes
     return () => {
       if (blobUrl) {
         window.URL.revokeObjectURL(blobUrl);
@@ -86,7 +86,7 @@ export default function MagazineViewer({
 
   const onDocumentLoadError = (error: Error) => {
     console.error("Error loading PDF:", error);
-    setError("Failed to load PDF. Please try again.");
+    setError("Encryption or structure failure. Unable to render document.");
     setIsLoading(false);
   };
 
@@ -98,62 +98,72 @@ export default function MagazineViewer({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full h-full max-w-7xl max-h-screen flex flex-col bg-white rounded-lg shadow-2xl m-4">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Issue {issueNumber}
-          </h2>
-          <div className="flex items-center gap-3">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-xl animate-in fade-in duration-300">
+      <div className="relative w-full h-full max-w-[90vw] max-h-[90vh] flex flex-col bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-500">
+        {/* Header - Premium Navigation */}
+        <div className="flex items-center justify-between px-10 py-6 border-b border-slate-100 bg-slate-50/50 backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/20">
+                <FileText size={20} />
+             </div>
+             <div>
+                <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest leading-none">Magazine Archive</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Issue Reference: {issueNumber}</p>
+             </div>
+          </div>
+
+          <div className="flex items-center gap-6">
             {/* Zoom Controls */}
-            <div className="flex items-center gap-2 border-r border-gray-300 pr-3">
+            <div className="flex items-center gap-2 px-6 border-x border-slate-200">
               <button
                 onClick={zoomOut}
                 disabled={scale <= 0.5}
-                className="p-2 text-gray-600 hover:text-[#13967B] hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-primary hover:bg-white rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-slate-200 shadow-sm"
                 title="Zoom Out"
               >
-                <FontAwesomeIcon icon={faSearchMinus} />
+                <ZoomOut size={18} />
               </button>
-              <span className="text-sm font-medium text-gray-700 min-w-[3rem] text-center">
-                {Math.round(scale * 100)}%
-              </span>
+              <div className="px-4 py-2 bg-white rounded-xl border border-slate-200 shadow-inner">
+                <span className="text-[10px] font-black text-slate-900 min-w-[3rem] text-center block">
+                  {Math.round(scale * 100)}%
+                </span>
+              </div>
               <button
                 onClick={zoomIn}
                 disabled={scale >= 2.0}
-                className="p-2 text-gray-600 hover:text-[#13967B] hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-primary hover:bg-white rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed border border-transparent hover:border-slate-200 shadow-sm"
                 title="Zoom In"
               >
-                <FontAwesomeIcon icon={faSearchPlus} />
+                <ZoomIn size={18} />
               </button>
             </div>
 
-            {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-              title="Close"
+              className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100 group"
+              title="Close Portal"
             >
-              <FontAwesomeIcon icon={faTimes} className="text-xl" />
+              <X size={20} className="transition-transform group-hover:rotate-90" />
             </button>
           </div>
         </div>
 
-        {/* PDF Content */}
-        <div className="flex-1 overflow-auto bg-gray-100 p-4">
-          <div className="flex justify-center">
+        {/* PDF Content Area */}
+        <div className="flex-1 overflow-auto bg-slate-50 p-8 custom-scrollbar">
+          <div className="flex justify-center min-h-full">
             {isLoading && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#13967B] mb-4"></div>
-                <p className="text-gray-600">Loading PDF...</p>
+              <div className="flex flex-col items-center justify-center py-32 animate-pulse">
+                <Loader2 size={48} className="text-primary animate-spin mb-6" />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hydrating Document Edges...</p>
               </div>
             )}
 
             {error && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-                  <p className="text-red-600 text-center">{error}</p>
+              <div className="flex flex-col items-center justify-center py-32">
+                <div className="bg-rose-50 border border-rose-100 rounded-[2rem] p-10 max-w-md text-center">
+                  <AlertCircle size={40} className="text-rose-500 mx-auto mb-4" />
+                  <h3 className="text-sm font-black text-rose-900 uppercase tracking-widest mb-2">Registry Error</h3>
+                  <p className="text-xs text-rose-600 leading-relaxed font-medium">{error}</p>
                 </div>
               </div>
             )}
@@ -163,8 +173,8 @@ export default function MagazineViewer({
                 file={blobUrl}
                 onLoadSuccess={onDocumentLoadSuccess}
                 onLoadError={onDocumentLoadError}
-                loading=""
-                className="shadow-lg"
+                loading={null}
+                className="shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-lg overflow-hidden transition-all duration-500"
               >
                 <Page
                   pageNumber={pageNumber}
@@ -180,41 +190,41 @@ export default function MagazineViewer({
 
         {/* Footer - Page Navigation */}
         {!error && numPages > 0 && (
-          <div className="flex items-center justify-center gap-4 px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-center gap-8 py-6 border-t border-slate-100 bg-slate-50/50">
             <button
               onClick={goToPrevPage}
               disabled={pageNumber <= 1}
-              className="p-2 text-gray-600 hover:text-[#13967B] hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-12 h-12 flex items-center justify-center bg-white text-slate-400 hover:text-primary rounded-2xl transition-all shadow-sm border border-slate-200 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               title="Previous Page"
             >
-              <FontAwesomeIcon icon={faChevronLeft} />
+              <ChevronLeft size={20} />
             </button>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Page</span>
-              <input
-                type="number"
-                min={1}
-                max={numPages}
-                value={pageNumber}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value);
-                  if (value >= 1 && value <= numPages) {
-                    setPageNumber(value);
-                  }
-                }}
-                className="w-16 px-2 py-1 text-center border border-gray-300 rounded-md focus:ring-[#13967B] focus:border-[#13967B]"
-              />
-              <span className="text-sm text-gray-600">of {numPages}</span>
+            <div className="flex items-center gap-4 bg-white px-6 py-2 rounded-2xl border border-slate-200 shadow-sm">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sequence</span>
+              <div className="flex items-center gap-3">
+                 <input
+                   type="number"
+                   min={1}
+                   max={numPages}
+                   value={pageNumber}
+                   onChange={(e) => {
+                     const value = parseInt(e.target.value);
+                     if (value >= 1 && value <= numPages) setPageNumber(value);
+                   }}
+                   className="w-14 h-8 text-center bg-slate-50 border border-slate-200 rounded-lg text-xs font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                 />
+                 <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">of {numPages}</span>
+              </div>
             </div>
 
             <button
               onClick={goToNextPage}
               disabled={pageNumber >= numPages}
-              className="p-2 text-gray-600 hover:text-[#13967B] hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-12 h-12 flex items-center justify-center bg-white text-slate-400 hover:text-primary rounded-2xl transition-all shadow-sm border border-slate-200 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
               title="Next Page"
             >
-              <FontAwesomeIcon icon={faChevronRight} />
+              <ChevronRight size={20} />
             </button>
           </div>
         )}

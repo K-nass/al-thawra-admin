@@ -3,12 +3,27 @@ import { useNavigate, useParams } from "react-router-dom";
 import { usePage, useCreatePage, useUpdatePage, useFetchPages } from "@/hooks/useFetchPages";
 import type { CreatePageRequest } from "@/api/pages.api";
 import { useToast } from "@/components/Toast/ToastContainer";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSave, faArrowLeft, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { 
+  ChevronLeft, 
+  Save, 
+  Loader2, 
+  Layout, 
+  Globe2, 
+  Settings, 
+  FileText, 
+  Plus, 
+  X,
+  Eye,
+  Columns,
+  Users,
+  Route
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function PageForm() {
   const navigate = useNavigate();
   const toast = useToast();
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
 
@@ -28,6 +43,7 @@ export default function PageForm() {
     showRightColumn: true,
     showTitle: true,
   });
+  const [errors, setErrors] = useState<{title?: string, content?: string, language?: string, location?: string}>({});
 
   const [keywordInput, setKeywordInput] = useState("");
 
@@ -38,7 +54,6 @@ export default function PageForm() {
   const { data: allPages } = useFetchPages({
     pageSize: 90,
   });
-
 
   // Populate form when editing
   useEffect(() => {
@@ -101,12 +116,23 @@ export default function PageForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors: {title?: string, content?: string, language?: string, location?: string} = {};
 
     if (!formData.title.trim()) {
-      toast.error("Title is required");
+      newErrors.title = "Title is required";
+    }
+
+    if (!formData.content.trim()) {
+      newErrors.content = "Content is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fix the errors in the form");
       return;
     }
 
+    setErrors({});
     if (isEditMode) {
       updateMutation.mutate(
         { id: id!, data: formData },
@@ -119,15 +145,11 @@ export default function PageForm() {
             const errorData = error.response?.data;
             let errorMessage = "Failed to update page";
 
-            if (errorData?.title) {
-              errorMessage = errorData.title;
-            }
-
+            if (errorData?.title) errorMessage = errorData.title;
             if (errorData?.errors) {
               const errorDetails = Object.values(errorData.errors).flat().join("\n");
               errorMessage += "\n\n" + errorDetails;
             }
-
             toast.error(errorMessage);
           },
         }
@@ -142,15 +164,11 @@ export default function PageForm() {
           const errorData = error.response?.data;
           let errorMessage = "Failed to create page";
 
-          if (errorData?.title) {
-            errorMessage = errorData.title;
-          }
-
+          if (errorData?.title) errorMessage = errorData.title;
           if (errorData?.errors) {
             const errorDetails = Object.values(errorData.errors).flat().join("\n");
             errorMessage += "\n\n" + errorDetails;
           }
-
           toast.error(errorMessage);
         },
       });
@@ -159,290 +177,345 @@ export default function PageForm() {
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  if (isLoadingPage && isEditMode) {
+     return (
+        <div className="flex-1 flex flex-col items-center justify-center bg-surface">
+           <Loader2 size={48} className="text-primary animate-spin mb-4" />
+           <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Hydrating Page Archive...</p>
+        </div>
+     );
+  }
+
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/pages")}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <FontAwesomeIcon icon={faArrowLeft} className="text-gray-600" />
-          </button>
-          <h1 className="text-2xl font-bold text-gray-800">
-            {isEditMode ? "Edit Page" : "Add Page"}
-          </h1>
-        </div>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
-        {/* Title */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Title <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Enter page title"
-          />
-        </div>
-
-        {/* Slug */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
-          <input
-            type="text"
-            name="slug"
-            value={formData.slug || ""}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="auto-generated-from-title"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Leave empty to auto-generate from title
-          </p>
-        </div>
-
-        {/* Language & Location */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Language <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="language"
-              value={formData.language}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="English">English</option>
-              <option value="Arabic">Arabic</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Location <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="TopMenu">Top Menu</option>
-              <option value="MainMenu">Main Menu</option>
-              <option value="Footer">Footer</option>
-              <option value="DontAddToMenu">Don't Add to Menu</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Brief description for SEO"
-          />
-        </div>
-
-        {/* Content */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Content <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            required
-            rows={10}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-            placeholder="Page content (HTML supported)"
-          />
-        </div>
-
-        {/* Keywords */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={keywordInput}
-              onChange={(e) => setKeywordInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddKeyword();
-                }
-              }}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Add keyword and press Enter"
-            />
+    <div className="flex-1 flex flex-col min-h-0 bg-surface lg:flex-row lg:overflow-hidden">
+      {/* Scrollable Form Area */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+        <form onSubmit={handleSubmit} className="max-w-7xl mx-auto space-y-8 pb-20">
+           {/* Header Area */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+               <button 
+                 type="button"
+                 onClick={() => navigate("/admin/pages")}
+                 className="w-10 h-10 flex items-center justify-center rounded-xl bg-white text-slate-400 hover:text-slate-600 transition-all border border-slate-200 shadow-sm active:scale-95"
+               >
+                 <ChevronLeft size={20} />
+               </button>
+               <div>
+                  <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none group">
+                    {isEditMode ? "Document Revision" : "New Terminal Page"}
+                  </h1>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 flex items-center gap-2">
+                    <Route size={10} className="text-primary" />
+                    Content Infrastructure
+                  </p>
+               </div>
+            </div>
+            
             <button
-              type="button"
-              onClick={handleAddKeyword}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+               type="submit"
+               disabled={isPending}
+               className="inline-flex items-center justify-center px-8 py-3.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-slate-200 hover:bg-primary hover:shadow-primary/20 transition-all duration-300 gap-3 group active:scale-95 disabled:opacity-50"
             >
-              Add
+               {isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+               {isEditMode ? "Commit Changes" : "Deploy Page"}
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {formData.keywords.map((keyword) => (
-              <span
-                key={keyword}
-                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-              >
-                {keyword}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveKeyword(keyword)}
-                  className="hover:text-blue-900"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        </div>
 
-        {/* Menu Order & Parent Page */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Menu Order</label>
-            <input
-              type="number"
-              name="menuOrder"
-              value={formData.menuOrder}
-              onChange={handleChange}
-              min="1"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Left Column - Main Details */}
+            <div className="lg:col-span-8 space-y-8">
+               {/* Core Content Card */}
+               <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-8 space-y-6">
+                  <div className="flex items-center gap-3 mb-2">
+                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                        <FileText size={16} />
+                     </div>
+                     <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Page Parameters</h2>
+                  </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Parent Page</label>
-            <select
-              name="parentPageId"
-              value={formData.parentPageId || ""}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">No Parent</option>
-              {allPages?.items
-                ?.filter((page) => page.id !== id)
-                .map((page) => (
-                  <option key={page.id} value={page.id}>
-                    {page.title}
-                  </option>
-                ))}
-            </select>
-          </div>
-        </div>
+                  <div className="space-y-4">
+                     <div>
+                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                         Document Title <span className="text-rose-500">*</span>
+                       </label>
+                       <input
+                         type="text"
+                         name="title"
+                         value={formData.title}
+                         onChange={handleChange}
+                         required
+                         className={`w-full px-5 py-4 bg-slate-50 border rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:ring-4 transition-all ${
+                           errors.title ? 'border-rose-400 focus:ring-rose-500/10' : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
+                         }`}
+                         placeholder="Enter descriptive page title"
+                       />
+                       {errors.title && (
+                         <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{errors.title}</p>
+                       )}
+                     </div>
 
-        {/* Checkboxes */}
-        <div className="space-y-3">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="showTitle"
-              name="showTitle"
-              checked={formData.showTitle}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label htmlFor="showTitle" className="ms-2 text-sm text-gray-700">
-              Show Title
-            </label>
-          </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Archive ID (Slug)</label>
+                          <input
+                            type="text"
+                            name="slug"
+                            value={formData.slug || ""}
+                            onChange={handleChange}
+                            className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+                            placeholder="auto-generated-id"
+                          />
+                        </div>
+                        <div>
+                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                             Localization Node <span className="text-rose-500">*</span>
+                           </label>
+                           <select
+                              name="language"
+                              value={formData.language}
+                              onChange={handleChange}
+                              className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
+                           >
+                              <option value="English">🇬🇧 English Registry</option>
+                              <option value="Arabic">🇸🇦 Arabic Registry</option>
+                           </select>
+                        </div>
+                     </div>
+                  </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="showBreadcrumb"
-              name="showBreadcrumb"
-              checked={formData.showBreadcrumb}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label htmlFor="showBreadcrumb" className="ms-2 text-sm text-gray-700">
-              Show Breadcrumb
-            </label>
-          </div>
+                   <div>
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                       System Content (HTML SUPPORTED) <span className="text-rose-500">*</span>
+                     </label>
+                     <textarea
+                       name="content"
+                       value={formData.content}
+                       onChange={handleChange}
+                       required
+                       rows={12}
+                       className={`w-full px-5 py-4 bg-slate-50 border rounded-[2rem] text-sm font-medium placeholder:text-slate-300 focus:ring-4 transition-all font-mono leading-relaxed ${
+                         errors.content ? 'border-rose-400 focus:ring-rose-500/10' : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
+                       }`}
+                       placeholder="Enter raw system content or HTML structure..."
+                     />
+                     {errors.content && (
+                       <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{errors.content}</p>
+                     )}
+                   </div>
+               </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="showRightColumn"
-              name="showRightColumn"
-              checked={formData.showRightColumn}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label htmlFor="showRightColumn" className="ms-2 text-sm text-gray-700">
-              Show Right Column
-            </label>
-          </div>
+               {/* SEO Card */}
+               <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-8 space-y-6">
+                  <div className="flex items-center gap-3 mb-2">
+                     <div className="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600">
+                        <Globe2 size={16} />
+                     </div>
+                     <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Metadata Strategy</h2>
+                  </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="showOnlyToRegisteredUsers"
-              name="showOnlyToRegisteredUsers"
-              checked={formData.showOnlyToRegisteredUsers}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label htmlFor="showOnlyToRegisteredUsers" className="ms-2 text-sm text-gray-700">
-              Show Only to Registered Users
-            </label>
-          </div>
-        </div>
+                  <div className="space-y-4">
+                     <div>
+                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Meta Descriptor</label>
+                       <textarea
+                         name="description"
+                         value={formData.description}
+                         onChange={handleChange}
+                         rows={3}
+                         className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+                         placeholder="Brief summary for indexing services..."
+                       />
+                     </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/pages")}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isPending || isLoadingPage}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {isPending ? (
-              <>
-                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <FontAwesomeIcon icon={faSave} />
-                Save
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+                     <div>
+                       <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Keyword Pulse</label>
+                       <div className="flex gap-2 mb-3">
+                         <input
+                           type="text"
+                           value={keywordInput}
+                           onChange={(e) => setKeywordInput(e.target.value)}
+                           onKeyPress={(e) => {
+                             if (e.key === "Enter") {
+                               e.preventDefault();
+                               handleAddKeyword();
+                             }
+                           }}
+                           className="flex-1 px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold placeholder:text-slate-300 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+                           placeholder="Enter token and press return"
+                         />
+                         <button
+                           type="button"
+                           onClick={handleAddKeyword}
+                           className="px-6 py-3 bg-slate-100 text-slate-900 font-black text-[10px] uppercase tracking-widest border border-slate-200 rounded-2xl hover:bg-slate-200 transition-all active:scale-95"
+                         >
+                           Attach
+                         </button>
+                       </div>
+                       <div className="flex flex-wrap gap-2">
+                         {formData.keywords.map((keyword) => (
+                           <div
+                             key={keyword}
+                             className="group flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-tight hover:border-primary/30 transition-all"
+                           >
+                             {keyword}
+                             <button
+                               type="button"
+                               onClick={() => handleRemoveKeyword(keyword)}
+                               className="hover:text-rose-500 transition-colors"
+                             >
+                               <X size={12} />
+                             </button>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Right Column - System Controls */}
+            <div className="lg:col-span-4 space-y-8">
+               {/* Location Card */}
+               <div className="bg-slate-900 rounded-[2.5rem] shadow-xl p-8 text-white space-y-6">
+                  <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center text-white border border-white/20">
+                        <Layout size={16} />
+                     </div>
+                     <h2 className="text-sm font-black uppercase tracking-widest">Portal Cluster</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                     <div>
+                        <label className="block text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-2 ml-1">Menu Injection Point</label>
+                        <select
+                           name="location"
+                           value={formData.location}
+                           onChange={handleChange}
+                           className="w-full px-5 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all cursor-pointer appearance-none"
+                        >
+                           <option className="bg-slate-900" value="TopMenu">Top Global Header</option>
+                           <option className="bg-slate-900" value="MainMenu">Main Terminal Menu</option>
+                           <option className="bg-slate-900" value="Footer">Institutional Footer</option>
+                           <option className="bg-slate-900" value="DontAddToMenu">Isolate (Standalone)</option>
+                        </select>
+                     </div>
+
+                     <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-2 ml-1">Sequence</label>
+                           <input
+                             type="number"
+                             name="menuOrder"
+                             value={formData.menuOrder}
+                             onChange={handleChange}
+                             min="1"
+                             className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-2xl text-xs font-black text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
+                           />
+                        </div>
+                        <div>
+                           <label className="block text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-2 ml-1">Parent Node</label>
+                           <select
+                             name="parentPageId"
+                             value={formData.parentPageId || ""}
+                             onChange={handleChange}
+                             className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-bold text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all appearance-none cursor-pointer"
+                           >
+                              <option className="bg-slate-900" value="">Global Root</option>
+                              {allPages?.items
+                                ?.filter((page) => page.id !== id)
+                                .map((page) => (
+                                  <option className="bg-slate-900" key={page.id} value={page.id}>
+                                    {page.title}
+                                  </option>
+                                ))}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Toggles Card */}
+               <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm p-8 space-y-6">
+                  <div className="flex items-center gap-3">
+                     <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-500 border border-slate-100">
+                        <Settings size={16} />
+                     </div>
+                     <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest">Visibility Logic</h2>
+                  </div>
+
+                  <div className="space-y-3">
+                     <ToggleButton 
+                        id="showTitle" 
+                        label="Display Document Title" 
+                        checked={formData.showTitle} 
+                        onChange={handleChange} 
+                        icon={<Eye size={14} />}
+                     />
+                     <ToggleButton 
+                        id="showBreadcrumb" 
+                        label="Enable Navigation Trail" 
+                        checked={formData.showBreadcrumb} 
+                        onChange={handleChange} 
+                        icon={<Layout size={14} />}
+                     />
+                     <ToggleButton 
+                        id="showRightColumn" 
+                        label="Deploy Sidebar Widget" 
+                        checked={formData.showRightColumn} 
+                        onChange={handleChange} 
+                        icon={<Columns size={14} />}
+                     />
+                     <ToggleButton 
+                        id="showOnlyToRegisteredUsers" 
+                        label="Restrict to Authorized Agents" 
+                        checked={formData.showOnlyToRegisteredUsers} 
+                        onChange={handleChange} 
+                        icon={<Users size={14} />}
+                     />
+                  </div>
+               </div>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
+}
+
+function ToggleButton({ 
+  id, 
+  label, 
+  checked, 
+  onChange, 
+  icon 
+}: { 
+  id: string, 
+  label: string, 
+  checked: boolean, 
+  onChange: any, 
+  icon: React.ReactNode 
+}) {
+   return (
+      <label htmlFor={id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer group ${checked ? 'bg-primary/5 border-primary/20 shadow-sm' : 'bg-slate-50 border-slate-100 hover:border-slate-200'}`}>
+         <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${checked ? 'bg-primary text-white' : 'bg-white text-slate-300'}`}>
+               {icon}
+            </div>
+            <span className={`text-[11px] font-black uppercase tracking-tight transition-colors ${checked ? 'text-primary' : 'text-slate-500'}`}>
+               {label}
+            </span>
+         </div>
+         <div className="relative inline-flex items-center">
+            <input
+               type="checkbox"
+               id={id}
+               name={id}
+               checked={checked}
+               onChange={onChange}
+               className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+         </div>
+      </label>
+   );
 }

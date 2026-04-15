@@ -1,136 +1,144 @@
-import type { UseMutationResult } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import type { ShardedInitialStateInterface } from "./usePostReducer/postData";
+import type { HandleChangeType } from "./types";
+import { 
+  Send, 
+  Clock, 
+  ShieldCheck, 
+  CheckCircle2,
+  Loader2,
+  ChevronDown
+} from "lucide-react";
 
-interface PublishSectionProps {
-  mutation: UseMutationResult<unknown, unknown, void, unknown>;
-  isEditMode?: boolean;
-  state: any; // Using any to avoid complex type union issues
-  handleChange: (e: any) => void;
+interface Props {
+  mutation: any;
+  state: any;
+  handleChange: HandleChangeType;
   fieldErrors?: Record<string, string[]>;
+  isEditMode?: boolean;
 }
 
-export default function PublishSection({ mutation: _mutation, isEditMode = false, state, handleChange, fieldErrors }: PublishSectionProps) {
+export default function PublishSection({ mutation, state, handleChange, fieldErrors = {}, isEditMode = false }: Props) {
   const { t } = useTranslation();
 
-  // Format the UTC date to local datetime-local input format
+  // Handle date formatting
   const getLocalDateTime = (utcDateString: string | null) => {
     if (!utcDateString) return "";
     const date = new Date(utcDateString);
-    // Adjust to local time for display
     const offset = date.getTimezoneOffset() * 60000;
     const localDate = new Date(date.getTime() - offset);
     return localDate.toISOString().slice(0, 16);
   };
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const localValue = e.target.value;
-    if (!localValue) {
-      handleChange({
-        target: {
-          name: "scheduledAt",
-          value: null,
-          type: "text"
-        }
-      });
-      return;
-    }
-
-    // Convert local time to UTC
-    const date = new Date(localValue);
-    const utcString = date.toISOString();
-
-    handleChange({
-      target: {
-        name: "scheduledAt",
-        value: utcString,
-        type: "text"
-      }
-    });
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
-    if (checked) {
-      // Set default to now if checked
-      const now = new Date();
-      handleChange({
-        target: {
-          name: "scheduledAt",
-          value: now.toISOString(),
-          type: "text"
-        }
-      });
-    } else {
-      handleChange({
-        target: {
-          name: "scheduledAt",
-          value: null,
-          type: "text"
-        }
-      });
-    }
-  };
-
   const scheduledAtErrors = fieldErrors?.scheduledat || fieldErrors?.ScheduledAt;
 
   return (
-    <div className="bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-slate-200 space-y-3 sm:space-y-4">
-      <h3 className="text-sm sm:text-base font-semibold">{t('post.publish')}</h3>
-      <div className="space-y-3">
-        <label className="flex items-center cursor-pointer select-none">
-          <input
-            className="rounded text-primary focus:ring-primary w-4 h-4"
-            type="checkbox"
-            checked={!!state.scheduledAt}
-            onChange={handleCheckboxChange}
-          />
-          <span className="ml-2 text-sm font-medium text-slate-700">{t('post.scheduledPost')}</span>
-        </label>
-
-        {state.scheduledAt && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-1" data-error-field={scheduledAtErrors ? true : undefined}>
-            <div className="relative">
-              <input
-                type="datetime-local"
-                className={`w-full px-3 py-2 border rounded-md text-sm shadow-sm transition-colors
-                  focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                  ${scheduledAtErrors ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-slate-300 hover:border-slate-400'}
-                `}
-                value={getLocalDateTime(state.scheduledAt)}
-                onChange={handleDateChange}
-                min={new Date().toISOString().slice(0, 16)}
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                {/* Calendar icon could go here if we hide the native indicator */}
-              </div>
-            </div>
-
-            {scheduledAtErrors ? (
-              <p className="text-xs text-red-500 font-medium mt-1">
-                {scheduledAtErrors[0]}
-              </p>
-            ) : (
-              <p className="text-xs text-slate-500">
-                {t('post.scheduledTimeUtc', 'Scheduled time will be saved in UTC')}
-              </p>
-            )}
-          </div>
-        )}
+    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 relative overflow-hidden group">
+      <div className="flex items-center gap-3 mb-6 relative">
+        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-sm border border-primary/20">
+          <Send size={20} />
+        </div>
+        <div>
+          <h3 className="text-lg font-black text-slate-900 tracking-tight">
+            {isEditMode ? "Update Content" : t('post.publish')}
+          </h3>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('post.visibilityAndScheduling')}</p>
+        </div>
       </div>
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:space-x-2">
-        <button
-          type="button"
-          className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-[#DEA530] text-white rounded hover:bg-amber-600 cursor-pointer"
-        >
-          {t('post.saveAsDraft')}
-        </button>
-        <button
-          type="submit"
-          className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-primary bg-[#605CA8] rounded hover:bg-indigo-700 cursor-pointer text-white"
-        >
-          {isEditMode ? t('post.updatePost', 'Update Post') : t('post.publishPost')}
-        </button>
+
+      <div className="space-y-6 relative">
+        {/* Status Select */}
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
+            <ShieldCheck size={10} /> {t('formLabels.status')} <span className="text-rose-500 ml-1 font-bold">*</span>
+          </label>
+          <div className="relative group/select">
+            <select
+              name="status"
+              value={state.status}
+              onChange={(e) => handleChange(e as any)}
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all appearance-none"
+            >
+              <option value="Published">{t('common.published') || "Published"}</option>
+              <option value="Draft">{t('common.draft') || "Draft"}</option>
+            </select>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+              <ChevronDown size={16} />
+            </div>
+          </div>
+          {fieldErrors.status && (
+            <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{fieldErrors.status}</p>
+          )}
+        </div>
+
+        {/* Scheduled At (Date Picker) */}
+        <div className="space-y-3">
+            <label className="flex items-center cursor-pointer select-none group/check">
+              <input
+                className="sr-only"
+                type="checkbox"
+                checked={!!state.scheduledAt}
+                onChange={(e) => {
+                    if (e.target.checked) {
+                        handleChange({ target: { name: "scheduledAt", value: new Date().toISOString(), type: "text" } } as any);
+                    } else {
+                        handleChange({ target: { name: "scheduledAt", value: null, type: "text" } } as any);
+                    }
+                }}
+              />
+              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                  state.scheduledAt ? 'bg-primary border-primary' : 'bg-transparent border-slate-200 group-hover/check:border-primary/50'
+              }`}>
+                  {state.scheduledAt && <CheckCircle2 size={12} className="text-white" />}
+              </div>
+              <span className="ml-3 text-xs font-bold text-slate-600 uppercase tracking-wider">{t('post.scheduledPost')}</span>
+            </label>
+
+            {state.scheduledAt && (
+              <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-1.5">
+                <div className="relative group/input">
+                    <input
+                        type="datetime-local"
+                        className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-4 transition-all appearance-none ${
+                            scheduledAtErrors ? 'border-rose-300 focus:ring-rose-500/10' : 'border-slate-200 focus:ring-primary/10'
+                        }`}
+                        value={getLocalDateTime(state.scheduledAt)}
+                        onChange={(e) => {
+                            const date = new Date(e.target.value);
+                            handleChange({ target: { name: 'scheduledAt', value: date.toISOString(), type: 'text' } } as any);
+                        }}
+                        min={new Date().toISOString().slice(0, 16)}
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <Clock size={16} />
+                    </div>
+                </div>
+                {scheduledAtErrors && (
+                    <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{scheduledAtErrors[0]}</p>
+                )}
+              </div>
+            )}
+        </div>
+
+        {/* Action Button */}
+        <div className="pt-2">
+           <button
+             type="submit"
+             disabled={mutation.isPending}
+             className="w-full flex items-center justify-center gap-3 py-4 bg-primary text-white rounded-2xl font-black text-sm uppercase tracking-[0.15em] shadow-xl shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed group/btn"
+           >
+             {mutation.isPending ? (
+               <Loader2 size={20} className="animate-spin" />
+             ) : (
+               <>
+                 <Send size={18} className="group-hover/btn:translate-x-1 transition-transform" />
+                 {isEditMode ? "Update Article" : t('post.publish')}
+               </>
+             )}
+           </button>
+           <p className="mt-4 text-[10px] font-bold text-slate-400 text-center uppercase tracking-widest leading-relaxed">
+             {t('post.confirmDetailsBeforePublish')}
+           </p>
+        </div>
       </div>
     </div>
   );

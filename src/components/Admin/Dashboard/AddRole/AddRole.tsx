@@ -2,14 +2,26 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faList } from "@fortawesome/free-solid-svg-icons";
+import { 
+  Shield, 
+  ChevronLeft, 
+  Check, 
+  Info, 
+  Save, 
+  Loader2,
+  Lock,
+  Edit3,
+  Globe
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { rolesApi, type CreateRoleDto } from "@/api";
+import { useToast } from "@/components/Toast/ToastContainer";
 
 export default function AddRole() {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const toast = useToast();
+    
     const [roleNameEn, setRoleNameEn] = useState("");
     const [roleNameAr, setRoleNameAr] = useState("");
     const [permissions, setPermissions] = useState<string[]>([]);
@@ -24,59 +36,40 @@ export default function AddRole() {
         );
     };
 
-    // Preset role permissions
-    // Note: Using AddPost for both posts and reels, CanReferPost for both referring posts and reels
-    // until backend adds AddReels and CanReferReels permissions
-    const setAuthorPermissions = () => {
-        setPermissions(["AddPost"]);
-        setRoleNameEn("Author");
-        setRoleNameAr("كاتب");
+    const presetRoles = [
+        { name: "Author", nameAr: "كاتب", perms: ["AddPost"], color: "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100" },
+        { name: "Member", nameAr: "عضو", perms: ["AddPost"], color: "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100" },
+        { name: "Writer", nameAr: "محرر", perms: ["AddPost", "CanReferPost"], color: "bg-purple-50 text-purple-700 border-purple-100 hover:bg-purple-100" },
+    ];
+
+    const applyPreset = (preset: typeof presetRoles[0]) => {
+        setPermissions(preset.perms);
+        setRoleNameEn(preset.name);
+        setRoleNameAr(preset.nameAr);
+        toast.info(t('roles.presetApplied', { name: preset.name }) || `Applied ${preset.name} preset`);
     };
 
-    const setMemberPermissions = () => {
-        setPermissions(["AddPost"]);
-        setRoleNameEn("Member");
-        setRoleNameAr("عضو");
-    };
-
-    const setWriterPermissions = () => {
-        setPermissions(["AddPost", "CanReferPost"]);
-        setRoleNameEn("Writer");
-        setRoleNameAr("محرر");
-    };
-
-    // Create role mutation
     const createRoleMutation = useMutation({
         mutationFn: (data: CreateRoleDto) => rolesApi.create(data),
         onSuccess: () => {
-            // Navigate back to roles list on success
+            toast.success(t('roles.successCreate', 'Role created successfully'));
             navigate("/admin/roles-permissions");
         },
         onError: (err) => {
-            setError("");
-            setFieldErrors({});
-
             if (axios.isAxiosError(err)) {
                 const responseData = err.response?.data;
-
-                // Handle validation errors (422)
                 if (err.response?.status === 422 && responseData?.errors) {
                     const errors: Record<string, string> = {};
                     Object.keys(responseData.errors).forEach((key) => {
                         const messages = responseData.errors[key];
-                        errors[key.toLowerCase()] = Array.isArray(messages)
-                            ? messages[0]
-                            : messages;
+                        errors[key.toLowerCase()] = Array.isArray(messages) ? messages[0] : messages;
                     });
                     setFieldErrors(errors);
-                }
-                // Handle general errors
-                else if (responseData?.title) {
-                    setError(responseData.title);
-                } else if (responseData?.message) {
-                    setError(responseData.message);
+                    toast.error(t('common.validationError', 'Please check form fields'));
                 } else {
-                    setError(err.message || "Failed to create role");
+                    const msg = responseData?.title || responseData?.message || err.message;
+                    setError(msg);
+                    toast.error(msg);
                 }
             } else {
                 setError("An unexpected error occurred");
@@ -84,12 +77,11 @@ export default function AddRole() {
         },
     });
 
-    const handleSubmit = () => {
-        // Clear previous errors
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
         setError("");
         setFieldErrors({});
 
-        // Client-side validation
         if (!roleNameEn.trim()) {
             setFieldErrors({ name: "Role name is required" });
             return;
@@ -97,309 +89,208 @@ export default function AddRole() {
 
         if (permissions.length === 0) {
             setError("Please select at least one permission");
+            toast.info("Please select at least one permission");
             return;
         }
 
-        // Submit the form
         createRoleMutation.mutate({
             name: roleNameEn,
             permissions,
         });
     };
 
+    const allAvailablePermissions = [
+        { id: "AddPost", label: t('roles.addPost') },
+        { id: "CanReferPost", label: t('roles.canReferPost') },
+        { id: "ManageAllPosts", label: t('roles.manageAllPosts') },
+        { id: "Navigation", label: t('roles.navigation') },
+        { id: "Pages", label: t('roles.pages') },
+        { id: "RSSFeeds", label: t('roles.rssFeeds') },
+        { id: "Categories", label: t('roles.categories') },
+        { id: "Tags", label: t('roles.tags') },
+        { id: "Widgets", label: t('roles.widgets') },
+        { id: "Polls", label: t('roles.polls') },
+        { id: "CommentsAndContactMessages", label: t('roles.commentsAndContactMessages') },
+        { id: "Newsletter", label: t('roles.newsletter') },
+        { id: "AdSpaces", label: t('roles.adSpaces') },
+        { id: "Users", label: t('roles.users') },
+        { id: "RolesAndPermissions", label: t('roles.rolesAndPermissionsOption') },
+        { id: "SEOTools", label: t('roles.seoTools') },
+        { id: "Settings", label: t('roles.settings') },
+        { id: "RewardSystem", label: t('roles.rewardSystem') },
+        { id: "AIWriter", label: t('roles.aiWriter') },
+    ];
+
     return (
-        <div className="flex-1 flex flex-col bg-gray-50">
+        <div className="flex-1 flex flex-col min-h-0 bg-surface">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-6 bg-white">
-                <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">{t('roles.addRole')}</h1>
-                <Link
-                    to="/admin/roles-permissions"
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded hover:bg-emerald-700 transition-colors text-sm"
-                >
-                    <FontAwesomeIcon icon={faList} className="text-sm" />
-                    {t('roles.rolesAndPermissions')}
-                </Link>
+            <div className="p-4 sm:p-6 border-b border-slate-200 bg-white">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 max-w-5xl mx-auto w-full">
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => navigate(-1)}
+                            className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 transition-colors"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t('roles.addRole')}</h1>
+                            <p className="text-sm text-slate-500 mt-0.5">Define a new system role and its specific access rules.</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        <Link
+                            to="/admin/roles-permissions"
+                            className="inline-flex items-center justify-center px-4 py-2 border border-slate-200 bg-white text-slate-700 text-sm font-semibold rounded-lg shadow-sm hover:bg-slate-50 transition-all gap-2"
+                        >
+                            {t('roles.rolesAndPermissions')}
+                        </Link>
+                    </div>
+                </div>
             </div>
 
             {/* Content */}
-            <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-y-auto">
-                <div className="bg-white rounded-lg shadow-sm">
-                    {/* Error Message */}
-                    {error && (
-                        <div className="mx-4 sm:mx-6 mt-4 sm:mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-                            <p className="text-sm text-red-700">{error}</p>
+            <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
+                <form onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-6 pb-12">
+                    {/* General Info Card */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <Info size={18} className="text-primary" />
+                                {t('roles.generalInfo', 'General Information')}
+                            </h3>
                         </div>
-                    )}
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* English Name */}
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
+                                        {t('roles.roleNameEnglish')}
+                                    </label>
+                                    <div className="relative">
+                                        <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            value={roleNameEn}
+                                            onChange={(e) => setRoleNameEn(e.target.value)}
+                                            placeholder="e.g. Moderator"
+                                            className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
+                                                fieldErrors.name 
+                                                  ? 'border-red-300 focus:ring-red-100' 
+                                                  : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
+                                            }`}
+                                        />
+                                    </div>
+                                    {fieldErrors.name && (
+                                        <p className="px-1 text-xs font-medium text-red-500">{fieldErrors.name}</p>
+                                    )}
+                                </div>
 
-                    {/* Role Name Inputs */}
-                    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                        <div>
-                            <label
-                                htmlFor="role-name-en"
-                                className="block text-sm font-medium text-slate-700 mb-2"
-                            >
-                                {t('roles.roleNameEnglish')}
-                            </label>
-                            <input
-                                type="text"
-                                id="role-name-en"
-                                value={roleNameEn}
-                                onChange={(e) => setRoleNameEn(e.target.value)}
-                                placeholder="Role Name"
-                                className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
-                                    fieldErrors.name ? "border-red-500" : "border-slate-300"
-                                }`}
-                            />
-                            {fieldErrors.name && (
-                                <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
-                            )}
-                        </div>
-                        <div>
-                            <label
-                                htmlFor="role-name-ar"
-                                className="block text-sm font-medium text-slate-700 mb-2"
-                            >
-                                {t('roles.roleNameArabic')}
-                            </label>
-                            <input
-                                type="text"
-                                id="role-name-ar"
-                                value={roleNameAr}
-                                onChange={(e) => setRoleNameAr(e.target.value)}
-                                placeholder="Role Name"
-                                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                            />
-                        </div>
+                                {/* Arabic Name */}
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">
+                                        {t('roles.roleNameArabic')}
+                                    </label>
+                                    <div className="relative">
+                                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="text"
+                                            value={roleNameAr}
+                                            onChange={(e) => setRoleNameAr(e.target.value)}
+                                            placeholder="مثال: مشرف"
+                                            dir="rtl"
+                                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all text-right"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
 
-                        {/* Quick Role Presets */}
-                        <div className="border-t border-slate-200 pt-4">
-                            <label className="block text-sm font-medium text-slate-700 mb-3">
-                                {t('roles.quickRolePresets')}
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                                <button
-                                    type="button"
-                                    onClick={setAuthorPermissions}
-                                    className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-                                >
-                                    {t('roles.authorPreset')}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={setMemberPermissions}
-                                    className="px-4 py-2 text-sm bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors"
-                                >
-                                    {t('roles.memberPreset')}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={setWriterPermissions}
-                                    className="px-4 py-2 text-sm bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors"
-                                >
-                                    {t('roles.writerPreset')}
-                                </button>
+                            {/* Presets */}
+                            <div>
+                                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1 block mb-3">
+                                    {t('roles.quickRolePresets')}
+                                </label>
+                                <div className="flex flex-wrap gap-3">
+                                    {presetRoles.map((preset) => (
+                                        <button
+                                            key={preset.name}
+                                            type="button"
+                                            onClick={() => applyPreset(preset)}
+                                            className={`px-4 py-2 rounded-xl border text-sm font-semibold transition-all ${preset.color} active:scale-95`}
+                                        >
+                                            {preset.name} ({preset.nameAr})
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Permissions */}
-                    <div className="p-4 sm:p-6">
-                        <h3 className="text-base sm:text-lg font-semibold text-slate-800 mb-4 sm:mb-6">
-                            {t('roles.permissions')}
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 lg:gap-x-12 gap-y-3 sm:gap-y-4">
-                            {/* Left Column */}
-                            <div className="space-y-3">
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("AddPost")}
-                                        onChange={() => handlePermissionToggle("AddPost")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.addPost')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("CanReferPost")}
-                                        onChange={() => handlePermissionToggle("CanReferPost")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.canReferPost')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("ManageAllPosts")}
-                                        onChange={() => handlePermissionToggle("ManageAllPosts")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.manageAllPosts')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Navigation")}
-                                        onChange={() => handlePermissionToggle("Navigation")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.navigation')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Pages")}
-                                        onChange={() => handlePermissionToggle("Pages")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.pages')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("RSSFeeds")}
-                                        onChange={() => handlePermissionToggle("RSSFeeds")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.rssFeeds')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Categories")}
-                                        onChange={() => handlePermissionToggle("Categories")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.categories')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Tags")}
-                                        onChange={() => handlePermissionToggle("Tags")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.tags')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Widgets")}
-                                        onChange={() => handlePermissionToggle("Widgets")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.widgets')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Polls")}
-                                        onChange={() => handlePermissionToggle("Polls")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.polls')}</span>
-                                </label>
-                            </div>
-
-                            {/* Right Column */}
-                            <div className="space-y-3">
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("CommentsAndContactMessages")}
-                                        onChange={() => handlePermissionToggle("CommentsAndContactMessages")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.commentsAndContactMessages')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Newsletter")}
-                                        onChange={() => handlePermissionToggle("Newsletter")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.newsletter')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("AdSpaces")}
-                                        onChange={() => handlePermissionToggle("AdSpaces")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.adSpaces')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Users")}
-                                        onChange={() => handlePermissionToggle("Users")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.users')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("RolesAndPermissions")}
-                                        onChange={() => handlePermissionToggle("RolesAndPermissions")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.rolesAndPermissionsOption')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("SEOTools")}
-                                        onChange={() => handlePermissionToggle("SEOTools")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.seoTools')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("Settings")}
-                                        onChange={() => handlePermissionToggle("Settings")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.settings')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("RewardSystem")}
-                                        onChange={() => handlePermissionToggle("RewardSystem")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.rewardSystem')}</span>
-                                </label>
-                                <label className="flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={permissions.includes("AIWriter")}
-                                        onChange={() => handlePermissionToggle("AIWriter")}
-                                        className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
-                                    />
-                                    <span className="ml-3 text-sm text-slate-700">{t('roles.aiWriter')}</span>
-                                </label>
+                    {/* Permissions Card */}
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                                <Lock size={18} className="text-primary" />
+                                {t('roles.permissions')}
+                            </h3>
+                            <button 
+                                type="button"
+                                onClick={() => setPermissions(permissions.length === allAvailablePermissions.length ? [] : allAvailablePermissions.map(p => p.id))}
+                                className="text-xs font-bold text-primary hover:underline"
+                            >
+                                {permissions.length === allAvailablePermissions.length ? t('common.unselectAll', 'Unselect All') : t('common.selectAll', 'Select All')}
+                            </button>
+                        </div>
+                        <div className="p-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8">
+                                {allAvailablePermissions.map((perm) => (
+                                    <label 
+                                        key={perm.id} 
+                                        className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
+                                            permissions.includes(perm.id) 
+                                                ? 'bg-primary/5 border-primary/20 shadow-sm ring-1 ring-primary/10' 
+                                                : 'bg-white border-slate-100 hover:border-slate-200'
+                                        }`}
+                                    >
+                                        <div className="mt-0.5 relative flex items-center justify-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={permissions.includes(perm.id)}
+                                                onChange={() => handlePermissionToggle(perm.id)}
+                                                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-primary checked:bg-primary"
+                                            />
+                                            <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className={`text-sm font-semibold transition-colors ${permissions.includes(perm.id) ? 'text-primary' : 'text-slate-700'}`}>
+                                                {perm.label}
+                                            </span>
+                                        </div>
+                                    </label>
+                                ))}
                             </div>
                         </div>
                     </div>
 
-                    {/* Submit Button */}
-                    <div className="flex justify-end p-4 sm:p-6 bg-gray-50">
+                    {/* Footer Actions */}
+                    <div className="flex flex-col sm:flex-row items-center justify-end gap-4 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
                         <button
-                            onClick={handleSubmit}
-                            disabled={createRoleMutation.isPending}
-                            className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                            type="button"
+                            onClick={() => navigate(-1)}
+                            className="w-full sm:w-auto px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 hover:bg-slate-50 transition-all font-semibold text-sm shadow-sm"
                         >
-                            {createRoleMutation.isPending ? "Creating..." : "Add Role"}
+                            {t('common.cancel')}
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={createRoleMutation.isPending}
+                            className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white rounded-xl hover:bg-emerald-600 active:scale-[0.98] transition-all font-semibold text-sm shadow-sm shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {createRoleMutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                            {createRoleMutation.isPending ? t('roles.creating', 'Creating...') : t('roles.addRole')}
                         </button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     );

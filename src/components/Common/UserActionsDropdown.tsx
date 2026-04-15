@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronDown, faPencil, faTrash, faBan, faCheck, faUserShield, faEnvelopeCircleCheck } from '@fortawesome/free-solid-svg-icons';
+import { ChevronDown, Pencil, Trash2, Ban, Check, Shield, MailCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface UserActionsDropdownProps {
@@ -57,9 +56,8 @@ export default function UserActionsDropdown({
         className="flex items-center space-x-1 px-4 py-2 text-sm font-medium bg-slate-600 text-white rounded-md hover:bg-slate-700 transition-all duration-200 shadow-sm hover:shadow-md"
       >
         <span>{t('common.manage')}</span>
-        <FontAwesomeIcon
-          icon={faChevronDown}
-          className={`text-xs transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        <ChevronDown
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
@@ -71,7 +69,7 @@ export default function UserActionsDropdown({
             onClick={() => handleAction(onEdit)}
             className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faPencil} className="text-slate-600 w-4" />
+            <Pencil className="text-slate-600 w-4 h-4" />
             <span>{t('common.edit')}</span>
           </button>
 
@@ -84,7 +82,7 @@ export default function UserActionsDropdown({
               onClick={() => handleAction(onBan)}
               className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
             >
-              <FontAwesomeIcon icon={faBan} className="text-slate-600 w-4" />
+              <Ban className="text-slate-600 w-4 h-4" />
               <span>{t('users.ban')}</span>
             </button>
           )}
@@ -95,7 +93,7 @@ export default function UserActionsDropdown({
               onClick={() => handleAction(onActivate)}
               className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
             >
-              <FontAwesomeIcon icon={faCheck} className="text-slate-600 w-4" />
+              <Check className="text-slate-600 w-4 h-4" />
               <span>{t('users.activate')}</span>
             </button>
           )}
@@ -105,7 +103,7 @@ export default function UserActionsDropdown({
             onClick={() => handleAction(onChangeRole)}
             className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faUserShield} className="text-slate-600 w-4" />
+            <Shield className="text-slate-600 w-4 h-4" />
             <span>{t('users.changeRole')}</span>
           </button>
 
@@ -119,7 +117,7 @@ export default function UserActionsDropdown({
                 : 'text-slate-700 hover:bg-slate-50'
             }`}
           >
-            <FontAwesomeIcon icon={faEnvelopeCircleCheck} className={`w-4 ${emailConfirmed ? 'text-slate-400' : 'text-slate-600'}`} />
+            <MailCheck className={`w-4 h-4 ${emailConfirmed ? 'text-slate-400' : 'text-slate-600'}`} />
             <span>{t('users.confirmEmail')}</span>
           </button>
 
@@ -131,7 +129,7 @@ export default function UserActionsDropdown({
             onClick={() => handleAction(onDelete)}
             className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-3 rtl:space-x-reverse transition-colors"
           >
-            <FontAwesomeIcon icon={faTrash} className="text-red-600 w-4" />
+            <Trash2 className="text-red-600 w-4 h-4" />
             <span>{t('common.delete')}</span>
           </button>
         </div>

@@ -3,20 +3,17 @@ import FormHeader from "./FormHeader";
 import PostDetailsForm, { type TagInterface } from "./PostDetailsForm";
 import ContentEditor from "./ContentEditor";
 import ReelForm from "./ReelForm";
+import AdvancedOptionsTab from "./AdvancedOptionsTab";
 import { authApi } from "@/api/auth.api";
 
-import AdditionalImages from "./AdditionalImages";
-import FileUpload from "./FileUpload";
 import CategorySelect from "./CategorySelect";
 import PublishSection from "./PublishSection";
 import ReelPublishSection from "./ReelPublishSection";
 import ImageUpload from "./ImageUpload";
-import MediaUploadComponent from "./MediaUploadComponent";
 import { useEffect, type ChangeEvent, useState } from "react";
 import axios from "axios";
 import { apiClient, getAuthToken } from "@/api/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import ApiNotification from "../../../../Common/ApiNotification";
 import { usePostReducer } from "./usePostReducer/usePostReducer";
 import type {
   ArticleInitialStateInterface,
@@ -25,6 +22,8 @@ import type {
 import { postConfig } from "./usePostReducer/postConfig";
 import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/components/Toast/ToastContainer";
+import { Layout, Settings, ChevronLeft } from "lucide-react";
 
 interface TagResponse {
   data: {
@@ -34,12 +33,14 @@ interface TagResponse {
 
 export default function DashboardForm() {
   const { t } = useTranslation();
+  const toast = useToast();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const type = query.get("type");
   const navigate = useNavigate();
   const [state, dispatch] = usePostReducer(type);
   const token = getAuthToken();
+  const [activeTab, setActiveTab] = useState<'main' | 'advanced'>('main');
 
   useEffect(() => {
     if (!type) {
@@ -54,10 +55,6 @@ export default function DashboardForm() {
     }
   }, [token, navigate]);
 
-  const [notification, setNotification] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   type CustomChangeEvent =
@@ -126,7 +123,7 @@ export default function DashboardForm() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      let payload: any = state;
+      let payload: any = JSON.parse(JSON.stringify(state)); // Deep clone to avoid mutation
       if (!type) throw new Error("Post type is required");
 
       const config = postConfig[type as keyof typeof postConfig];
@@ -134,175 +131,47 @@ export default function DashboardForm() {
 
       // For reels, we don't need categoryId - post directly to /reels
       if (type === "reel") {
-        // Automatically set authorId if available and missing
         if (!payload.authorId && userProfile?.id) {
           payload = { ...payload, authorId: userProfile.id };
         }
-        // Reels have different structure, no categoryId needed
         const response = await apiClient.post("/reels", payload);
         return response.data;
       }
 
-      // For other post types, categoryId is required
       const categoryId = payload.categoryId;
       if (!categoryId) throw new Error("categoryId missing");
 
       // Client-side validation for articles
       if (type === "article") {
-        // Validate required fields
         const validationErrors = validateArticleForm(payload);
         if (Object.keys(validationErrors).length > 0) {
           setFieldErrors(validationErrors);
           throw new Error(t('validation.formHasErrors'));
         }
         
-        // Null-to-string conversion for article fields (Requirements 2.5, 2.6, 2.7, 6.2, 6.3, 6.4)
-        // imageUrl cannot be null - empty string is allowed by the API
-        if (payload.imageUrl === null || payload.imageUrl === undefined) {
-          payload.imageUrl = "";
-        }
-        
-        // metaDescription cannot be null - must be empty string
-        if (payload.metaDescription === null || payload.metaDescription === undefined) {
-          payload.metaDescription = "";
-        }
-        
-        // metaKeywords cannot be null - must be empty string
-        if (payload.metaKeywords === null || payload.metaKeywords === undefined) {
-          payload.metaKeywords = "";
-        }
+        if (payload.imageUrl === null || payload.imageUrl === undefined) payload.imageUrl = "";
+        if (payload.metaDescription === null || payload.metaDescription === undefined) payload.metaDescription = "";
+        if (payload.metaKeywords === null || payload.metaKeywords === undefined) payload.metaKeywords = "";
       }
 
-      // Client-side validation for video posts
-      // Check if at least one video source is provided with actual content
-      const hasVideoUrl = payload.videoUrl && payload.videoUrl.trim() !== '';
-      const hasVideoFiles = payload.videoFileUrls && Array.isArray(payload.videoFileUrls) &&
-        payload.videoFileUrls.some((url: string) => url && url.trim() !== '');
-      const hasEmbedCode = payload.videoEmbedCode && payload.videoEmbedCode.trim() !== '';
-
-      if (type === "video" && !hasVideoUrl && !hasVideoFiles && !hasEmbedCode) {
-        const validationError = new Error("Please provide at least one video source: Video URL, video file, or embed code");
-        (validationError as any).isAxiosError = true;
-        (validationError as any).response = {
-          status: 422,
-          data: {
-            errors: {
-              VideoUrl: ["Please provide at least one video source: Video URL, video file, or embed code"]
-            },
-            message: "Please provide at least one video source: Video URL, video file, or embed code"
-          }
-        };
-        throw validationError;
-      }
-
-      // Client-side validation for audio posts
       if (type === "audio" && !payload.audioUrl && !payload.audioFileUrls?.length) {
-        const validationError = new Error("Audio URL or audio file is required");
-        (validationError as any).isAxiosError = true;
-        (validationError as any).response = {
-          status: 422,
-          data: {
-            errors: {
-              AudioUrl: ["Audio URL or audio file is required"]
-            },
-            message: "Audio URL or audio file is required"
-          }
-        };
-        throw validationError;
+        throw new Error("Audio source missing");
       }
 
       const endpoint = config.endpoint;
 
-      // For video posts, copy imageUrl to videoThumbnailUrl
-      if (type === "video" && "imageUrl" in payload) {
-        payload = {
-          ...payload,
-          videoThumbnailUrl: payload.imageUrl || null,
-        };
-      }
-
-      // For audio posts, copy imageUrl to thumbnailUrl
       if (type === "audio" && "imageUrl" in payload) {
-        payload = {
-          ...payload,
-          thumbnailUrl: payload.imageUrl || null,
-        };
+        payload.thumbnailUrl = payload.imageUrl || null;
       }
 
-      // Clean up empty strings from array fields to prevent API validation errors
       if (payload.additionalImageUrls) {
         payload.additionalImageUrls = payload.additionalImageUrls.filter((url: string) => url && url.trim() !== '');
-        if (payload.additionalImageUrls.length === 0) {
-          payload.additionalImageUrls = null;
-        }
+        if (payload.additionalImageUrls.length === 0) payload.additionalImageUrls = null;
       }
 
-      if (payload.fileUrls) {
-        payload.fileUrls = payload.fileUrls.filter((url: string) => url && url.trim() !== '');
-        if (payload.fileUrls.length === 0) {
-          payload.fileUrls = null;
-        }
-      }
-
-      if (payload.videoFileUrls) {
-        payload.videoFileUrls = payload.videoFileUrls.filter((url: string) => url && url.trim() !== '');
-        if (payload.videoFileUrls.length === 0) {
-          payload.videoFileUrls = null;
-        }
-      }
-
-      if (payload.audioFileUrls) {
-        payload.audioFileUrls = payload.audioFileUrls.filter((url: string) => url && url.trim() !== '');
-        if (payload.audioFileUrls.length === 0) {
-          payload.audioFileUrls = null;
-        }
-      }
-
-      // Clean up empty strings in tagIds array
-      // Backend expects array or field to be omitted, not null
       if (payload.tagIds) {
         payload.tagIds = payload.tagIds.filter((id: string) => id && id.trim() !== '');
-        if (payload.tagIds.length === 0) {
-          delete payload.tagIds;
-        }
-      } else if (payload.tagIds === null) {
-        delete payload.tagIds;
-      }
-
-      // Clean up empty string values for single URL fields
-      // Note: imageUrl is required for articles, so don't convert to null
-      if (type === "video") {
-        if (payload.videoThumbnailUrl === '') {
-          payload.videoThumbnailUrl = null;
-        }
-        if (payload.videoUrl === '') {
-          payload.videoUrl = null;
-        }
-      }
-
-      if (type === "audio") {
-        if (payload.thumbnailUrl === '') {
-          payload.thumbnailUrl = null;
-        }
-        if (payload.audioUrl === '') {
-          payload.audioUrl = null;
-        }
-      }
-
-      // For articles, keep imageUrl as empty string if not provided (required field)
-      // For other types, convert empty imageUrl to null if needed
-      if (type !== "article" && payload.imageUrl === '') {
-        payload.imageUrl = null;
-      }
-
-      // Ensure metaDescription and metaKeywords are never null for non-article types
-      if (type !== "article") {
-        if (!payload.metaDescription || payload.metaDescription === null) {
-          payload.metaDescription = "";
-        }
-        if (!payload.metaKeywords || payload.metaKeywords === null) {
-          payload.metaKeywords = "";
-        }
+        if (payload.tagIds.length === 0) delete payload.tagIds;
       }
 
       const response = await apiClient.post(
@@ -312,14 +181,13 @@ export default function DashboardForm() {
       return response.data;
     },
     onSuccess: (data) => {
-      // Handle 201 success with translated message
-      const msg =
-        (data && (data.message || data.title)) ?? 
+      const msg = (data && (data.message || data.title)) ?? 
         (type === "article" ? t('success.articleCreated') : t('post.postCreatedSuccessfully'));
       setFieldErrors({});
-      setNotification({ type: "success", message: String(msg) });
+      toast.success(String(msg));
+      navigate('/admin/posts/all');
     },
-    onError: (error: unknown) => {
+    onError: (error: any) => {
       console.error("Post creation error:", error);
       let message = t('errors.failedToCreatePost');
       const errors: Record<string, string[]> = {};
@@ -327,191 +195,173 @@ export default function DashboardForm() {
       if (axios.isAxiosError(error)) {
         const d = error.response?.data;
         const status = error.response?.status;
-        console.error("API Error Response:", { status, data: d });
 
-        // Handle 401 Unauthorized - session expired, redirect to login
         if (status === 401) {
-          message = t('common.sessionExpired');
-          setNotification({ type: "error", message });
-          setTimeout(() => {
-            navigate('/login');
-          }, 2000);
+          toast.error(t('common.sessionExpired'));
+          navigate('/login');
           return;
         }
 
-        // Handle 422 Validation Errors
         if (status === 422 && d?.errors) {
-          // Extract field-level errors from API response
           if (typeof d.errors === 'object') {
-            const errorMessages: string[] = [];
             Object.entries(d.errors).forEach(([field, messages]) => {
-              const normalizedField = field.toLowerCase();
-              if (Array.isArray(messages)) {
-                errors[normalizedField] = messages;
-                // Collect all error messages for display
-                messages.forEach(msg => errorMessages.push(msg));
-              } else if (typeof messages === 'string') {
-                errors[normalizedField] = [messages];
-                errorMessages.push(messages);
-              }
+              errors[field.toLowerCase()] = Array.isArray(messages) ? messages : [String(messages)];
             });
-            // Show all validation error messages from backend
-            if (errorMessages.length > 0) {
-              message = errorMessages.join('\n');
-            } else {
-              // Fallback to generic message if no messages found
-              const errorCount = Object.keys(errors).length;
-              message = t('errors.validationErrors', { count: errorCount });
-            }
+            message = Object.values(errors).flat().join('\n') || t('errors.validationErrors');
           }
-        }
-        // Handle 400 Bad Request
-        else if (status === 400) {
-          message = d?.title || d?.message || t('errors.badRequest');
-        }
-        // Handle 404 Not Found
-        else if (status === 404) {
-          message = d?.title || d?.message || t('errors.resourceNotFound');
-        }
-        // Handle 409 Conflict
-        else if (status === 409) {
-          message = d?.title || d?.message || t('errors.conflict');
-        }
-        // Generic error fallback
-        else if (d?.title) {
-          message = String(d.title);
-        } else if (d?.message) {
-          message = String(d.message);
         } else {
-          message = error.message;
+          message = d?.title || d?.message || error.message;
         }
-      } else if (error instanceof Error) {
+      } else {
         message = error.message;
       }
 
       setFieldErrors(errors);
-      setNotification({ type: "error", message });
+      toast.error(message);
     },
   });
 
-  // #505458 new color i will use for form
-  console.log(state);
-
   return (
-    <>
-      {notification && (
-        <ApiNotification
-          type={notification.type}
-          message={notification.message}
-          onClose={() => setNotification(null)}
-        />
-      )}
-
-      <form
-        className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6"
-        onSubmit={(e) => {
-          e.preventDefault();
-          mutation.mutate();
-        }}
-      >
-        <FormHeader type={type} />
-        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
-          <div className="grow space-y-4 md:space-y-6">
-            {/* left column */}
-            {type !== "reel" && (
-              <PostDetailsForm
-                type={type}
-                state={state}
-                handleChange={handleChange}
-                tags={tags?.data.items ?? []}
-                isLoading={isLoadingTags}
-                fieldErrors={fieldErrors}
-              />
-            )}
-            {type === "reel" ? (
-              <ReelForm
-                state={state as ReelInitialStateInterface}
-                handleChange={handleChange}
-                fieldErrors={fieldErrors}
-                tags={tags?.data.items ?? []}
-                isLoading={isLoadingTags}
-              />
-            ) : (
-              <ContentEditor
-                state={state as ArticleInitialStateInterface}
-                handleChange={handleChange}
-                errors={fieldErrors}
-              />
-            )}
+    <div className="flex-1 flex flex-col min-h-0 bg-surface">
+      {/* Header Area */}
+      <div className="p-4 sm:p-6 border-b border-slate-200 bg-white sticky top-0 z-20 shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all border border-slate-200/50"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div>
+              <FormHeader type={type} />
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded border border-primary/10 tracking-widest uppercase">
+                  {type || 'Article'}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Content Studio
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="w-full lg:w-80 lg:shrink-0 space-y-4 md:space-y-6">
-            {/* right column */}
-            {type !== "reel" && (
-              <ImageUpload
-                state={state}
-                handleChange={handleChange}
-                type={type}
-                fieldErrors={fieldErrors}
-              />
-            )}
-            {!["audio", "video", "reel"].includes(
-              type || ""
-            ) && (
+          
+          {/* Tab Switcher */}
+          {type !== "reel" && (
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/50">
+              <button
+                type="button"
+                onClick={() => setActiveTab('main')}
+                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'main' 
+                    ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Layout size={14} className={activeTab === 'main' ? 'text-primary' : ''} />
+                {t('post.mainOptions')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('advanced')}
+                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'advanced' 
+                    ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <Settings size={14} className={activeTab === 'advanced' ? 'text-primary' : ''} />
+                {t('post.advancedOptions')}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <form
+          className="max-w-7xl mx-auto"
+          onSubmit={(e) => {
+            e.preventDefault();
+            mutation.mutate();
+          }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column - Dynamic Content based on Tabs */}
+            <div className="lg:col-span-8 space-y-6">
+              {type === "reel" ? (
+                <ReelForm
+                  state={state as ReelInitialStateInterface}
+                  handleChange={handleChange}
+                  fieldErrors={fieldErrors}
+                  tags={tags?.data.items ?? []}
+                  isLoading={isLoadingTags}
+                />
+              ) : activeTab === 'main' ? (
                 <>
-                  <AdditionalImages handleChange={handleChange} fieldErrors={fieldErrors} />
-                  <FileUpload handleChange={handleChange} fieldErrors={fieldErrors} />
+                  <PostDetailsForm
+                    type={type}
+                    state={state}
+                    handleChange={handleChange}
+                    fieldErrors={fieldErrors}
+                  />
+                  <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200">
+                    <ContentEditor
+                      state={state as ArticleInitialStateInterface}
+                      handleChange={handleChange}
+                      errors={fieldErrors}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="animate-in fade-in duration-500">
+                  <AdvancedOptionsTab
+                    type={type}
+                    state={state as ArticleInitialStateInterface}
+                    handleChange={handleChange}
+                    tags={tags?.data.items ?? []}
+                    isLoading={isLoadingTags}
+                    fieldErrors={fieldErrors}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Right Column - Sidebar Settings (Persistent) */}
+            <div className="lg:col-span-4 space-y-6">
+              {type !== "reel" && (
+                <>
+                  <CategorySelect
+                    handleChange={handleChange}
+                    categories={categories?.data ?? []}
+                    isLoading={isLoadingCategories}
+                    value={state.categoryId}
+                    errors={fieldErrors}
+                    language={state.language}
+                  />
+                  <ImageUpload
+                    state={state}
+                    handleChange={handleChange}
+                    type={type}
+                    fieldErrors={fieldErrors}
+                  />
                 </>
               )}
-            {type === "video" && (
-              <MediaUploadComponent
-                mediaType="video"
-                onMediaSelect={(media) => {
-                  handleChange({
-                    target: {
-                      name: "videoUrl",
-                      value: media.url,
-                      type: "text",
-                    },
-                  } as any);
-                }}
-              />
-            )}
-            {type === "audio" && (
-              <MediaUploadComponent
-                mediaType="audio"
-                onMediaSelect={(media) => {
-                  handleChange({
-                    target: {
-                      name: "audioUrl",
-                      value: media.url,
-                      type: "text",
-                    },
-                  } as any);
-                }}
-              />
-            )}
-            {type !== "reel" && (
-              <CategorySelect
-                handleChange={handleChange}
-                categories={categories?.data ?? []}
-                isLoading={isLoadingCategories}
-                value={state.categoryId}
-                errors={fieldErrors}
-              />
-            )}
-            {type === "reel" ? (
-              <ReelPublishSection mutation={mutation} />
-            ) : (
-              <PublishSection
-                mutation={mutation}
-                state={state}
-                handleChange={handleChange}
-                fieldErrors={fieldErrors}
-              />
-            )}
+              
+              {type === "reel" ? (
+                <ReelPublishSection mutation={mutation} />
+              ) : (
+                <PublishSection
+                  mutation={mutation}
+                  state={state}
+                  handleChange={handleChange}
+                  fieldErrors={fieldErrors}
+                />
+              )}
+            </div>
           </div>
-        </div>
-      </form>
-    </>
+        </form>
+      </div>
+    </div>
   );
 }
