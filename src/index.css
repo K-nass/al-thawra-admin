@@ -155,6 +155,67 @@ button {
   display: none;  /* Chrome, Safari and Opera */
 }
 
+/* Hide scrollbars across admin panel while keeping scrolling */
+[data-admin-panel="true"] .overflow-auto,
+[data-admin-panel="true"] .overflow-x-auto,
+[data-admin-panel="true"] .overflow-y-auto {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+[data-admin-panel="true"] .overflow-auto::-webkit-scrollbar,
+[data-admin-panel="true"] .overflow-x-auto::-webkit-scrollbar,
+[data-admin-panel="true"] .overflow-y-auto::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Admin panel global readability + production spacing */
+[data-admin-panel="true"] {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+[data-admin-panel="true"] .text-xs {
+  font-size: 0.8rem;
+}
+
+[data-admin-panel="true"] .text-sm {
+  font-size: 0.95rem;
+}
+
+[data-admin-panel="true"] .text-\[9px\] {
+  font-size: 0.74rem;
+}
+
+[data-admin-panel="true"] .text-\[10px\] {
+  font-size: 0.78rem;
+}
+
+[data-admin-panel="true"] .text-\[11px\] {
+  font-size: 0.83rem;
+}
+
+[data-admin-panel="true"] button,
+[data-admin-panel="true"] a,
+[data-admin-panel="true"] input,
+[data-admin-panel="true"] select,
+[data-admin-panel="true"] textarea {
+  transition-duration: 200ms;
+}
+
+[data-admin-panel="true"] .shadow-xl,
+[data-admin-panel="true"] .shadow-2xl {
+  box-shadow: 0 14px 30px -18px rgba(15, 23, 42, 0.25);
+}
+
+@media (max-width: 640px) {
+  [data-admin-panel="true"] .rounded-\[2rem\] {
+    border-radius: 1.25rem;
+  }
+}
+
 /* Toast animations */
 @keyframes slide-in {
   from {

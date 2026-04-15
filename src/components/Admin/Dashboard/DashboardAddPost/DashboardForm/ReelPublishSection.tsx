@@ -21,14 +21,14 @@ export default function ReelPublishSection({ mutation }: ReelPublishSectionProps
                     <h3 className="text-lg font-black text-white tracking-tight">
                         {t('post.publish')}
                     </h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Reel Publication</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t("reels.reelPublication")}</p>
                 </div>
             </div>
 
             <div className="space-y-6 relative">
                 <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/5">
                     <ShieldCheck className="text-primary w-5 h-5 shrink-0" />
-                    <span className="text-xs font-medium text-slate-300">Reels are published instantly to the global feed.</span>
+                    <span className="text-sm font-medium text-slate-300">{t("reels.instantPublishHint")}</span>
                 </div>
 
                 <div className="pt-2">
@@ -47,7 +47,7 @@ export default function ReelPublishSection({ mutation }: ReelPublishSectionProps
                         )}
                     </button>
                     <p className="mt-4 text-[10px] font-bold text-slate-500 text-center uppercase tracking-widest leading-relaxed">
-                        Instant distribution active
+                        {t("reels.instantDistribution")}
                     </p>
                 </div>
             </div>

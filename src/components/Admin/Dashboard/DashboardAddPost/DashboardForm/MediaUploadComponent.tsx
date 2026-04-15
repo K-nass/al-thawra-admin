@@ -69,7 +69,7 @@ export default function MediaUploadComponent({
     return String(duration);
   };
 
-  const uploadLabel = mediaType === "video" ? t("formLabels.uploadVideo") || "Upload Video" : t("formLabels.uploadAudio") || "Upload Audio";
+  const uploadLabel = mediaType === "video" ? t("formLabels.uploadVideo") : t("formLabels.uploadAudio");
   const acceptedFormats = mediaType === "video" ? "MP4, WebM, Ogg" : "MP3, WAV, OGG, WebM";
 
   return (
@@ -79,13 +79,13 @@ export default function MediaUploadComponent({
         <div>
           <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
             {mediaType === "video" ? <Video size={16} className="text-primary" /> : <Play size={16} className="text-primary" />}
-            {mediaType === "video" ? t("formLabels.videoUpload") || "Video Content" : t("formLabels.audioUpload") || "Audio Content"}
+            {mediaType === "video" ? t("formLabels.videoUpload") : t("formLabels.audioUpload")}
             <span className="text-rose-500 font-bold">*</span>
           </h3>
         </div>
         <div className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-full">
             <Info size={12} className="text-slate-400" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Required Resource</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{t("formLabels.requiredResource")}</span>
         </div>
       </div>
 
@@ -102,7 +102,7 @@ export default function MediaUploadComponent({
             }`}
           >
             <LinkIcon size={14} />
-            {t("formLabels.getVideoFromURL") || "Remote URL"}
+            {t("formLabels.getVideoFromURL")}
           </button>
         )}
         <button
@@ -115,7 +115,7 @@ export default function MediaUploadComponent({
           }`}
         >
           <Upload size={14} />
-          {t("formLabels.uploadLocal") || "Local Upload"}
+          {t("formLabels.uploadLocal")}
         </button>
       </div>
 
@@ -125,7 +125,7 @@ export default function MediaUploadComponent({
           <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="space-y-2">
               <label htmlFor={`${mediaType}-url`} className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                {t("formLabels.videoURL") || "Media Link"}
+                {t("formLabels.videoURL")}
               </label>
               <div className="relative">
                 <LinkIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -133,7 +133,7 @@ export default function MediaUploadComponent({
                   id={`${mediaType}-url`}
                   name={`${mediaType}-url`}
                   type="url"
-                  placeholder={t("formLabels.enterVideoURL") || "https://..."}
+                  placeholder={t("formLabels.enterVideoURL")}
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-medium"
                 />
               </div>
@@ -142,12 +142,12 @@ export default function MediaUploadComponent({
             {!hideEmbedCode && (
               <div className="space-y-2">
                 <label htmlFor={`${mediaType}-embed-url`} className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                  <span className="flex items-center gap-1.5"><Code size={12} /> {t("formLabels.embedCode") || "Embed Code"}</span>
+                  <span className="flex items-center gap-1.5"><Code size={12} /> {t("formLabels.embedCode")}</span>
                 </label>
                 <textarea
                   id={`${mediaType}-embed-url`}
                   name={`${mediaType}-embed-url`}
-                  placeholder={t("formLabels.pasteVideoEmbedCode") || "<iframe>...</iframe>"}
+                  placeholder={t("formLabels.pasteVideoEmbedCode")}
                   rows={4}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-mono text-slate-600 resize-none leading-relaxed"
                 />
@@ -174,7 +174,7 @@ export default function MediaUploadComponent({
                         {mediaType === "video" ? <Video className="text-emerald-500" size={32} /> : <Play className="text-emerald-500" size={32} />}
                     </div>
                     <p className="text-sm font-bold text-emerald-700 flex items-center gap-1.5">
-                        <CheckCircle2 size={16} /> Ready to Use
+                        <CheckCircle2 size={16} /> {t("formLabels.readyToUse")}
                     </p>
                     <p className="text-[10px] text-emerald-600/70 font-semibold mt-1 truncate max-w-xs">{uploadedMedia.fileName}</p>
                   </div>
@@ -193,7 +193,7 @@ export default function MediaUploadComponent({
                     </div>
                     <div className="inline-flex items-center gap-2 px-6 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-xs shadow-sm group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all active:scale-95">
                       <MousePointerClick size={14} />
-                      Browse Files
+                      {t("formLabels.browseFiles")}
                     </div>
                   </>
                 )}
@@ -205,7 +205,7 @@ export default function MediaUploadComponent({
               <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm animate-in zoom-in-95 duration-200">
                 <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/80 flex items-center justify-between">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                        <FileText size={12} /> Resource Metadata
+                        <FileText size={12} /> {t("formLabels.resourceMetadata")}
                     </span>
                     <button 
                         onClick={(e) => {
@@ -214,22 +214,22 @@ export default function MediaUploadComponent({
                         }}
                         className="text-[10px] font-bold text-rose-500 hover:underline"
                     >
-                        Remove
+                        {t("common.delete")}
                     </button>
                 </div>
                 <div className="p-5 grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Mime Type</p>
-                    <p className="text-xs font-bold text-slate-700">{uploadedMedia.mimeType || "N/A"}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">{t("formLabels.mimeType")}</p>
+                    <p className="text-xs font-bold text-slate-700">{uploadedMedia.mimeType || t("common.notAvailable")}</p>
                   </div>
                   <div className="space-y-1 text-right">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">File Size</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">{t("formLabels.fileSize")}</p>
                     <p className="text-xs font-bold text-slate-700">{(uploadedMedia.sizeInBytes / 1024).toFixed(1)} KB</p>
                   </div>
                   {uploadedMedia.duration && (
                     <div className="col-span-2 pt-2 border-t border-slate-50 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1.5">
-                        <Clock size={12} /> Playback Duration
+                        <Clock size={12} /> {t("formLabels.playbackDuration")}
                       </span>
                       <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-lg">{formatDuration(uploadedMedia.duration)}</span>
                     </div>
@@ -251,7 +251,7 @@ export default function MediaUploadComponent({
               const mediaItem: MediaItem = {
                 id: e.target.id || "",
                 url: e.target.value,
-                fileName: e.target.fileName || "unnamed-resource",
+                fileName: e.target.fileName || t("formLabels.unnamedResource"),
                 type: mediaType,
                 sizeInBytes: e.target.sizeInBytes || 0,
                 mimeType: e.target.mimeType || "",

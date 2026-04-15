@@ -12,13 +12,11 @@ import {
   Users as UsersIcon, 
   Plus, 
   Search, 
-  Filter, 
   Mail, 
   UserCheck, 
   UserPlus,
   ShieldCheck,
   Calendar,
-  MoreVertical
 } from "lucide-react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -26,7 +24,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useToast } from "@/components/Toast/ToastContainer";
 
 export default function Users() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -66,30 +64,35 @@ export default function Users() {
   });
 
   const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: ["users"] });
+  const getRoleLabel = (roleName: string) => {
+    const roleKey = `users.roles.${roleName.toLowerCase()}`;
+    const translated = t(roleKey);
+    return translated === roleKey ? roleName : translated;
+  };
 
   // Mutations
   const banMutation = useMutation({
     mutationFn: (id: string) => usersApi.ban(id),
-    onSuccess: () => { toast.success(t("users.banSuccess") || "User banned successfully"); invalidateUsers(); },
-    onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to ban user"),
+    onSuccess: () => { toast.success(t("users.banSuccess")); invalidateUsers(); },
+    onError: (err: any) => toast.error(err?.response?.data?.message || t("users.errors.banFailed")),
   });
 
   const activateMutation = useMutation({
     mutationFn: (id: string) => usersApi.activate(id),
-    onSuccess: () => { toast.success(t("users.activateSuccess") || "User activated successfully"); invalidateUsers(); },
-    onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to activate user"),
+    onSuccess: () => { toast.success(t("users.activateSuccess")); invalidateUsers(); },
+    onError: (err: any) => toast.error(err?.response?.data?.message || t("users.errors.activateFailed")),
   });
 
   const confirmEmailMutation = useMutation({
     mutationFn: (id: string) => usersApi.confirmEmail(id),
-    onSuccess: () => { toast.success(t("users.confirmEmailSuccess") || "Email confirmed successfully"); invalidateUsers(); },
-    onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to confirm email"),
+    onSuccess: () => { toast.success(t("users.confirmEmailSuccess")); invalidateUsers(); },
+    onError: (err: any) => toast.error(err?.response?.data?.message || t("users.errors.confirmEmailFailed")),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => usersApi.delete(id),
-    onSuccess: () => { toast.success(t("users.deleteSuccess") || "User deleted successfully"); invalidateUsers(); },
-    onError: (err: any) => toast.error(err?.response?.data?.message || "Failed to delete user"),
+    onSuccess: () => { toast.success(t("users.deleteSuccess")); invalidateUsers(); },
+    onError: (err: any) => toast.error(err?.response?.data?.message || t("users.errors.deleteFailed")),
   });
 
   // Confirm dialog handlers
@@ -108,22 +111,26 @@ export default function Users() {
 
   const getConfirmTitle = () => {
     const { action } = confirmDialog;
-    if (action === "ban") return t("users.banConfirmTitle") || "Ban User";
-    if (action === "activate") return t("users.activateConfirmTitle") || "Activate User";
-    if (action === "confirmEmail") return t("users.confirmEmailTitle") || "Confirm Email";
-    return t("users.deleteConfirmTitle") || "Delete User";
+    if (action === "ban") return t("users.banConfirmTitle");
+    if (action === "activate") return t("users.activateConfirmTitle");
+    if (action === "confirmEmail") return t("users.confirmEmailTitle");
+    return t("users.deleteConfirmTitle");
   };
 
   const getConfirmMessage = () => {
     const { action, userName } = confirmDialog;
-    if (action === "ban") return t("users.banConfirmMessage", { userName }) || `Are you sure you want to ban ${userName}?`;
-    if (action === "activate") return t("users.activateConfirmMessage", { userName }) || `Are you sure you want to activate ${userName}?`;
-    if (action === "confirmEmail") return t("users.confirmEmailMessage", { userName }) || `Are you sure you want to confirm email for ${userName}?`;
-    return t("users.deleteConfirmMessage", { userName }) || `Are you sure you want to delete ${userName}? This action cannot be undone.`;
+    if (action === "ban") return t("users.banConfirmMessage", { userName });
+    if (action === "activate") return t("users.activateConfirmMessage", { userName });
+    if (action === "confirmEmail") return t("users.confirmEmailMessage", { userName });
+    return t("users.deleteConfirmMessage", { userName });
   };
 
   const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    new Date(dateString).toLocaleDateString(i18n.language?.startsWith("ar") ? "ar-EG" : "en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-surface">
@@ -139,13 +146,13 @@ export default function Users() {
                 {t("users.title")}
               </h1>
               <p className="text-sm text-slate-500 mt-1">
-                Manage system users, roles, and access permissions.
+                {t("users.subtitle")}
               </p>
             </div>
           </div>
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-600 transition-all duration-200 gap-2 group"
+            className="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-emerald-600 transition-colors duration-200 gap-2 group"
           >
             <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
             {t("users.addUser")}
@@ -165,7 +172,7 @@ export default function Users() {
                   value={searchPhrase}
                   onChange={(e) => setSearchPhrase(e.target.value)}
                   placeholder={t("common.search")}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200"
                 />
               </div>
             </div>
@@ -176,12 +183,12 @@ export default function Users() {
               <select
                 value={role}
                 onChange={(e) => { setRole(e.target.value); setPageNumber(1); }}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200 appearance-none"
               >
                 <option value="">{t("common.all")}</option>
-                <option value="Admin">Admin</option>
-                <option value="Moderator">Moderator</option>
-                <option value="Author">Author</option>
+                <option value="Admin">{t("users.roles.admin")}</option>
+                <option value="Moderator">{t("users.roles.moderator")}</option>
+                <option value="Author">{t("users.roles.author")}</option>
               </select>
             </div>
 
@@ -191,7 +198,7 @@ export default function Users() {
               <select
                 value={status}
                 onChange={(e) => { setStatus(e.target.value); setPageNumber(1); }}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200 appearance-none"
               >
                 <option value="">{t("common.all")}</option>
                 <option value="Active">{t("users.active")}</option>
@@ -205,7 +212,7 @@ export default function Users() {
               <select
                 value={emailConfirmed === undefined ? "" : emailConfirmed.toString()}
                 onChange={(e) => { const v = e.target.value; setEmailConfirmed(v === "" ? undefined : v === "true"); setPageNumber(1); }}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors duration-200 appearance-none"
               >
                 <option value="">{t("common.all")}</option>
                 <option value="true">{t("users.confirmed")}</option>
@@ -219,12 +226,14 @@ export default function Users() {
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center bg-white rounded-xl border border-slate-200 shadow-sm">
             <Loader />
-            <p className="mt-4 text-sm text-slate-500 animate-pulse">Loading users...</p>
+            <p className="mt-4 text-sm text-slate-500 animate-pulse">{t("users.loadingUsers")}</p>
           </div>
         ) : isError ? (
           <div className="p-8 bg-error-background/50 border border-error-border rounded-xl text-center">
             <h3 className="text-lg font-semibold text-error-hover mb-2">{t("users.errors.generic")}</h3>
-            <p className="text-sm text-slate-600">{error instanceof Error ? error.message : "An error occurred"}</p>
+            <p className="text-sm text-slate-600">
+              {error instanceof Error ? error.message : t("users.errors.generic")}
+            </p>
           </div>
         ) : !data || data.items.length === 0 ? (
           <div className="py-20 flex flex-col items-center justify-center bg-white rounded-xl border border-slate-200 shadow-sm">
@@ -238,13 +247,13 @@ export default function Users() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">{t("users.userName")}</TableHead>
-                  <TableHead>{t("users.email")}</TableHead>
-                  <TableHead className="w-[120px]">{t("users.role")}</TableHead>
+                  <TableHead className="min-w-[240px] sm:min-w-[300px]">{t("users.userName")}</TableHead>
+                  <TableHead className="min-w-[220px]">{t("users.email")}</TableHead>
+                  <TableHead className="hidden md:table-cell w-[120px]">{t("users.role")}</TableHead>
                   <TableHead className="w-[120px]">{t("users.status")}</TableHead>
-                  <TableHead className="w-[120px]">{t("users.emailStatus")}</TableHead>
-                  <TableHead className="w-[150px]">{t("post.date")}</TableHead>
-                  <TableHead className="text-right w-[100px]">{t("common.actions")}</TableHead>
+                  <TableHead className="hidden lg:table-cell w-[140px]">{t("users.emailStatus")}</TableHead>
+                  <TableHead className="hidden lg:table-cell w-[150px]">{t("post.date")}</TableHead>
+                  <TableHead className="text-right w-[120px]">{t("common.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -271,7 +280,7 @@ export default function Users() {
                             {user.userName}
                           </span>
                           <span className="text-xs text-slate-500 font-medium truncate">
-                            ID: {user.id.slice(0, 8)}...
+                            {t("users.idShort")}: {user.id.slice(0, 8)}...
                           </span>
                         </div>
                       </div>
@@ -279,13 +288,13 @@ export default function Users() {
                     <TableCell>
                       <div className="flex items-center gap-2 text-slate-600">
                         <Mail className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="truncate max-w-[200px]">{user.email}</span>
+                        <span className="truncate max-w-[14rem] sm:max-w-[18rem] md:max-w-none">{user.email}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Badge variant="primary" className="bg-indigo-50 text-indigo-700 border-indigo-100">
-                        <ShieldCheck className="w-3 h-3 mr-1" />
-                        {user.role}
+                        <ShieldCheck className="w-3 h-3" />
+                        <span>{getRoleLabel(user.role)}</span>
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -293,16 +302,22 @@ export default function Users() {
                         {user.isActive ? t("users.active") : t("users.inactive")}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <Badge variant={user.emailConfirmed ? "success" : "warning"}>
                         {user.emailConfirmed ? (
-                          <><UserCheck className="w-3 h-3 mr-1" /> {t("users.confirmed")}</>
+                          <>
+                            <UserCheck className="w-3 h-3" />
+                            <span>{t("users.confirmed")}</span>
+                          </>
                         ) : (
-                          <><UserPlus className="w-3 h-3 mr-1" /> {t("users.pending")}</>
+                          <>
+                            <UserPlus className="w-3 h-3" />
+                            <span>{t("users.pending")}</span>
+                          </>
                         )}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="flex items-center gap-2 text-slate-500 text-xs">
                         <Calendar className="w-3.5 h-3.5" />
                         {formatDate(user.createdAt)}
@@ -347,15 +362,15 @@ export default function Users() {
         message={getConfirmMessage()}
         onConfirm={handleConfirm}
         onCancel={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
-        confirmText={t("common.confirm") || "Confirm"}
-        cancelText={t("common.cancel") || "Cancel"}
+        confirmText={t("common.confirm")}
+        cancelText={t("common.cancel")}
         type={confirmDialog.action === "delete" || confirmDialog.action === "ban" ? "danger" : "info"}
       />
 
       <CreateUserModal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
-        onSuccess={() => { invalidateUsers(); toast.success(t("users.createSuccess") || "User created successfully"); }}
+        onSuccess={() => { invalidateUsers(); toast.success(t("users.createSuccess")); }}
       />
 
       <ChangeRoleModal
@@ -363,7 +378,7 @@ export default function Users() {
         userId={changeRoleModal.userId}
         currentRole={changeRoleModal.currentRole}
         onClose={() => setChangeRoleModal((prev) => ({ ...prev, isOpen: false }))}
-        onSuccess={() => { invalidateUsers(); toast.success(t("users.changeRoleSuccess") || "Role changed successfully"); }}
+        onSuccess={() => { invalidateUsers(); toast.success(t("users.changeRoleSuccess")); }}
       />
     </div>
   );

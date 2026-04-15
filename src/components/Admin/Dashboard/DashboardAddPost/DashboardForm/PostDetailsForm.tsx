@@ -114,7 +114,7 @@ export default function PostDetailsForm({
           <h3 className="text-lg font-black text-slate-900 tracking-tight">
             {t('post.postDetails')}
           </h3>
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Metadata & Core Settings</p>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{t("post.metadataCoreSettings")}</p>
         </div>
       </div>
 
@@ -283,7 +283,7 @@ function FlagCheckbox({
   return (
     <label className={`
       relative flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all duration-300
-      ${checked ? activeColorMap[color] + " shadow-lg" : "bg-white border-slate-200 hover:bg-slate-50"}
+      ${checked ? activeColorMap[color] + " shadow-sm" : "bg-white border-slate-200 hover:bg-slate-50"}
     `}>
       <input
         type="checkbox"

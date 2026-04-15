@@ -57,10 +57,10 @@ export default function DashboardHome() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <LayoutDashboard className="text-primary w-6 h-6" />
-            {t('dashboard.overview') || "Dashboard Overview"}
+            {t('dashboard.overview')}
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Welcome back! Here's what's happening with your portal today.
+            {t('dashboard.welcomeSubtitle')}
           </p>
         </div>
 

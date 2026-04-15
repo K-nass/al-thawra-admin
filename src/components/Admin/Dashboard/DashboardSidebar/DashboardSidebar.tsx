@@ -41,7 +41,7 @@ const getSidebarItems = (): SidebarItemData[] => [
   { id: 9, labelKey: 'dashboard.tags', icon: Tags, path: '/admin/tags' },
   { id: 10, labelKey: 'dashboard.magazines', icon: BookOpen, path: '/admin/magazines' },
   { id: 11, labelKey: 'dashboard.users', icon: Users, path: '/admin/users' },
-  { id: 12, labelKey: 'Roles&Permissions', icon: Key, path: '/admin/roles-permissions' },
+  { id: 12, labelKey: 'dashboard.rolesAndPermissions', icon: Key, path: '/admin/roles-permissions' },
 ];
 
 export default function DashboardSidebar() {
@@ -74,8 +74,8 @@ export default function DashboardSidebar() {
       <button
         type="button"
         onClick={toggleMobileSidebar}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-[#1A1F2B] text-white rounded-lg shadow-lg hover:bg-slate-800 transition-colors"
-        aria-label="Toggle menu"
+        className="md:hidden fixed top-3 left-3 z-50 p-2.5 bg-[#1A1F2B] text-white rounded-xl shadow-lg hover:bg-slate-800 transition-colors duration-200"
+        aria-label={t("common.toggle")}
       >
         {isMobileSidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
@@ -91,11 +91,11 @@ export default function DashboardSidebar() {
           fixed inset-y-0 left-0 z-40 flex flex-col
           bg-[#1A1F2B] text-slate-300 border-r border-[#2A3143]
           transform md:translate-x-0 transition-transform duration-300 ease-in-out
-          ${isMobileSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:w-auto'}
+          ${isMobileSidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full md:w-auto'}
         `}
       >
         {/* Header section */}
-        <div className="flex items-center justify-between p-4 h-16 shrink-0">
+        <div className="flex items-center justify-between p-4 h-[4.5rem] shrink-0">
           <AnimatePresence>
             {isDesktopSidebarOpen && (
               <motion.div
@@ -106,7 +106,7 @@ export default function DashboardSidebar() {
                 className="flex items-center overflow-hidden whitespace-nowrap"
               >
                 {/* Placeholder Logo / Brand */}
-                <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-bold mr-3">
+                <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white font-bold mr-3">
                   AT
                 </div>
                 <h1 className="text-lg font-bold text-white tracking-wide">
@@ -141,7 +141,7 @@ export default function DashboardSidebar() {
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 overflow-y-auto px-2 py-4 scrollbar-hide space-y-1">
+        <div className="flex-1 overflow-y-auto px-3 py-5 scrollbar-hide space-y-1.5">
           {sidebarItems.map((item) => (
             <SidebarItem key={item.id} item={item} />
           ))}
@@ -158,7 +158,7 @@ export default function DashboardSidebar() {
             onClick={() => logout()}
             disabled={isLoading}
             title={!isDesktopSidebarOpen ? t('dashboard.logout') : undefined}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors disabled:opacity-50 group"
+            className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors duration-200 disabled:opacity-50 group"
           >
             <LogOut size={20} className="flex-shrink-0" />
             <AnimatePresence>

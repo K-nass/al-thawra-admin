@@ -23,7 +23,7 @@ export default function FileUpload({ handleChange, fieldErrors = {} }: FileUploa
           </div>
           <div>
             <h3 className="text-sm font-black text-slate-900 tracking-tight">{t('imageUpload.files')}</h3>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">Attachments</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">{t("imageUpload.attachments")}</p>
           </div>
         </div>
       </div>
