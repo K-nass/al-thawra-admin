@@ -92,7 +92,7 @@
     "caption": "Caption",
     "tags": "Tags",
     "published": "Published",
-    "draft": "Draft"
+    "draft": "Draft",
     "retry": "Retry"
   },
   "app": {
