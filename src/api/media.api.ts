@@ -86,7 +86,7 @@ export const mediaApi = {
     formData.append("signature", signatureData.signature);
     formData.append("folder", signatureData.folder);
     formData.append("public_id", signatureData.publicId);
-    
+
     // The backend signature calculates this transformation parameter automatically.
     // It must be included here so Cloudinary evaluates identical string-to-sign payloads!
     formData.append("transformation", signatureData.transformation || "q_auto,f_auto");
