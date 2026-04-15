@@ -6,6 +6,9 @@ import { setAuthToken, setRefreshToken, setUserRole } from '@/api/client';
 import { authApi, type LoginRequest } from '@/api/auth.api';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageToggle from '@/components/LanguageToggle/LanguageToggle';
+import { Eye , EyeOff } from 'lucide-react';
+
+  
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,6 +18,7 @@ export default function Login() {
     password: '',
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [showPassword, setShowPassword] = useState(false);
   const [notification, setNotification] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -178,17 +182,27 @@ export default function Login() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 {t('auth.password')}
               </label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder={t('auth.password')}
-                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${fieldErrors.password ? 'border-red-500 bg-red-50' : 'border-gray-300'
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder={t('auth.password')}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${fieldErrors.password ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
-                required
-              />
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-700"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            
               {fieldErrors.password && (
                 <ul className="mt-1 space-y-1">
                   {fieldErrors.password.map((error, idx) => (
