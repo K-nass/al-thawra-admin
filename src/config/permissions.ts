@@ -9,6 +9,7 @@ import {
   Video,
   Layers,
   Tags,
+  BookOpen,
   Users,
   Key,
 } from 'lucide-react';
@@ -41,6 +42,9 @@ export const KNOWN_PERMISSIONS = {
 
   // Roles & Permissions module
   RolesAndPermissions: 'RolesAndPermissions',
+
+  // Magazines module
+  Magazines: 'Magazines',
 } as const;
 
 export type KnownPermission = typeof KNOWN_PERMISSIONS[keyof typeof KNOWN_PERMISSIONS];
@@ -78,6 +82,9 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   '/admin/add-tag': 'Tags',
   '/admin/edit-tag/:id': 'Tags',
 
+  // Magazines route
+  '/admin/magazines': 'Magazines',
+
   // Users routes
   '/admin/users': 'Users',
   '/admin/edit-user/:id/:username': 'Users',
@@ -111,6 +118,7 @@ export const SIDEBAR_PERMISSIONS: SidebarItemConfig[] = [
   { id: 7, labelKey: 'dashboard.reels', icon: Video, path: '/admin/reels', requiredPermission: 'AddReels' },
   { id: 8, labelKey: 'dashboard.categories', icon: Layers, path: '/admin/categories', requiredPermission: 'Categories' },
   { id: 9, labelKey: 'dashboard.tags', icon: Tags, path: '/admin/tags', requiredPermission: 'Tags' },
+  { id: 10, labelKey: 'dashboard.magazines', icon: BookOpen, path: '/admin/magazines', requiredPermission: 'Magazines' },
   { id: 11, labelKey: 'dashboard.users', icon: Users, path: '/admin/users', requiredPermission: 'Users' },
   { id: 12, labelKey: 'dashboard.rolesAndPermissions', icon: Key, path: '/admin/roles-permissions', requiredPermission: 'RolesAndPermissions' },
 ];
