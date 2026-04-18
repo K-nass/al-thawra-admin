@@ -16,8 +16,10 @@ import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import { PermissionRouteGuard } from "./components/AdminProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 import { SidebarProvider } from "./contexts/SidebarContext";
+import { PermissionsProvider } from "./contexts/PermissionsContext";
 import { getAuthToken } from "./api/client";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
 import Roles from "./components/Admin/Dashboard/Roles/Roles";
@@ -66,31 +68,31 @@ export const routes = createBrowserRouter([
       },
       {
         path: "admin",
-        element: <AdminProtectedRoute><ErrorBoundary><SidebarProvider><DashboardLayout /></SidebarProvider></ErrorBoundary></AdminProtectedRoute>,
+        element: <AdminProtectedRoute><ErrorBoundary><SidebarProvider><PermissionsProvider><DashboardLayout /></PermissionsProvider></SidebarProvider></ErrorBoundary></AdminProtectedRoute>,
         children: [
-          { index: true, element: <DashboardHome /> },
-          { path: "post-format", element: <DashboardAddPost /> },
-          { path: "add-post", element: <DashboardForm /> },
-          { path: "edit-post/:postId", element: <DashboardEditPost /> },
-          { path: "posts/all", element: <DashboardPosts mode="all" /> },
-          { path: "posts/slider-posts", element: <DashboardPosts mode="slider" /> },
-          { path: "posts/featured-posts", element: <DashboardPosts mode="featured" /> },
-          { path: "posts/breaking-news", element: <DashboardPosts mode="breaking" /> },
-          { path: "magazines", element: <Magazines /> },
-          { path: "roles-permissions", element: <Roles /> },
+          { index: true, element: <PermissionRouteGuard><DashboardHome /></PermissionRouteGuard> },
+          { path: "post-format", element: <PermissionRouteGuard><DashboardAddPost /></PermissionRouteGuard> },
+          { path: "add-post", element: <PermissionRouteGuard><DashboardForm /></PermissionRouteGuard> },
+          { path: "edit-post/:postId", element: <PermissionRouteGuard><DashboardEditPost /></PermissionRouteGuard> },
+          { path: "posts/all", element: <PermissionRouteGuard><DashboardPosts mode="all" /></PermissionRouteGuard> },
+          { path: "posts/slider-posts", element: <PermissionRouteGuard><DashboardPosts mode="slider" /></PermissionRouteGuard> },
+          { path: "posts/featured-posts", element: <PermissionRouteGuard><DashboardPosts mode="featured" /></PermissionRouteGuard> },
+          { path: "posts/breaking-news", element: <PermissionRouteGuard><DashboardPosts mode="breaking" /></PermissionRouteGuard> },
+          { path: "magazines", element: <PermissionRouteGuard><Magazines /></PermissionRouteGuard> },
+          { path: "roles-permissions", element: <PermissionRouteGuard><Roles /></PermissionRouteGuard> },
 
-          { path: "add-role", element: <AddRole /> },
-          { path: "edit-role/:id", element: <EditRole /> },
-          { path: "users", element: <Users /> },
-          { path: "edit-user/:id/:username", element: <EditUser /> },
-          { path: "categories", element: <DashboardCategories /> },
-          { path: "add-category", element: <DashboardAddCategory /> },
-          { path: "edit-category/:slug", element: <DashboardAddCategory /> },
-          { path: "reels", element: <DashboardReels /> },
-          { path: "edit-reel/:id", element: <DashboardEditReel /> },
-          { path: "tags", element: <DashboardTags /> },
-          { path: "add-tag", element: <TagForm /> },
-          { path: "edit-tag/:id", element: <TagForm /> }
+          { path: "add-role", element: <PermissionRouteGuard><AddRole /></PermissionRouteGuard> },
+          { path: "edit-role/:id", element: <PermissionRouteGuard><EditRole /></PermissionRouteGuard> },
+          { path: "users", element: <PermissionRouteGuard><Users /></PermissionRouteGuard> },
+          { path: "edit-user/:id/:username", element: <PermissionRouteGuard><EditUser /></PermissionRouteGuard> },
+          { path: "categories", element: <PermissionRouteGuard><DashboardCategories /></PermissionRouteGuard> },
+          { path: "add-category", element: <PermissionRouteGuard><DashboardAddCategory /></PermissionRouteGuard> },
+          { path: "edit-category/:slug", element: <PermissionRouteGuard><DashboardAddCategory /></PermissionRouteGuard> },
+          { path: "reels", element: <PermissionRouteGuard><DashboardReels /></PermissionRouteGuard> },
+          { path: "edit-reel/:id", element: <PermissionRouteGuard><DashboardEditReel /></PermissionRouteGuard> },
+          { path: "tags", element: <PermissionRouteGuard><DashboardTags /></PermissionRouteGuard> },
+          { path: "add-tag", element: <PermissionRouteGuard><TagForm /></PermissionRouteGuard> },
+          { path: "edit-tag/:id", element: <PermissionRouteGuard><TagForm /></PermissionRouteGuard> }
 
         ]
       }

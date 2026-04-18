@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   Home,
-  FileText,
   FilePlus,
   Files,
   Rss,
@@ -24,25 +23,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useLogout } from '@/hooks/useLogout';
+import { usePermissions } from '@/contexts/PermissionsContext';
+import { SIDEBAR_PERMISSIONS, type SidebarItemConfig } from '@/config/permissions';
 import DashboardProfileCard from './DashboardProfileCard/DashboardProfileCard';
 import SidebarItem, { type SidebarItemData } from './SidebarItem';
 import SidebarToggleButton from './SidebarToggleButton';
 import LanguageToggle from '@/components/LanguageToggle/LanguageToggle';
 
-const getSidebarItems = (): SidebarItemData[] => [
-  { id: 0, labelKey: 'dashboard.home', icon: Home, path: '/admin' },
-  { id: 2, labelKey: 'dashboard.addPost', icon: FilePlus, path: '/admin/post-format' },
-  { id: 3, labelKey: 'dashboard.allPosts', icon: Files, path: '/admin/posts/all' },
-  { id: 4, labelKey: 'dashboard.sliderPosts', icon: Rss, path: '/admin/posts/slider-posts' },
-  { id: 5, labelKey: 'dashboard.featuredPosts', icon: Star, path: '/admin/posts/featured-posts' },
-  { id: 6, labelKey: 'dashboard.breakingNews', icon: Zap, path: '/admin/posts/breaking-news' },
-  { id: 7, labelKey: 'dashboard.reels', icon: Video, path: '/admin/reels' },
-  { id: 8, labelKey: 'dashboard.categories', icon: Layers, path: '/admin/categories' },
-  { id: 9, labelKey: 'dashboard.tags', icon: Tags, path: '/admin/tags' },
-  { id: 10, labelKey: 'dashboard.magazines', icon: BookOpen, path: '/admin/magazines' },
-  { id: 11, labelKey: 'dashboard.users', icon: Users, path: '/admin/users' },
-  { id: 12, labelKey: 'dashboard.rolesAndPermissions', icon: Key, path: '/admin/roles-permissions' },
-];
+// Convert config type to SidebarItemData type
+function convertToSidebarItemData(item: SidebarItemConfig): SidebarItemData {
+  return {
+    id: item.id,
+    labelKey: item.labelKey,
+    icon: item.icon,
+    path: item.path,
+  };
+}
 
 export default function DashboardSidebar() {
   const { t } = useTranslation();
@@ -55,7 +51,33 @@ export default function DashboardSidebar() {
     closeMobileSidebar
   } = useSidebar();
 
-  const sidebarItems = getSidebarItems();
+  // Get user permissions
+  let sidebarItems: SidebarItemData[] = [];
+  
+  try {
+    const { permissions, hasAllPermissions, isLoading: permissionsLoading } = usePermissions();
+    
+    // Filter sidebar items based on permissions
+    sidebarItems = useMemo(() => {
+      // If permissions are still loading, show all items (they'll be filtered after load)
+      if (permissionsLoading) {
+        return SIDEBAR_PERMISSIONS.map(convertToSidebarItemData);
+      }
+      
+      // If user has all permissions, show all items
+      if (hasAllPermissions) {
+        return SIDEBAR_PERMISSIONS.map(convertToSidebarItemData);
+      }
+      
+      // Filter to only items the user has permission for
+      return SIDEBAR_PERMISSIONS
+        .filter(item => !item.requiredPermission || permissions.includes(item.requiredPermission))
+        .map(convertToSidebarItemData);
+    }, [permissions, hasAllPermissions, permissionsLoading]);
+  } catch {
+    // If permissions context not available, show all items
+    sidebarItems = SIDEBAR_PERMISSIONS.map(convertToSidebarItemData);
+  }
 
   // Handle keyboard navigation (escape key to close mobile menu)
   useEffect(() => {

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useFetchMagazines, useDeleteMagazine, useMagazineByDate } from "@/hooks/useFetchMagazines";
 import { useToast } from "@/components/Toast/ToastContainer";
 import type { Magazine } from "@/api/magazines.api";
@@ -6,33 +6,31 @@ import Loader from "@/components/Common/Loader";
 import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
 import MagazineViewer from "./MagazineViewer";
 import MagazineFormModal from "./MagazineFormModal";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faCalendar,
-  faTrash,
-  faFilePdf,
-  faEye,
-  faPlus,
-  faPen,
-  faXmark,
-  faNewspaper,
-  faSearch,
-  faFilter,
-  faChevronLeft,
-  faChevronRight,
-} from "@fortawesome/free-solid-svg-icons";
+  BookOpen,
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Filter,
+  Calendar,
+  Eye,
+  FileText,
+  Loader2,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-// import { useToast } from "@/components/Toast/ToastContainer";
+import { Badge } from "@/components/ui/badge";
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Debounce â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function useDebounce<T>(value: T, delay: number): T {
-  const [debounced, setDebounced] = useState<T>(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
+  const [debounced, setDebounced] = useState(value);
+  if (typeof window !== "undefined") {
+    setTimeout(() => setDebounced(value), delay);
+  }
   return debounced;
 }
 
@@ -41,14 +39,12 @@ export default function Magazines() {
   const toast = useToast();
   const isRTL = i18n.language === "ar";
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 400);
   const [dateRange, setDateRange] = useState<{ from: string; to: string }>({ from: "", to: "" });
   const [pageNumber, setPageNumber] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Dialogs
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     issueNumber: string | null;
@@ -66,7 +62,6 @@ export default function Magazines() {
     magazine: Magazine | null;
   }>({ isOpen: false, magazine: null });
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Data Hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const magazines = useFetchMagazines({
     pageNumber,
     pageSize: 15,
@@ -76,27 +71,14 @@ export default function Magazines() {
   });
 
   const todayDate = format(new Date(), "yyyy-MM-dd");
-  const {
-    data: todayIssue,
-    isLoading: isLoadingToday,
-  } = useMagazineByDate(todayDate);
-
+  const { data: todayIssue, isLoading: isLoadingToday } = useMagazineByDate(todayDate);
   const deleteMagazine = useDeleteMagazine();
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Derived â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const hasFilters = !!dateRange.from || !!dateRange.to || !!debouncedSearch;
 
   const dateLocale = useMemo(() => {
     return isRTL ? "ar-EG" : "en-US";
   }, [isRTL]);
-
-  const formatLongDate = (dateValue: Date) =>
-    dateValue.toLocaleDateString(dateLocale, {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
 
   const formatDate = (dateStr: string) => {
     try {
@@ -110,7 +92,14 @@ export default function Magazines() {
     }
   };
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const formatLongDate = (dateValue: Date) =>
+    dateValue.toLocaleDateString(dateLocale, {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
   const handleDeleteClick = (magazine: Magazine) => {
     setConfirmDialog({
       isOpen: true,
@@ -121,7 +110,6 @@ export default function Magazines() {
 
   const handleConfirmDelete = () => {
     if (!confirmDialog.issueNumber) return;
-
     deleteMagazine.mutate(confirmDialog.issueNumber, {
       onSuccess: () => {
         toast.success(t("magazines.deleteSuccess"));
@@ -161,15 +149,6 @@ export default function Magazines() {
     setPageNumber(1);
   };
 
-  useEffect(() => {
-    setPageNumber(1);
-  }, [debouncedSearch, dateRange.from, dateRange.to]);
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [pageNumber]);
-
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Pagination Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const totalPages = magazines.data?.totalPages ?? 0;
 
   const getPageNumbers = () => {
@@ -179,11 +158,7 @@ export default function Magazines() {
     } else {
       pages.push(1);
       if (pageNumber > 3) pages.push("ellipsis");
-      for (
-        let i = Math.max(2, pageNumber - 1);
-        i <= Math.min(totalPages - 1, pageNumber + 1);
-        i++
-      ) {
+      for (let i = Math.max(2, pageNumber - 1); i <= Math.min(totalPages - 1, pageNumber + 1); i++) {
         pages.push(i);
       }
       if (pageNumber < totalPages - 2) pages.push("ellipsis");
@@ -192,310 +167,274 @@ export default function Magazines() {
     return pages;
   };
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Card animation variants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
       opacity: 1,
       y: 0,
-      transition: { delay: i * 0.04, duration: 0.25, ease: "easeOut" },
+      transition: { delay: i * 0.04, duration: 0.25 },
     }),
   };
 
-  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto">
-        {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Page Header â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
-        <div className="bg-gradient-to-br from-[#13967B] via-[#0e7a64] to-[#0a5e4d] px-4 py-6 sm:px-6 sm:py-8 md:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                    <FontAwesomeIcon icon={faNewspaper} className="text-lg" />
-                  </div>
-                  {t("magazines.title")}
-                </h1>
-                {magazines.data && (
-                  <p className="text-white/70 text-sm mt-2">
-                    {t("magazines.magazineCount", {
-                      count: magazines.data.totalCount,
-                    })}
-                  </p>
-                )}
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-50/50">
+      <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
+                <BookOpen size={16} />
               </div>
-              <button
-                type="button"
-                onClick={handleCreate}
-                className="px-5 py-2.5 bg-white text-[#13967B] rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md self-start sm:self-auto"
-              >
-                <FontAwesomeIcon icon={faPlus} />
-                {t("magazines.createMagazine")}
-              </button>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t("magazines.issue")}</span>
             </div>
-
-            {/* Search & Filter Toggle */}
-            <div className="mt-6 flex items-center gap-3">
-              <div className="flex-1 relative">
-                <FontAwesomeIcon
-                  icon={faSearch}
-                  className="absolute start-4 top-1/2 -translate-y-1/2 text-white/40"
-                />
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder={t("magazines.searchPlaceholder")}
-                  className="w-full ps-11 pe-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40 transition-all"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowFilters(!showFilters)}
-                className={`px-4 py-3 rounded-xl border font-medium transition-all duration-200 flex items-center gap-2 ${
-                  showFilters || hasFilters
-                    ? "bg-white text-[#13967B] border-white"
-                    : "bg-white/10 text-white border-white/20 hover:bg-white/20"
-                }`}
-              >
-                <FontAwesomeIcon icon={faFilter} />
-                <span className="hidden sm:inline">{t("common.filter")}</span>
-                {hasFilters && (
-                  <span className="w-2 h-2 bg-amber-400 rounded-full" />
-                )}
-              </button>
-            </div>
-
-            {/* Collapsible Filter Panel */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/15">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-medium text-white/70 mb-1 block">
-                          {t("magazines.fromDate")}
-                        </label>
-                        <input
-                          type="date"
-                          value={dateRange.from}
-                          onChange={(e) =>
-                            setDateRange((prev) => ({ ...prev, from: e.target.value }))
-                          }
-                          className="w-full px-3 py-2.5 bg-white/10 border border-white/20 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/30 [color-scheme:dark]"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-white/70 mb-1 block">
-                          {t("magazines.toDate")}
-                        </label>
-                        <input
-                          type="date"
-                          value={dateRange.to}
-                          onChange={(e) =>
-                            setDateRange((prev) => ({ ...prev, to: e.target.value }))
-                          }
-                          className="w-full px-3 py-2.5 bg-white/10 border border-white/20 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-white/30 [color-scheme:dark]"
-                        />
-                      </div>
-                    </div>
-                    {hasFilters && (
-                      <button
-                        type="button"
-                        onClick={clearFilters}
-                        className="mt-3 text-xs text-white/70 hover:text-white flex items-center gap-1.5 transition-colors"
-                      >
-                        <FontAwesomeIcon icon={faXmark} />
-                        {t("magazines.clearFilters")}
-                      </button>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">{t("magazines.title")}</h1>
+            {magazines.data && (
+              <p className="text-sm text-slate-500 mt-2 font-medium max-w-xl">
+                {t("magazines.magazineCount", { count: magazines.data.totalCount })}
+              </p>
+            )}
           </div>
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="inline-flex items-center justify-center px-6 py-3.5 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-2xl shadow-sm hover:bg-primary transition-colors duration-200 gap-3 group"
+          >
+            <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
+            {t("magazines.createMagazine")}
+          </button>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-6">
-          {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Today's Issue Hero â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#13967B]/10 rounded-lg flex items-center justify-center">
-                <FontAwesomeIcon icon={faCalendar} className="text-[#13967B] text-sm" />
+        <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 p-8 mb-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 pointer-events-none opacity-50" />
+
+          <div className="flex flex-col md:flex-row gap-6 relative">
+            <div className="flex-1 relative group">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors">
+                <Search size={16} />
               </div>
-              <h2 className="text-lg font-bold text-gray-900">{t("magazines.todaysIssue")}</h2>
-              <span className="text-xs text-gray-400 ms-auto">
-                {formatLongDate(new Date())}
-              </span>
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setPageNumber(1);
+                }}
+                placeholder={t("magazines.searchPlaceholder")}
+                className="w-full pl-14 pr-6 py-4 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors"
+              />
             </div>
-
-            <div className="p-6">
-              {isLoadingToday ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader />
-                </div>
-              ) : todayIssue ? (
-                <div className="flex flex-col md:flex-row gap-6">
-                  {/* Thumbnail */}
-                  <div className="w-full md:w-48 flex-shrink-0">
-                    <div className="aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden border border-gray-200 shadow-sm relative group">
-                      {todayIssue.thumbnailUrl ? (
-                        <img
-                          src={todayIssue.thumbnailUrl}
-                          alt={`${t("magazines.issue")} ${todayIssue.issueNumber}`}
-                          className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gradient-to-br from-gray-50 to-gray-100">
-                          <FontAwesomeIcon icon={faFilePdf} className="text-5xl" />
-                        </div>
-                      )}
-                      <div className="absolute top-2 end-2 bg-red-500 text-white px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1 shadow-sm">
-                        <FontAwesomeIcon icon={faFilePdf} className="text-[10px]" />
-                        {t("magazines.pdf")}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Details */}
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                        {t("magazines.issue")} {todayIssue.issueNumber}
-                      </h3>
-                      <p className="text-gray-500 text-sm mb-1">
-                        {t("magazines.createdOn")}{" "}
-                        {new Date(todayIssue.createdAt).toLocaleDateString(dateLocale, {
-                          weekday: "long",
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      <button
-                        type="button"
-                        onClick={() => handleViewPdf(todayIssue)}
-                        className="px-4 py-2 bg-[#13967B] text-white rounded-lg hover:bg-[#0e7a64] transition-colors font-medium flex items-center gap-2 text-sm shadow-sm"
-                      >
-                        <FontAwesomeIcon icon={faEye} />
-                        {t("magazines.viewPdf")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(todayIssue)}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center gap-2 text-sm"
-                      >
-                        <FontAwesomeIcon icon={faPen} />
-                        {t("common.edit")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteClick(todayIssue)}
-                        className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-medium flex items-center gap-2 text-sm"
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                        {t("common.delete")}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Empty Today State */
-                <div className="text-center py-10">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    <FontAwesomeIcon icon={faNewspaper} className="text-2xl text-gray-300" />
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-700 mb-1">
-                    {t("magazines.noIssueForToday")}
-                  </h4>
-                  <p className="text-gray-400 text-sm mb-5 max-w-md mx-auto">
-                    {t("magazines.noIssueMessage")}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleCreate}
-                    className="px-5 py-2.5 bg-[#13967B] text-white rounded-xl font-medium hover:bg-[#0e7a64] transition-colors duration-200 inline-flex items-center gap-2 shadow-sm hover:shadow-md"
-                  >
-                    <FontAwesomeIcon icon={faPlus} />
-                    {t("magazines.createMagazine")}
-                  </button>
-                </div>
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-6 py-4 px-4 rounded-2xl font-medium transition-colors text-sm flex items-center gap-2 ${
+                showFilters || hasFilters
+                  ? "bg-primary text-white"
+                  : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <Filter size={16} />
+              {t("common.filter")}
+              {hasFilters && (
+                <span className="w-2 h-2 bg-amber-400 rounded-full" />
               )}
-            </div>
+            </button>
           </div>
 
-          {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Magazine Grid â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
-          <AnimatePresence mode="wait">
-            {magazines.isLoading ? (
+          <AnimatePresence>
+            {showFilters && (
               <motion.div
-                key="loader"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex justify-center items-center py-24"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                <Loader />
-              </motion.div>
-            ) : magazines.error ? (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="bg-red-50 border border-red-200 rounded-xl p-8 text-center"
-              >
-                <div className="w-14 h-14 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                  <FontAwesomeIcon icon={faNewspaper} className="text-xl text-red-400" />
+                <div className="mt-6 pt-6 border-t border-slate-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">
+                        {t("magazines.fromDate")}
+                      </label>
+                      <input
+                        type="date"
+                        value={dateRange.from}
+                        onChange={(e) => setDateRange((prev) => ({ ...prev, from: e.target.value }))}
+                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">
+                        {t("magazines.toDate")}
+                      </label>
+                      <input
+                        type="date"
+                        value={dateRange.to}
+                        onChange={(e) => setDateRange((prev) => ({ ...prev, to: e.target.value }))}
+                        className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors"
+                      />
+                    </div>
+                  </div>
+                  {hasFilters && (
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="mt-4 text-xs font-medium text-primary hover:text-emerald-700 flex items-center gap-1.5 transition-colors"
+                    >
+                      <X size={12} />
+                      {t("magazines.clearFilters")}
+                    </button>
+                  )}
                 </div>
-                <p className="text-red-600 font-medium mb-1">
-                  {t("magazines.failedToLoad")}
-                </p>
-                <p className="text-red-400 text-sm mb-4">
-                  {(magazines.error as any)?.response?.data?.title ||
-                    (magazines.error as any)?.message ||
-                    ""}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => magazines.refetch()}
-                  className="px-4 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
-                >
-                  {t("common.retry")}
-                </button>
               </motion.div>
-            ) : magazines.data?.items && magazines.data.items.length > 0 ? (
-              <motion.div
-                key="content"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+            )}
+          </AnimatePresence>
+        </div>
+
+        <AnimatePresence mode="wait">
+          {magazines.isLoading ? (
+            <motion.div
+              key="loader"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-32 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm"
+            >
+              <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("common.loading")}</p>
+            </motion.div>
+          ) : magazines.error ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="p-16 bg-rose-50 border border-rose-100 rounded-[2rem] text-center"
+            >
+              <div className="w-16 h-16 bg-rose-100/50 rounded-full flex items-center justify-center mx-auto mb-6 text-rose-500">
+                <BookOpen size={32} />
+              </div>
+              <h3 className="text-xl font-black text-rose-900 mb-2 uppercase tracking-tight">{t("magazines.failedToLoad")}</h3>
+              <p className="text-sm text-rose-600/80 max-w-md mx-auto font-medium mb-6">
+                {(magazines.error as any)?.response?.data?.title || (magazines.error as any)?.message || ""}
+              </p>
+              <button
+                type="button"
+                onClick={() => magazines.refetch()}
+                className="px-6 py-3 bg-rose-500 text-white rounded-2xl font-bold text-sm hover:bg-rose-600 transition-colors"
               >
-                {/* Grid Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    {t("magazines.totalIssues")}
-                  </h2>
-                  <span className="text-sm text-gray-400">
-                    {t("magazines.magazineCount", {
-                      count: magazines.data.totalCount,
-                    })}
+                {t("common.retry")}
+              </button>
+            </motion.div>
+          ) : magazines.data?.items && magazines.data.items.length > 0 ? (
+            <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden mb-8">
+                <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                  <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">{t("magazines.todaysIssue")}</h2>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    {formatLongDate(new Date())}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <div className="p-8">
+                  {isLoadingToday ? (
+                    <div className="flex items-center justify-center py-10">
+                      <Loader />
+                    </div>
+                  ) : todayIssue ? (
+                    <div className="flex flex-col md:flex-row gap-8">
+                      <div className="w-full md:w-40 flex-shrink-0">
+                        <div className="aspect-[3/4] bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative group">
+                          {todayIssue.thumbnailUrl ? (
+                            <img
+                              src={todayIssue.thumbnailUrl}
+                              alt={`${t("magazines.issue")} ${todayIssue.issueNumber}`}
+                              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300 bg-slate-50">
+                              <FileText size={48} />
+                            </div>
+                          )}
+                          <div className="absolute top-3 end-3 bg-red-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                            <FileText size={10} />
+                            PDF
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex flex-col justify-between">
+                        <div>
+                          <h3 className="text-3xl font-black text-slate-900 mb-2">
+                            {t("magazines.issue")} {todayIssue.issueNumber}
+                          </h3>
+                          <p className="text-sm text-slate-500 font-medium">
+                            {t("magazines.createdOn")}{" "}
+                            {new Date(todayIssue.createdAt).toLocaleDateString(dateLocale, {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3 mt-6">
+                          <button
+                            type="button"
+                            onClick={() => handleViewPdf(todayIssue)}
+                            className="px-5 py-3 bg-primary text-white rounded-2xl font-bold text-sm hover:bg-emerald-600 transition-colors flex items-center gap-2"
+                          >
+                            <Eye size={16} />
+                            {t("magazines.viewPdf")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(todayIssue)}
+                            className="px-5 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors flex items-center gap-2"
+                          >
+                            <Pencil size={16} />
+                            {t("common.edit")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteClick(todayIssue)}
+                            className="px-5 py-3 bg-red-50 text-red-600 rounded-2xl font-bold text-sm hover:bg-red-100 transition-colors flex items-center gap-2"
+                          >
+                            <Trash2 size={16} />
+                            {t("common.delete")}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <div className="w-20 h-20 mx-auto mb-4 bg-slate-50 rounded-full flex items-center justify-center">
+                        <BookOpen size={32} className="text-slate-300" />
+                      </div>
+                      <h4 className="text-lg font-bold text-slate-700 mb-2">{t("magazines.noIssueForToday")}</h4>
+                      <p className="text-sm text-slate-400 mb-6 max-w-md mx-auto">{t("magazines.noIssueMessage")}</p>
+                      <button
+                        type="button"
+                        onClick={handleCreate}
+                        className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-primary transition-colors inline-flex items-center gap-2"
+                      >
+                        <Plus size={16} />
+                        {t("magazines.createMagazine")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
+                <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                  <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">{t("magazines.totalIssues")}</h2>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    {t("magazines.magazineCount", { count: magazines.data.totalCount })}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8">
                   {magazines.data.items.map((magazine, index) => (
                     <motion.div
                       key={magazine.issueNumber}
@@ -503,10 +442,9 @@ export default function Magazines() {
                       variants={cardVariants}
                       initial="hidden"
                       animate="visible"
-                      className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 group hover:border-gray-200"
+                      className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-200 group"
                     >
-                      {/* Thumbnail */}
-                      <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
+                      <div className="aspect-[3/4] bg-slate-100 relative overflow-hidden">
                         {magazine.thumbnailUrl ? (
                           <img
                             src={magazine.thumbnailUrl}
@@ -514,58 +452,53 @@ export default function Magazines() {
                             className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 gap-2">
-                            <FontAwesomeIcon icon={faFilePdf} className="text-4xl" />
-                            <span className="text-xs font-medium text-gray-400">{t("magazines.pdf")}</span>
+                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
+                            <FileText size={40} />
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">PDF</span>
                           </div>
                         )}
 
-                        {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-end justify-center pb-6">
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-end justify-center pb-6">
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => handleViewPdf(magazine)}
-                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-gray-800 rounded-full hover:bg-[#13967B] hover:text-white transition-all duration-200 flex items-center justify-center shadow-sm"
+                              className="w-11 h-11 bg-white rounded-xl flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200 shadow-sm"
                               title={t("magazines.viewPdf")}
                             >
-                              <FontAwesomeIcon icon={faEye} className="text-sm" />
+                              <Eye size={18} />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleEdit(magazine)}
-                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-gray-800 rounded-full hover:bg-blue-500 hover:text-white transition-all duration-200 flex items-center justify-center shadow-sm"
+                              className="w-11 h-11 bg-white rounded-xl flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all duration-200 shadow-sm"
                               title={t("common.edit")}
                             >
-                              <FontAwesomeIcon icon={faPen} className="text-sm" />
+                              <Pencil size={18} />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteClick(magazine)}
-                              className="w-10 h-10 bg-white/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all duration-200 flex items-center justify-center shadow-sm"
+                              className="w-11 h-11 bg-white rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all duration-200 shadow-sm"
                               title={t("common.delete")}
                             >
-                              <FontAwesomeIcon icon={faTrash} className="text-sm" />
+                              <Trash2 size={18} />
                             </button>
                           </div>
                         </div>
 
-                        {/* PDF Badge */}
-                        <div className="absolute top-3 end-3 bg-red-500/90 backdrop-blur-sm text-white px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1">
-                          <FontAwesomeIcon icon={faFilePdf} className="text-[10px]" />
-                          {t("magazines.pdf")}
+                        <div className="absolute top-3 end-3 bg-red-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                          <FileText size={10} />
+                          PDF
                         </div>
                       </div>
 
-                      {/* Info */}
-                      <div className="p-4">
+                      <div className="p-5">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="text-base font-bold text-gray-900">
-                              {t("magazines.issue")} {magazine.issueNumber}
-                            </h3>
-                            <p className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                              <FontAwesomeIcon icon={faCalendar} className="text-[10px]" />
+                            <h3 className="text-base font-black text-slate-900">{t("magazines.issue")} {magazine.issueNumber}</h3>
+                            <p className="text-xs text-slate-400 flex items-center gap-1 mt-1 font-medium">
+                              <Calendar size={10} />
                               {formatDate(magazine.createdAt)}
                             </p>
                           </div>
@@ -575,27 +508,20 @@ export default function Magazines() {
                   ))}
                 </div>
 
-                {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Pagination â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
                 {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-1.5 py-8 mt-4">
+                  <div className="flex justify-center items-center gap-2 py-8 border-t border-slate-100">
                     <button
                       type="button"
                       onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
                       disabled={pageNumber === 1}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
-                      <FontAwesomeIcon
-                        icon={isRTL ? faChevronRight : faChevronLeft}
-                        className="text-xs"
-                      />
+                      {isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                     </button>
 
                     {getPageNumbers().map((num, idx) =>
                       num === "ellipsis" ? (
-                        <span
-                          key={`ellipsis-${idx}`}
-                          className="w-9 h-9 flex items-center justify-center text-gray-400 text-sm"
-                        >
+                        <span key={`ellipsis-${idx}`} className="w-10 h-10 flex items-center justify-center text-slate-400 text-sm">
                           ...
                         </span>
                       ) : (
@@ -603,10 +529,10 @@ export default function Magazines() {
                           key={num}
                           type="button"
                           onClick={() => setPageNumber(num)}
-                          className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 ${
+                          className={`w-10 h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all duration-200 ${
                             pageNumber === num
-                              ? "bg-[#13967B] text-white shadow-sm"
-                              : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                              ? "bg-primary text-white shadow-sm"
+                              : "border border-slate-200 text-slate-600 hover:bg-slate-50"
                           }`}
                         >
                           {num}
@@ -616,64 +542,48 @@ export default function Magazines() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setPageNumber((prev) => Math.min(prev + 1, totalPages))
-                      }
+                      onClick={() => setPageNumber((prev) => Math.min(prev + 1, totalPages))}
                       disabled={pageNumber === totalPages}
-                      className="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
-                      <FontAwesomeIcon
-                        icon={isRTL ? faChevronLeft : faChevronRight}
-                        className="text-xs"
-                      />
+                      {isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
                     </button>
                   </div>
                 )}
-              </motion.div>
-            ) : (
-              /* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Empty State â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="bg-white rounded-2xl border border-gray-100 p-12 text-center"
-              >
-                <div className="w-20 h-20 mx-auto mb-5 bg-gray-50 rounded-full flex items-center justify-center">
-                  <FontAwesomeIcon
-                    icon={faNewspaper}
-                    className="text-3xl text-gray-300"
-                  />
-                </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">
-                  {t("magazines.noMagazinesFound")}
-                </h3>
-                <p className="text-gray-400 text-sm max-w-md mx-auto mb-6">
-                  {t("magazines.noMagazinesMessage")}
-                </p>
-                {hasFilters && (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="px-4 py-2 text-sm font-medium text-[#13967B] bg-[#13967B]/5 rounded-lg hover:bg-[#13967B]/10 transition-colors inline-flex items-center gap-1.5"
-                  >
-                    <FontAwesomeIcon icon={faXmark} />
-                    {t("magazines.clearFilters")}
-                  </button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="bg-white rounded-[2rem] border border-slate-200 p-16 text-center"
+            >
+              <div className="w-24 h-24 mx-auto mb-6 bg-slate-50 rounded-full flex items-center justify-center">
+                <BookOpen size={40} className="text-slate-300" />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">{t("magazines.noMagazinesFound")}</h3>
+              <p className="text-sm text-slate-500 max-w-md mx-auto mb-6 font-medium">{t("magazines.noMagazinesMessage")}</p>
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="px-5 py-3 text-sm font-bold text-primary bg-primary/5 rounded-2xl hover:bg-primary/10 transition-colors inline-flex items-center gap-2"
+                >
+                  <X size={14} />
+                  {t("magazines.clearFilters")}
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ Modals â•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گâ•گ */}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         title={t("magazines.confirmDeleteTitle")}
-        message={t("magazines.confirmDeleteMessage", {
-          magazineTitle: confirmDialog.magazineTitle,
-        })}
+        message={t("magazines.confirmDeleteMessage", { magazineTitle: confirmDialog.magazineTitle })}
         confirmText={t("common.delete")}
         cancelText={t("common.cancel")}
         onConfirm={handleConfirmDelete}
@@ -696,4 +606,3 @@ export default function Magazines() {
     </div>
   );
 }
-

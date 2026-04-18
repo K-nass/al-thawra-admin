@@ -1,16 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faXmark,
-  faCloudUploadAlt,
-  faFilePdf,
-  faImage,
-  faCheckCircle,
-  faSpinner,
-  faTrash,
-  faRotateRight,
-} from "@fortawesome/free-solid-svg-icons";
+  X,
+  Upload,
+  FileText,
+  Image,
+  Loader2,
+  RotateCw,
+  Trash2,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCloudinaryUpload } from "@/hooks/useCloudinaryUpload";
 import { useCreateMagazine, useUpdateMagazine } from "@/hooks/useFetchMagazines";
@@ -20,7 +20,6 @@ import type { Magazine } from "@/api/magazines.api";
 interface MagazineFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** If provided, the modal is in "edit" mode */
   magazine?: Magazine | null;
 }
 
@@ -33,7 +32,6 @@ export default function MagazineFormModal({
   const toast = useToast();
   const isEditMode = !!magazine;
 
-  // ────────────────────────── Form State ──────────────────────────
   const [issueNumber, setIssueNumber] = useState("");
   const [pdfUrl, setPdfUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
@@ -41,30 +39,24 @@ export default function MagazineFormModal({
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ issueNumber?: string; pdf?: string }>({});
 
-  // ────────────────────────── Upload Hooks ──────────────────────────
   const pdfUpload = useCloudinaryUpload();
   const thumbUpload = useCloudinaryUpload();
 
-  // ────────────────────────── Mutation Hooks ──────────────────────────
   const createMagazine = useCreateMagazine();
   const updateMagazine = useUpdateMagazine();
 
-  // ────────────────────────── Refs ──────────────────────────
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const thumbInputRef = useRef<HTMLInputElement>(null);
 
-  // ────────────────────────── Drag State ──────────────────────────
   const [pdfDragOver, setPdfDragOver] = useState(false);
   const [thumbDragOver, setThumbDragOver] = useState(false);
 
-  // ────────────────────────── Derived State ──────────────────────────
   const isBusy =
     pdfUpload.isUploading ||
     thumbUpload.isUploading ||
     createMagazine.isPending ||
     updateMagazine.isPending;
 
-  // ────────────────────────── Initialize on open/edit ──────────────────────────
   useEffect(() => {
     if (isOpen) {
       if (magazine) {
@@ -86,7 +78,6 @@ export default function MagazineFormModal({
     }
   }, [isOpen, magazine]);
 
-  // ────────────────────────── Validation ──────────────────────────
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
     if (!issueNumber.trim()) {
@@ -99,7 +90,6 @@ export default function MagazineFormModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  // ────────────────────────── PDF Upload Handler ──────────────────────────
   const handlePdfFile = useCallback(
     async (file: File) => {
       if (file.type !== "application/pdf") {
@@ -118,7 +108,6 @@ export default function MagazineFormModal({
     [pdfUpload, toast, t]
   );
 
-  // ────────────────────────── Thumbnail Upload Handler ──────────────────────────
   const handleThumbnailFile = useCallback(
     async (file: File) => {
       if (!file.type.startsWith("image/")) {
@@ -126,7 +115,6 @@ export default function MagazineFormModal({
         return;
       }
 
-      // Show local preview immediately
       const localPreview = URL.createObjectURL(file);
       setThumbnailPreview(localPreview);
 
@@ -134,19 +122,16 @@ export default function MagazineFormModal({
       if (result?.url) {
         setThumbnailUrl(result.url);
         toast.success(t("magazines.thumbnailUploaded"));
-        // Revoke local preview, use the cloudinary URL
         URL.revokeObjectURL(localPreview);
         setThumbnailPreview(result.url);
       } else {
-        // Upload failed, clear preview
         URL.revokeObjectURL(localPreview);
-        setThumbnailPreview(thumbnailUrl); // Revert to original
+        setThumbnailPreview(thumbnailUrl);
       }
     },
     [thumbUpload, toast, t, thumbnailUrl]
   );
 
-  // ────────────────────────── Drop Handlers ──────────────────────────
   const handleDrop = useCallback(
     (e: React.DragEvent, type: "pdf" | "image") => {
       e.preventDefault();
@@ -177,7 +162,6 @@ export default function MagazineFormModal({
     else setThumbDragOver(false);
   };
 
-  // ────────────────────────── Submit ──────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
@@ -208,7 +192,6 @@ export default function MagazineFormModal({
     }
   };
 
-  // ────────────────────────── Close handler ──────────────────────────
   const handleClose = () => {
     if (isBusy) return;
     pdfUpload.reset();
@@ -227,42 +210,37 @@ export default function MagazineFormModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={handleClose}
           />
 
-          {/* Modal */}
           <motion.div
-            className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+            className="relative bg-white rounded-[2rem] shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
           >
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+            <div className="sticky top-0 z-10 bg-white border-b border-slate-100 px-8 py-5 flex items-center justify-between rounded-t-[2rem]">
+              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">
                 {isEditMode ? t("magazines.editMagazine") : t("magazines.createMagazine")}
               </h2>
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={isBusy}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50"
               >
-                <FontAwesomeIcon icon={faXmark} className="text-xl" />
+                <X size={20} />
               </button>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* ── Issue Number ── */}
+            <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div>
                 <label
                   htmlFor="magazine-issue-number"
-                  className="block text-sm font-semibold text-gray-700 mb-1.5"
+                  className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block"
                 >
                   {t("magazines.issueNumber")} <span className="text-red-500">*</span>
                 </label>
@@ -276,37 +254,36 @@ export default function MagazineFormModal({
                   }}
                   placeholder={t("magazines.issueNumberPlaceholder")}
                   disabled={isBusy || isEditMode}
-                  className={`w-full px-4 py-3 border rounded-xl text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#13967B]/30 focus:border-[#13967B] disabled:bg-gray-50 disabled:cursor-not-allowed ${errors.issueNumber
+                  className={`w-full px-5 py-4 bg-slate-50 border rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors ${errors.issueNumber
                       ? "border-red-400 ring-2 ring-red-100"
-                      : "border-gray-200 hover:border-gray-300"
-                    }`}
+                      : "border-slate-200 hover:border-slate-300"
+                    } disabled:bg-slate-100 disabled:cursor-not-allowed`}
                 />
                 {errors.issueNumber && (
-                  <p className="mt-1.5 text-sm text-red-500 flex items-center gap-1">
+                  <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle size={14} />
                     {errors.issueNumber}
                   </p>
                 )}
               </div>
 
-              {/* ── PDF Upload Zone ── */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">
                   {t("magazines.pdfFile")} <span className="text-red-500">*</span>
                 </label>
 
-                {/* Uploaded State */}
                 {pdfUrl && !pdfUpload.isUploading ? (
-                  <div className="border border-green-200 bg-green-50/50 rounded-xl p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <FontAwesomeIcon icon={faFilePdf} className="text-red-500 text-lg" />
+                  <div className="border border-emerald-200 bg-emerald-50/50 rounded-2xl p-5 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                        <FileText size={20} className="text-red-500" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-800 truncate max-w-[280px]">
+                        <p className="text-sm font-bold text-slate-800 truncate max-w-[200px]">
                           {pdfFileName || t("magazines.currentPdf")}
                         </p>
-                        <p className="text-xs text-green-600 flex items-center gap-1">
-                          <FontAwesomeIcon icon={faCheckCircle} />
+                        <p className="text-xs text-emerald-600 flex items-center gap-1 mt-0.5">
+                          <CheckCircle size={12} />
                           {t("magazines.pdfUploaded")}
                         </p>
                       </div>
@@ -315,21 +292,17 @@ export default function MagazineFormModal({
                       type="button"
                       onClick={() => pdfInputRef.current?.click()}
                       disabled={isBusy}
-                      className="px-3 py-1.5 text-sm font-medium text-[#13967B] bg-white border border-[#13967B]/30 rounded-lg hover:bg-[#13967B]/5 transition-colors disabled:opacity-50"
+                      className="px-4 py-2 text-sm font-bold text-primary bg-primary/5 border border-primary/20 rounded-xl hover:bg-primary/10 transition-colors"
                     >
-                      <FontAwesomeIcon icon={faRotateRight} className="me-1.5" />
+                      <RotateCw size={14} className="inline me-1.5" />
                       {t("magazines.replacePdf")}
                     </button>
                   </div>
                 ) : pdfUpload.isUploading ? (
-                  /* Uploading State */
-                  <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-5">
+                  <div className="border border-blue-200 bg-blue-50/50 rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        className="text-blue-500 animate-spin text-lg"
-                      />
-                      <span className="text-sm font-medium text-blue-700">
+                      <Loader2 size={20} className="text-blue-500 animate-spin" />
+                      <span className="text-sm font-bold text-blue-700">
                         {t("magazines.uploadingPdf")}
                       </span>
                     </div>
@@ -339,41 +312,43 @@ export default function MagazineFormModal({
                         style={{ width: `${pdfUpload.progress}%` }}
                       />
                     </div>
-                    <p className="text-xs text-blue-500 mt-1.5 text-end">
+                    <p className="text-xs text-blue-500 mt-2 text-end font-bold">
                       {pdfUpload.progress}%
                     </p>
                   </div>
                 ) : (
-                  /* Drop Zone */
                   <div
                     onClick={() => pdfInputRef.current?.click()}
                     onDrop={(e) => handleDrop(e, "pdf")}
                     onDragOver={(e) => handleDragOver(e, "pdf")}
                     onDragLeave={(e) => handleDragLeave(e, "pdf")}
-                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 group ${pdfDragOver
-                        ? "border-[#13967B] bg-[#13967B]/5 scale-[1.01]"
+                    className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200 group ${pdfDragOver
+                        ? "border-primary bg-primary/5 scale-[1.01]"
                         : errors.pdf
                           ? "border-red-300 bg-red-50/30 hover:border-red-400"
-                          : "border-gray-200 hover:border-[#13967B]/50 hover:bg-gray-50/50"
+                          : "border-slate-200 hover:border-primary/50 hover:bg-slate-50/50"
                       }`}
                   >
                     <div
-                      className={`w-14 h-14 mx-auto mb-3 rounded-full flex items-center justify-center transition-colors ${pdfDragOver
-                          ? "bg-[#13967B]/10 text-[#13967B]"
-                          : "bg-gray-100 text-gray-400 group-hover:bg-[#13967B]/10 group-hover:text-[#13967B]"
+                      className={`w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center transition-colors ${pdfDragOver
+                          ? "bg-primary/10 text-primary"
+                          : "bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
                         }`}
                     >
-                      <FontAwesomeIcon icon={faCloudUploadAlt} className="text-2xl" />
+                      <Upload size={28} />
                     </div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">
+                    <p className="text-sm font-bold text-slate-600 mb-1">
                       {t("magazines.dragDropPdf")}
                     </p>
-                    <p className="text-xs text-gray-400">{t("magazines.pdfAcceptedFormats")}</p>
+                    <p className="text-xs text-slate-400">{t("magazines.pdfAcceptedFormats")}</p>
                   </div>
                 )}
 
                 {errors.pdf && !pdfUpload.isUploading && (
-                  <p className="mt-1.5 text-sm text-red-500">{errors.pdf}</p>
+                  <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle size={14} />
+                    {errors.pdf}
+                  </p>
                 )}
 
                 <input
@@ -389,26 +364,24 @@ export default function MagazineFormModal({
                 />
               </div>
 
-              {/* ── Thumbnail Upload Zone ── */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">
                   {t("magazines.thumbnailOptional")}
                 </label>
 
-                {/* Preview State */}
                 {thumbnailPreview && !thumbUpload.isUploading ? (
-                  <div className="border border-gray-200 rounded-xl p-4">
-                    <div className="flex items-start gap-4">
-                      <div className="w-24 h-32 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">
+                  <div className="border border-slate-200 rounded-2xl p-5">
+                    <div className="flex items-start gap-5">
+                      <div className="w-28 h-36 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-100">
                         <img
                           src={thumbnailPreview}
                           alt="Thumbnail"
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="flex-1 space-y-2 pt-1">
-                        <p className="text-xs text-green-600 flex items-center gap-1 font-medium">
-                          <FontAwesomeIcon icon={faCheckCircle} />
+                      <div className="flex-1 space-y-3 pt-1">
+                        <p className="text-xs text-emerald-600 flex items-center gap-1 font-bold">
+                          <CheckCircle size={12} />
                           {t("magazines.thumbnailUploaded")}
                         </p>
                         <div className="flex items-center gap-2">
@@ -416,9 +389,9 @@ export default function MagazineFormModal({
                             type="button"
                             onClick={() => thumbInputRef.current?.click()}
                             disabled={isBusy}
-                            className="px-3 py-1.5 text-xs font-medium text-[#13967B] bg-[#13967B]/5 border border-[#13967B]/20 rounded-lg hover:bg-[#13967B]/10 transition-colors disabled:opacity-50"
+                            className="px-4 py-2 text-xs font-bold text-primary bg-primary/5 border border-primary/20 rounded-xl hover:bg-primary/10 transition-colors"
                           >
-                            <FontAwesomeIcon icon={faRotateRight} className="me-1" />
+                            <RotateCw size={12} className="inline me-1" />
                             {t("magazines.replaceThumbnail")}
                           </button>
                           <button
@@ -428,9 +401,9 @@ export default function MagazineFormModal({
                               setThumbnailPreview(null);
                             }}
                             disabled={isBusy}
-                            className="px-3 py-1.5 text-xs font-medium text-red-500 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+                            className="px-4 py-2 text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 transition-colors"
                           >
-                            <FontAwesomeIcon icon={faTrash} className="me-1" />
+                            <Trash2 size={12} className="inline me-1" />
                             {t("magazines.removeThumbnail")}
                           </button>
                         </div>
@@ -438,14 +411,10 @@ export default function MagazineFormModal({
                     </div>
                   </div>
                 ) : thumbUpload.isUploading ? (
-                  /* Uploading State */
-                  <div className="border border-blue-200 bg-blue-50/50 rounded-xl p-5">
+                  <div className="border border-blue-200 bg-blue-50/50 rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <FontAwesomeIcon
-                        icon={faSpinner}
-                        className="text-blue-500 animate-spin text-lg"
-                      />
-                      <span className="text-sm font-medium text-blue-700">
+                      <Loader2 size={20} className="text-blue-500 animate-spin" />
+                      <span className="text-sm font-bold text-blue-700">
                         {t("magazines.uploadingThumbnail")}
                       </span>
                     </div>
@@ -455,34 +424,33 @@ export default function MagazineFormModal({
                         style={{ width: `${thumbUpload.progress}%` }}
                       />
                     </div>
-                    <p className="text-xs text-blue-500 mt-1.5 text-end">
+                    <p className="text-xs text-blue-500 mt-2 text-end font-bold">
                       {thumbUpload.progress}%
                     </p>
                   </div>
                 ) : (
-                  /* Drop Zone */
                   <div
                     onClick={() => thumbInputRef.current?.click()}
                     onDrop={(e) => handleDrop(e, "image")}
                     onDragOver={(e) => handleDragOver(e, "image")}
                     onDragLeave={(e) => handleDragLeave(e, "image")}
-                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200 group ${thumbDragOver
-                        ? "border-[#13967B] bg-[#13967B]/5 scale-[1.01]"
-                        : "border-gray-200 hover:border-[#13967B]/50 hover:bg-gray-50/50"
+                    className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200 group ${thumbDragOver
+                        ? "border-primary bg-primary/5 scale-[1.01]"
+                        : "border-slate-200 hover:border-primary/50 hover:bg-slate-50/50"
                       }`}
                   >
                     <div
-                      className={`w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center transition-colors ${thumbDragOver
-                          ? "bg-[#13967B]/10 text-[#13967B]"
-                          : "bg-gray-100 text-gray-400 group-hover:bg-[#13967B]/10 group-hover:text-[#13967B]"
+                      className={`w-14 h-14 mx-auto mb-3 rounded-2xl flex items-center justify-center transition-colors ${thumbDragOver
+                          ? "bg-primary/10 text-primary"
+                          : "bg-slate-100 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
                         }`}
                     >
-                      <FontAwesomeIcon icon={faImage} className="text-xl" />
+                      <Image size={24} />
                     </div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">
+                    <p className="text-sm font-bold text-slate-600 mb-1">
                       {t("magazines.dragDropImage")}
                     </p>
-                    <p className="text-xs text-gray-400">{t("magazines.imageAcceptedFormats")}</p>
+                    <p className="text-xs text-slate-400">{t("magazines.imageAcceptedFormats")}</p>
                   </div>
                 )}
 
@@ -499,24 +467,23 @@ export default function MagazineFormModal({
                 />
               </div>
 
-              {/* ── Actions ── */}
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={handleClose}
                   disabled={isBusy}
-                  className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-5 py-4 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {t("common.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isBusy}
-                  className="flex-1 px-4 py-3 bg-[#13967B] text-white rounded-xl font-medium hover:bg-[#0e7a64] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+                  className="flex-1 px-5 py-4 bg-slate-900 text-white rounded-2xl text-sm font-bold hover:bg-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isBusy ? (
                     <>
-                      <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+                      <Loader2 size={16} className="animate-spin" />
                       {pdfUpload.isUploading || thumbUpload.isUploading
                         ? t("common.uploading")
                         : t("magazines.saving")}
