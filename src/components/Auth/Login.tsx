@@ -57,11 +57,11 @@ export default function Login() {
 
       // Redirect based on role after short delay
       setTimeout(() => {
-        // Member and Author go to home page
-        if (userRole === 'Member' || userRole === 'Author') {
+        // Only Member role goes to home page (public site)
+        // Authors and all other roles go to admin panel with permissions
+        if (userRole === 'Member') {
           navigate('/home');
         } else {
-          // Admin and other roles go to admin panel
           navigate('/admin');
         }
       }, 1000);
