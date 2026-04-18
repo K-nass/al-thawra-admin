@@ -103,9 +103,7 @@ export default function PostDetailsForm({
   };
 
   return (
-    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
-      
+    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden relative">.      
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-sm border border-primary/20">
           <FileText size={20} />
@@ -160,12 +158,16 @@ export default function PostDetailsForm({
                   name="language"
                   value={(state as ArticleInitialStateInterface).language || ''}
                   onChange={handleChange}
+                  style={{ paddingInlineEnd: "2.5rem" }}
                 >
                   <option value="">{t('formLabels.selectLanguage')}</option>
                   <option value="English">{t('formLabels.english')}</option>
                   <option value="Arabic">{t('formLabels.arabic')}</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"
+                  style={{ insetInlineEnd: "1rem" }}
+                >
                    <Globe2 size={14} />
                 </div>
               </div>

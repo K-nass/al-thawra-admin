@@ -78,10 +78,10 @@ export default function ImageUpload({
                 <ImageIcon className="text-slate-400 group-hover:text-primary transition-colors" size={28} />
               </div>
               <p className="text-sm font-bold text-slate-800">{t('imageUpload.selectImage')}</p>
-              <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
+              {/* <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
                 <MousePointerClick size={12} />
-                Portal Library
-              </div>
+                {t("imageUpload.portalLibrary")}
+              </div> */}
             </div>
           )}
         </div>

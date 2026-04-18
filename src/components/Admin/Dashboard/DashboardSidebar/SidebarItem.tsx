@@ -27,14 +27,30 @@ export default function SidebarItem({ item }: SidebarItemProps) {
   const label = translatedLabel === item.labelKey ? item.labelKey : translatedLabel;
   const hasChildren = item.children && item.children.length > 0;
 
+  const normalizePath = (path: string) => {
+    if (path.length > 1 && path.endsWith('/')) {
+      return path.slice(0, -1);
+    }
+    return path;
+  };
+
+  const isPathActive = (path?: string) => {
+    if (!path) return false;
+
+    const currentPath = normalizePath(location.pathname);
+    const targetPath = normalizePath(path);
+
+    if (currentPath === targetPath) return true;
+    if (targetPath === '/admin') return false;
+
+    return currentPath.startsWith(`${targetPath}/`);
+  };
+
   // Determine active state, including checking children
-  const isSelfActive = item.path ? (
-    location.pathname === item.path || 
-    (item.path !== "" && location.pathname.startsWith(item.path))
-  ) : false;
+  const isSelfActive = isPathActive(item.path);
 
   const isChildActive = hasChildren ? item.children!.some(child => 
-    child.path && (location.pathname === child.path || location.pathname.startsWith(child.path))
+    isPathActive(child.path)
   ) : false;
 
   const isActive = isSelfActive || isChildActive;

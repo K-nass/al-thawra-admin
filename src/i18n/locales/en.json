@@ -113,7 +113,9 @@
     "notAvailable": "N/A",
     "scrollTrigger": "Scroll trigger",
     "updating": "Updating...",
-    "view": "View"
+    "view": "View",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen"
   },
   "app": {
     "name": "Al-Thawra",
@@ -183,6 +185,9 @@
     "globalSync": "Global Sync",
     "globalSyncDescription": "Updating this record will synchronize changes across all CDN edges instantly.",
     "draft": "Draft"
+    ,
+    "confirmDetailsBeforePublish": "Please confirm the details before publishing.",
+    "preview": "Preview"
   },
   "validation": {
     "titleRequired": "Title is required",
@@ -253,6 +258,7 @@
     "addImageUrl": "or Add Image Url",
     "useFullUrl": "Use full URL (https://...) or select from media library",
     "imageDescription": "Image Description",
+    "imageDescriptionPlaceholder": "Enter image description...",
     "additionalImages": "Additional Images",
     "supplementalVisuals": "Supplemental Visuals",
     "additionalImagesHeader": "additional images",
@@ -267,6 +273,8 @@
     "videoThumbnail": "Video Thumbnail",
     "imageForVideo": "Image for video",
     "invalidUrlFormat": "⚠️ Invalid URL format. Must start with http:// or https://"
+    ,
+    "portalLibrary": "Portal Library"
   },
   "formLabels": {
     "choosePostFormat": "Choose a Post Format",

@@ -73,6 +73,7 @@ export default memo(function CategorySelect({ categories = [], isLoading, handle
             name="categoryId"
             value={value ?? ""}
             onChange={(e: ChangeEvent<HTMLSelectElement>) => handleChange(e)}
+            style={{ paddingInlineEnd: "2.5rem" }}
             className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-medium focus:outline-none focus:ring-4 transition-all appearance-none ${
               errors.categoryId 
                 ? 'border-rose-200 focus:ring-rose-500/10 text-rose-600' 
@@ -87,7 +88,10 @@ export default memo(function CategorySelect({ categories = [], isLoading, handle
               </option>
             ))}
           </select>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+          <div
+            className="absolute top-1/2 -translate-y-1/2 pointer-events-none text-slate-400"
+            style={{ insetInlineEnd: "1rem" }}
+          >
              <ChevronDown size={16} />
           </div>
         </div>

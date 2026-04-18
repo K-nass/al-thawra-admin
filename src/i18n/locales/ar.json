@@ -113,7 +113,9 @@
     "notAvailable": "غير متاح",
     "scrollTrigger": "مُحفّز التمرير",
     "updating": "جاري التحديث...",
-    "view": "عرض"
+    "view": "عرض",
+    "fullscreen": "ملء الشاشة",
+    "exitFullscreen": "الخروج من ملء الشاشة"
   },
   "app": {
     "name": "جريدة الثورة",
@@ -183,6 +185,9 @@
     "globalSync": "مزامنة شاملة",
     "globalSyncDescription": "سيؤدي تحديث هذا السجل إلى مزامنة التغييرات عبر جميع أطراف CDN فوراً.",
     "draft": "مسودة"
+    ,
+    "confirmDetailsBeforePublish": "يرجى التأكد من التفاصيل قبل النشر.",
+    "preview": "معاينة"
   },
   "validation": {
     "titleRequired": "العنوان مطلوب",
@@ -253,6 +258,7 @@
     "addImageUrl": "أو أضف رابط صورة",
     "useFullUrl": "استخدم رابط كامل (https://...) أو اختر من مكتبة الوسائط",
     "imageDescription": "وصف الصورة",
+    "imageDescriptionPlaceholder": "أدخل وصف الصورة...",
     "additionalImages": "صور إضافية",
     "supplementalVisuals": "مرئيات إضافية",
     "additionalImagesHeader": "صور إضافية",
@@ -267,6 +273,8 @@
     "videoThumbnail": "صورة مصغرة للفيديو",
     "imageForVideo": "صورة للفيديو",
     "invalidUrlFormat": "⚠️ تنسيق رابط غير صحيح. يجب أن يبدأ بـ http:// أو https://"
+    ,
+    "portalLibrary": "مكتبة البوابة"
   },
   "formLabels": {
     "choosePostFormat": "اختر تنسيق المقال",

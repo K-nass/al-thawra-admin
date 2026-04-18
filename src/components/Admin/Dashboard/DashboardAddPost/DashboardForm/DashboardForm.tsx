@@ -23,7 +23,11 @@ import { postConfig } from "./usePostReducer/postConfig";
 import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/Toast/ToastContainer";
-import { Layout, Settings, ChevronLeft } from "lucide-react";
+import { Layout, Settings, ChevronLeft, Eye } from "lucide-react";
+import { useMemo } from "react";
+import ArticlePreviewModal from "../Preview/ArticlePreviewModal";
+import ArticlePreview from "../Preview/ArticlePreview";
+import { useDebouncedValue } from "../Preview/useDebouncedValue";
 
 interface TagResponse {
   data: {
@@ -41,6 +45,8 @@ export default function DashboardForm() {
   const [state, dispatch] = usePostReducer(type);
   const token = getAuthToken();
   const [activeTab, setActiveTab] = useState<'main' | 'advanced'>('main');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
 
   useEffect(() => {
     if (!type) {
@@ -221,6 +227,40 @@ export default function DashboardForm() {
     },
   });
 
+  const selectedCategory = useMemo(() => {
+    const list = categories?.data ?? [];
+    return list.find((c: any) => c.id === (state as any)?.categoryId) ?? null;
+  }, [categories?.data, (state as any)?.categoryId]);
+
+  const debouncedTitle = useDebouncedValue(String((state as any)?.title ?? ""), 150);
+  const debouncedContent = useDebouncedValue(String((state as any)?.content ?? ""), 250);
+  const debouncedImageUrl = useDebouncedValue(String((state as any)?.imageUrl ?? ""), 150);
+
+  const previewModel = useMemo(() => {
+    const language = String((state as any)?.language ?? "Arabic");
+    const dir = (language === "Arabic" ? "rtl" : "ltr") as "rtl" | "ltr";
+
+    const publishedAtLabel = new Date().toLocaleDateString(language === "Arabic" ? "ar-EG" : "en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    return {
+      dir,
+      title: debouncedTitle.trim() || t("post.title"),
+      categoryName: selectedCategory?.name || t("formLabels.selectCategory"),
+      authorName: userProfile?.userName,
+      authorImageUrl: userProfile?.avatarImageUrl ?? null,
+      publishedAtLabel,
+      imageUrl: debouncedImageUrl,
+      imageAlt: Array.isArray((state as any)?.imageDescription)
+        ? undefined
+        : String((state as any)?.imageDescription ?? ""),
+      contentHtml: debouncedContent || "",
+    };
+  }, [debouncedContent, debouncedImageUrl, debouncedTitle, selectedCategory?.name, state, t, userProfile?.avatarImageUrl, userProfile?.userName]);
+
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-surface">
       {/* Header Area */}
@@ -246,37 +286,61 @@ export default function DashboardForm() {
             </div>
           </div>
           
-          {/* Tab Switcher */}
-          {type !== "reel" && (
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/50">
+          <div className="flex items-center gap-3">
+            {type === "article" && (
               <button
                 type="button"
-                onClick={() => setActiveTab('main')}
-                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                  activeTab === 'main' 
-                    ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
+                onClick={() => setIsPreviewOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl border border-slate-200/50 bg-white text-slate-700 hover:bg-slate-50 transition-all text-xs font-black uppercase tracking-widest shadow-sm"
               >
-                <Layout size={14} className={activeTab === 'main' ? 'text-primary' : ''} />
-                {t('post.mainOptions')}
+                <Eye size={14} className="text-primary" />
+                {t("post.preview")}
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('advanced')}
-                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                  activeTab === 'advanced' 
-                    ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                <Settings size={14} className={activeTab === 'advanced' ? 'text-primary' : ''} />
-                {t('post.advancedOptions')}
-              </button>
-            </div>
-          )}
+            )}
+
+            {/* Tab Switcher */}
+            {type !== "reel" && (
+              <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/50">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('main')}
+                  className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                    activeTab === 'main' 
+                      ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <Layout size={14} className={activeTab === 'main' ? 'text-primary' : ''} />
+                  {t('post.mainOptions')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('advanced')}
+                  className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                    activeTab === 'advanced' 
+                      ? 'bg-white text-slate-900 shadow-lg border border-slate-200/50' 
+                      : 'text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  <Settings size={14} className={activeTab === 'advanced' ? 'text-primary' : ''} />
+                  {t('post.advancedOptions')}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      <ArticlePreviewModal
+        isOpen={isPreviewOpen}
+        isFullscreen={isPreviewFullscreen}
+        onClose={() => { setIsPreviewOpen(false); setIsPreviewFullscreen(false); }}
+        onToggleFullscreen={() => setIsPreviewFullscreen((v) => !v)}
+        onPublish={() => mutation.mutate()}
+        publishDisabled={mutation.isPending}
+      >
+        <ArticlePreview model={previewModel} />
+      </ArticlePreviewModal>
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <form

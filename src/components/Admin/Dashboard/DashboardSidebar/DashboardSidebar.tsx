@@ -47,14 +47,14 @@ const getSidebarItems = (): SidebarItemData[] => [
 export default function DashboardSidebar() {
   const { t } = useTranslation();
   const { logout, isLoading } = useLogout();
-  const { 
-    isDesktopSidebarOpen, 
-    toggleDesktopSidebar, 
-    isMobileSidebarOpen, 
-    toggleMobileSidebar, 
-    closeMobileSidebar 
+  const {
+    isDesktopSidebarOpen,
+    toggleDesktopSidebar,
+    isMobileSidebarOpen,
+    toggleMobileSidebar,
+    closeMobileSidebar
   } = useSidebar();
-  
+
   const sidebarItems = getSidebarItems();
 
   // Handle keyboard navigation (escape key to close mobile menu)
@@ -84,7 +84,7 @@ export default function DashboardSidebar() {
       <motion.aside
         initial={false}
         animate={{
-           width: isDesktopSidebarOpen ? 256 : 80, // 256px = 16rem = w-64, 80px = 5rem = w-20
+          width: isDesktopSidebarOpen ? 256 : 80, // 256px = 16rem = w-64, 80px = 5rem = w-20
         }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className={`
@@ -118,26 +118,26 @@ export default function DashboardSidebar() {
 
           {/* Desktop Toggle Button embedded in header */}
           <div className="hidden md:flex flex-1 justify-end">
-            <SidebarToggleButton 
-              onClick={toggleDesktopSidebar} 
-              icon={isDesktopSidebarOpen ? SidebarClose : SidebarOpen} 
+            <SidebarToggleButton
+              onClick={toggleDesktopSidebar}
+              icon={isDesktopSidebarOpen ? SidebarClose : SidebarOpen}
             />
           </div>
         </div>
 
         {/* Profile Section */}
         <div className="px-4 py-2 shrink-0 hidden md:block">
-           <AnimatePresence>
-             {isDesktopSidebarOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <DashboardProfileCard />
-                </motion.div>
-             )}
-           </AnimatePresence>
+          <AnimatePresence>
+            {isDesktopSidebarOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <DashboardProfileCard />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Navigation Items */}
@@ -150,7 +150,7 @@ export default function DashboardSidebar() {
         {/* Footer Actions */}
         <div className="p-4 shrink-0 border-t border-[#2A3143] flex flex-col gap-4">
           <div className={`flex ${isDesktopSidebarOpen || isMobileSidebarOpen ? 'justify-start' : 'justify-center'} px-2`}>
-             <LanguageToggle variant="dark" showLabel={isDesktopSidebarOpen || isMobileSidebarOpen} />
+            <LanguageToggle variant="dark" showLabel={isDesktopSidebarOpen || isMobileSidebarOpen} />
           </div>
 
           <button
