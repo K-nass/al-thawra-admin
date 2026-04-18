@@ -56,12 +56,13 @@ export default function PublishSection({ mutation, state, handleChange, fieldErr
               name="status"
               value={state.status}
               onChange={(e) => handleChange(e as any)}
+              style={{ paddingInlineEnd: "2.5rem" }}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 transition-all appearance-none"
             >
               <option value="Published">{t('common.published') || "Published"}</option>
               <option value="Draft">{t('common.draft') || "Draft"}</option>
             </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+            <div className="absolute top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" style={{ insetInlineEnd: "1rem" }}>
               <ChevronDown size={16} />
             </div>
           </div>
@@ -108,7 +109,7 @@ export default function PublishSection({ mutation, state, handleChange, fieldErr
                         }}
                         min={new Date().toISOString().slice(0, 16)}
                     />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <div className="absolute top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" style={{ insetInlineEnd: "1rem" }}>
                         <Clock size={16} />
                     </div>
                 </div>
