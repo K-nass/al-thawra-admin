@@ -95,29 +95,32 @@ export default function DashboardSidebar() {
         `}
       >
         {/* Header section */}
-        <div className="flex items-center justify-between p-4 h-[4.5rem] shrink-0">
-          <AnimatePresence>
-            {isDesktopSidebarOpen && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center overflow-hidden whitespace-nowrap"
-              >
-                {/* Placeholder Logo / Brand */}
-                <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-white font-bold mr-3">
-                  AT
-                </div>
-                <h1 className="text-lg font-bold text-white tracking-wide">
-                  {t('dashboard.adminPanel')}
-                </h1>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className={`p-4 shrink-0 flex transition-all duration-300 ${isDesktopSidebarOpen ? 'items-center justify-between h-[4.5rem]' : 'flex-col items-center gap-6 py-6'}`}>
+          <div className={`flex items-center ${isDesktopSidebarOpen ? '' : 'justify-center w-full'}`}>
+            {/* Placeholder Logo / Brand */}
+            <div className={`w-9 h-9 rounded-lg bg-white flex items-center justify-center overflow-hidden shrink-0 border border-white/10 shadow-sm ${isDesktopSidebarOpen ? 'mr-3' : 'mx-auto'}`}>
+              <img src="/icon.jpg" alt="Al-Thawra Logo" loading="lazy" className="w-full h-full object-cover" />
+            </div>
+            
+            <AnimatePresence>
+              {isDesktopSidebarOpen && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden whitespace-nowrap"
+                >
+                  <h1 className="text-lg font-bold text-white tracking-wide">
+                    {t('dashboard.adminPanel')}
+                  </h1>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Desktop Toggle Button embedded in header */}
-          <div className="hidden md:flex flex-1 justify-end">
+          <div className={`hidden md:flex ${isDesktopSidebarOpen ? 'flex-1 justify-end' : 'justify-center w-full'}`}>
             <SidebarToggleButton
               onClick={toggleDesktopSidebar}
               icon={isDesktopSidebarOpen ? SidebarClose : SidebarOpen}

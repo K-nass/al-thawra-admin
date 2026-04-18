@@ -196,7 +196,7 @@ export default function ArticlePreview({ model }: { model: ArticlePreviewModel }
                   {/* Content */}
                   <div className="mt-6 p-5 sm:p-6">
                     <div
-                      className="prose prose-lg max-w-none text-black prose-headings:text-black prose-p:text-black prose-strong:text-black prose-li:text-black prose-headings:font-black prose-a:text-blue-700"
+                      className="prose prose-lg max-w-none text-black prose-headings:text-black prose-p:text-black prose-strong:text-black prose-li:text-black prose-headings:font-black prose-a:text-blue-700 [&>p:empty]:hidden [&>div:empty]:hidden"
                       dangerouslySetInnerHTML={{ __html: sanitized }}
                     />
                   </div>
