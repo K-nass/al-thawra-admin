@@ -220,13 +220,13 @@ export default function Magazines() {
                   setPageNumber(1);
                 }}
                 placeholder={t("magazines.searchPlaceholder")}
-                className="w-full pl-14 pr-6 py-4 px-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors"
+                className="w-full pl-12 pr-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors"
               />
             </div>
             <button
               type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-6 py-4 px-4 rounded-2xl font-medium transition-colors text-sm flex items-center gap-2 ${
+              className={`px-5 py-3.5 rounded-2xl font-medium transition-colors text-sm flex items-center gap-2 ${
                 showFilters || hasFilters
                   ? "bg-primary text-white"
                   : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100"

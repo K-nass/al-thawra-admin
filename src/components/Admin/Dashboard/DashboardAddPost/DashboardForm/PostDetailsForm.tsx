@@ -117,14 +117,13 @@ export default function PostDetailsForm({
       </div>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* title */}
+          {/* title - full width */}
           <div className="space-y-1.5" data-error-field={fieldErrors.title ? true : undefined}>
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5" htmlFor="title">
               <FileText size={10} /> {t('post.title')} <span className="text-rose-500 ml-1 font-bold">*</span>
             </label>
             <input
-              className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-medium focus:outline-none focus:ring-4 transition-all ${
+              className={`w-full px-5 py-4 bg-slate-50 border rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 transition-all ${
                 fieldErrors.title 
                   ? 'border-rose-200 focus:ring-rose-500/10 text-rose-600' 
                   : 'border-slate-200 focus:ring-primary/10 text-slate-700'
@@ -136,11 +135,13 @@ export default function PostDetailsForm({
               value={state.title}
               onChange={handleChange}
             />
-            {fieldErrors.title && (
+{fieldErrors.title && (
               <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{fieldErrors.title}</p>
             )}
           </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ 
           {/* Language */}
           {'language' in state && (
             <div className="space-y-1.5" data-error-field={fieldErrors.language ? true : undefined}>
