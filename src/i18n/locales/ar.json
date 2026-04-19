@@ -458,6 +458,8 @@
     "searchPlaceholder": "ابحث بالعنوان أو الكاتب أو المعرّف...",
     "allCategories": "كل الفئات",
     "allLanguages": "كل اللغات",
+    "allStatuses": "كل الحالات",
+    "published": "منشور",
     "showRows": "عرض {{count}} صف",
     "hydratingFeed": "جاري تحميل المحتوى...",
     "idReference": "مرجع المعرف",

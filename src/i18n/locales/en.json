@@ -458,6 +458,8 @@
     "searchPlaceholder": "Search by title, author, or ID...",
     "allCategories": "All Categories",
     "allLanguages": "All Languages",
+    "allStatuses": "All Statuses",
+    "published": "Published",
     "showRows": "Show {{count}} Rows",
     "hydratingFeed": "Loading feed...",
     "idReference": "ID Reference",
