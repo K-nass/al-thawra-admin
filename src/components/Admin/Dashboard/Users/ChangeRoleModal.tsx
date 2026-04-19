@@ -4,6 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { X, Shield, Loader2, Save } from 'lucide-react';
 import { usersApi, type ChangeUserRoleDto } from '@/api/users.api';
 import { rolesApi } from '@/api/roles.api';
+import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+  type ModalFieldErrors,
+} from '@/utils/apiFormErrors';
 
 interface ChangeRoleModalProps {
   isOpen: boolean;
@@ -22,16 +28,25 @@ export default function ChangeRoleModal({
 }: ChangeRoleModalProps) {
   const { t } = useTranslation();
   const [selectedRole, setSelectedRole] = useState(currentRole);
-  const [roleError, setRoleError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ModalFieldErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
+  const serverFieldAliases = {
+    userid: 'userId',
+    newrolename: 'newRoleName',
+    role: 'newRoleName',
+  } as const;
 
   useEffect(() => {
     if (isOpen) {
       setSelectedRole(currentRole);
-      setRoleError(null);
+      setFieldErrors({});
       setApiError(null);
     }
   }, [isOpen, currentRole]);
+
+  useEffect(() => {
+    focusFirstErrorField(fieldErrors);
+  }, [fieldErrors]);
 
   const { data: rolesData } = useQuery({
     queryKey: ['roles'],
@@ -48,22 +63,25 @@ export default function ChangeRoleModal({
       onClose();
     },
     onError: (error: any) => {
-      const message =
-        error?.response?.data?.title ||
-        error?.response?.data?.message ||
-        t('users.errors.generic');
-      setApiError(message);
+      const parsed = parseApiValidationErrors(error, serverFieldAliases);
+      if (Object.keys(parsed.fieldErrors).length > 0) {
+        setFieldErrors(parsed.fieldErrors);
+        setApiError(parsed.messages[0] || t('users.errors.generic'));
+        return;
+      }
+
+      setApiError(extractApiErrorMessage(error, t('users.errors.generic')));
     },
   });
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setApiError(null);
+    setFieldErrors({});
     if (!selectedRole) {
-      setRoleError(t('users.validation.roleRequired'));
+      setFieldErrors({ newRoleName: t('users.validation.roleRequired') });
       return;
     }
-    setRoleError(null);
     changeRole({ userId, newRoleName: selectedRole });
   }
 
@@ -114,13 +132,19 @@ export default function ChangeRoleModal({
               <div className="relative">
                 <Shield className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <select
+                  name="newRoleName"
                   value={selectedRole}
                   onChange={(e) => {
                     setSelectedRole(e.target.value);
-                    setRoleError(null);
+                    setFieldErrors((prev) => {
+                      if (!prev.newRoleName) return prev;
+                      const next = { ...prev };
+                      delete next.newRoleName;
+                      return next;
+                    });
                   }}
                   className={`w-full pl-10 pr-4 rtl:pl-4 rtl:pr-10 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-colors duration-200 appearance-none ${
-                    roleError 
+                    fieldErrors.newRoleName 
                       ? 'border-red-300 focus:ring-red-100' 
                       : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
                   }`}
@@ -133,8 +157,8 @@ export default function ChangeRoleModal({
                   ))}
                 </select>
               </div>
-              {roleError && (
-                <p className="px-1 text-xs font-medium text-red-500">{roleError}</p>
+              {fieldErrors.newRoleName && (
+                <p className="px-1 text-xs font-medium text-red-500">{fieldErrors.newRoleName}</p>
               )}
             </div>
           </div>

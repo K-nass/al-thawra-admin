@@ -16,6 +16,12 @@ import { categoriesApi, type Category } from "@/api/categories.api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/components/Toast/ToastContainer";
 import LayoutSelector from "./LayoutSelector";
+import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+  type ModalFieldErrors,
+} from "@/utils/apiFormErrors";
 
 interface CategoryFormData {
   categoryId?: string;
@@ -39,6 +45,20 @@ export default function DashboardAddCategory() {
   const toast = useToast();
   const { slug } = useParams<{ slug: string }>();
   const isEditMode = !!slug;
+  const serverFieldAliases = {
+    categoryid: "categoryId",
+    name: "name",
+    slug: "slug",
+    language: "language",
+    layout: "layout",
+    description: "description",
+    colorhex: "colorHex",
+    order: "order",
+    isactive: "isActive",
+    showonmenu: "showOnMenu",
+    showonhomepage: "showOnHomepage",
+    parentcategoryid: "parentCategoryId",
+  } as const;
   
   const [formData, setFormData] = useState<CategoryFormData>({
     name: "",
@@ -53,7 +73,7 @@ export default function DashboardAddCategory() {
     showOnHomepage: true,
     parentCategoryId: null,
   });
-  const [errors, setErrors] = useState<{name?: string, language?: string, order?: string}>({});
+  const [errors, setErrors] = useState<ModalFieldErrors>({});
 
   // Fetch category data by slug if editing
   const { data: categoryData, isLoading: isLoadingCategory } = useQuery({
@@ -81,6 +101,10 @@ export default function DashboardAddCategory() {
       });
     }
   }, [categoryData, isEditMode]);
+
+  useEffect(() => {
+    focusFirstErrorField(errors);
+  }, [errors]);
 
   // Fetch all categories
   const { data: allCategories = [] } = useQuery({
@@ -121,15 +145,23 @@ export default function DashboardAddCategory() {
       toast.success(isEditMode ? t("categories.updateSuccess") : t("categories.createSuccess"));
       navigate("/admin/categories");
     },
-    onError: (error: any) => {
-      const errorData = error.response?.data;
-      let errorMessage = isEditMode ? t("categories.updateError") : t("categories.createError");
-      if (errorData?.title) errorMessage = errorData.title;
-      if (errorData?.errors) {
-        const errorDetails = Object.values(errorData.errors).flat().join(", ");
-        errorMessage += ": " + errorDetails;
+    onError: (error) => {
+      const parsed = parseApiValidationErrors(error, serverFieldAliases);
+      if (Object.keys(parsed.fieldErrors).length > 0) {
+        setErrors(parsed.fieldErrors);
+        toast.error(
+          parsed.messages[0] ||
+            (isEditMode ? t("categories.updateError") : t("categories.createError")),
+        );
+        return;
       }
-      toast.error(errorMessage);
+
+      toast.error(
+        extractApiErrorMessage(
+          error,
+          isEditMode ? t("categories.updateError") : t("categories.createError"),
+        ),
+      );
     },
   });
 
@@ -137,6 +169,13 @@ export default function DashboardAddCategory() {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
@@ -151,7 +190,7 @@ export default function DashboardAddCategory() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: {name?: string, language?: string, order?: string} = {};
+    const newErrors: ModalFieldErrors = {};
 
     if (!formData.name.trim()) {
       newErrors.name = t("categories.nameRequired") || "Category name is required";
@@ -270,8 +309,12 @@ export default function DashboardAddCategory() {
                       value={formData.language}
                       onChange={handleChange}
                       required
-                     disabled={isEditMode}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all appearance-none font-medium disabled:opacity-70 disabled:bg-slate-100"
+                      disabled={isEditMode}
+                      className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all appearance-none font-medium disabled:opacity-70 disabled:bg-slate-100 ${
+                        errors.language
+                          ? "border-rose-400 focus:ring-rose-500/10"
+                          : "border-slate-200 focus:ring-primary/10 focus:border-primary"
+                      }`}
                     >
                       <option value="English">{t("formLabels.english")}</option>
                       <option value="Arabic">{t("formLabels.arabic")}</option>

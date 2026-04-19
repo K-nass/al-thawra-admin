@@ -14,6 +14,12 @@ import {
 import { tagsApi } from "@/api/tags.api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/components/Toast/ToastContainer";
+import {
+    extractApiErrorMessage,
+    focusFirstErrorField,
+    parseApiValidationErrors,
+    type ModalFieldErrors,
+} from "@/utils/apiFormErrors";
 
 export default function TagForm() {
     const { id } = useParams<{ id: string }>();
@@ -22,12 +28,19 @@ export default function TagForm() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const isEditMode = !!id;
+    const serverFieldAliases = {
+        name: "name",
+        language: "language",
+        tagid: "tagId",
+        tags0name: "name",
+        tags0language: "language",
+    } as const;
 
     const [formData, setFormData] = useState({
         name: "",
         language: "English" as "English" | "Arabic",
     });
-    const [errors, setErrors] = useState<{name?: string, language?: string}>({});
+    const [errors, setErrors] = useState<ModalFieldErrors>({});
 
     // Fetch tag data if in edit mode
     const { data: tag, isLoading: isLoadingTag } = useQuery({
@@ -45,6 +58,10 @@ export default function TagForm() {
         }
     }, [tag]);
 
+    useEffect(() => {
+        focusFirstErrorField(errors);
+    }, [errors]);
+
     // Create mutation
     const createMutation = useMutation({
         mutationFn: () => tagsApi.create({
@@ -55,8 +72,14 @@ export default function TagForm() {
             toast.success(t("tags.createSuccess"));
             navigate("/admin/tags");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || t("tags.createError"));
+        onError: (error) => {
+            const parsed = parseApiValidationErrors(error, serverFieldAliases);
+            if (Object.keys(parsed.fieldErrors).length > 0) {
+                setErrors(parsed.fieldErrors);
+                toast.error(parsed.messages[0] || t("tags.createError"));
+                return;
+            }
+            toast.error(extractApiErrorMessage(error, t("tags.createError")));
         },
     });
 
@@ -73,14 +96,30 @@ export default function TagForm() {
             toast.success(t("tags.updateSuccess"));
             navigate("/admin/tags");
         },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || t("tags.updateError"));
+        onError: (error) => {
+            const parsed = parseApiValidationErrors(error, serverFieldAliases);
+            if (Object.keys(parsed.fieldErrors).length > 0) {
+                setErrors(parsed.fieldErrors);
+                toast.error(parsed.messages[0] || t("tags.updateError"));
+                return;
+            }
+            toast.error(extractApiErrorMessage(error, t("tags.updateError")));
         },
     });
 
+    const handleFieldChange = (field: "name" | "language", value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+        setErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newErrors: {name?: string, language?: string} = {};
+        const newErrors: ModalFieldErrors = {};
         
         if (!formData.name.trim()) {
             newErrors.name = t("tags.nameRequired");
@@ -158,8 +197,9 @@ export default function TagForm() {
                                         <input
                                             type="text"
                                             id="name"
+                                            name="name"
                                             value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                            onChange={(e) => handleFieldChange("name", e.target.value)}
                                             placeholder={t("tags.tagNamePlaceholder")}
                                             className={`w-full pl-10 pr-4 py-3 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all font-medium ${
                                               errors.name ? 'border-rose-400 focus:ring-rose-500/10' : 'border-slate-200 focus:ring-primary/10 focus:border-primary'
@@ -172,7 +212,7 @@ export default function TagForm() {
                                 </div>
 
                                 {/* Language Toggle */}
-                                <div className="space-y-3">
+                                <div className="space-y-3" data-error-field={errors.language ? "language" : undefined}>
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
                                         {t("tags.language")} <span className="text-rose-500">*</span>
                                     </label>
@@ -184,11 +224,13 @@ export default function TagForm() {
                                             <button
                                                 key={lang.id}
                                                 type="button"
-                                                onClick={() => setFormData({ ...formData, language: lang.id as any })}
+                                                onClick={() => handleFieldChange("language", lang.id)}
                                                 className={`px-4 py-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-95 ${
                                                     formData.language === lang.id
                                                         ? "border-primary bg-primary/5 text-primary shadow-sm"
-                                                        : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
+                                                        : errors.language
+                                                          ? "border-rose-300 bg-rose-50 text-rose-500 hover:border-rose-400"
+                                                          : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
                                                 }`}
                                             >
                                                 <Globe size={20} className={formData.language === lang.id ? "text-primary" : "text-slate-300"} />
@@ -197,6 +239,9 @@ export default function TagForm() {
                                             </button>
                                         ))}
                                     </div>
+                                    {errors.language && (
+                                      <p className="text-rose-500 text-[10px] font-bold uppercase tracking-tight mt-1 ml-1">{errors.language}</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
