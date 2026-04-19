@@ -74,6 +74,19 @@ export const apiClient = axios.create({
   },
 });
 
+function getCurrentLanguage(): 'en' | 'ar' {
+  try {
+    const stored = localStorage.getItem('language');
+    if (stored === 'en' || stored === 'ar') return stored;
+  } catch {
+    // no-op
+  }
+
+  const htmlLang = document?.documentElement?.lang;
+  if (htmlLang === 'en' || htmlLang === 'ar') return htmlLang;
+  return 'ar';
+}
+
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
@@ -84,6 +97,10 @@ apiClient.interceptors.request.use(
     } else {
 
     }
+
+    // Always send current UI language with every API request.
+    config.headers.language = getCurrentLanguage();
+
     return config;
   },
   (error) => {
