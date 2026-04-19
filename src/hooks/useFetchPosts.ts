@@ -7,6 +7,7 @@
   category?: string | null;
   authorName?: string | null;
   hasAuthor?: boolean;
+  hasWriter?: boolean;
   status?: string | null;
   isFeatured?: boolean;
   isBreaking?: boolean;
@@ -27,6 +28,7 @@ export function useFetchPosts(params: FetchPostsParams = {}) {
       category,
       authorName,
       hasAuthor,
+      hasWriter,
       status,
       isFeatured,
       isBreaking,
@@ -47,6 +49,7 @@ export function useFetchPosts(params: FetchPostsParams = {}) {
     if (category && category !== "all") queryParams.append("CategorySlug", category);
     if (authorName) queryParams.append("AuthorName", authorName);
     if (hasAuthor !== undefined) queryParams.append("HasAuthor", String(hasAuthor));
+    if (hasWriter !== undefined) queryParams.append("HasWriter", String(hasWriter));
     if (status) queryParams.append("Status", status);
     
     // IMPORTANT: Only send boolean flags when they are TRUE

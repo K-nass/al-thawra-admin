@@ -89,7 +89,7 @@ export default function ImageUpload({
         {/* Input Fields */}
         <div className="space-y-5">
             {/* URL Input */}
-            <div className="space-y-1.5 flex flex-col" data-error-field={fieldErrors.imageUrl ? true : undefined}>
+            <div className="space-y-1.5 flex flex-col" data-error-field={fieldErrors.imageUrl ? "imageUrl" : undefined}>
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
                     <LinkIcon size={12} /> {t('imageUpload.addImageUrl') || "Manual URL Input"}
                 </label>
@@ -131,7 +131,7 @@ export default function ImageUpload({
             </div>
 
             {/* Description Input */}
-            <div className="space-y-1.5 flex flex-col" data-error-field={fieldErrors.imageDescription ? true : undefined}>
+            <div className="space-y-1.5 flex flex-col" data-error-field={fieldErrors.imageDescription ? "imageDescription" : undefined}>
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
                     <FileText size={12} /> {t('imageUpload.imageDescription') || "Alt Text & Description"}
                 </label>

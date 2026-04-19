@@ -49,7 +49,7 @@ export default function AdditionalImages({ handleChange, fieldErrors = {} }: Add
         />
       )}
 
-      <div data-error-field={fieldErrors.additionalImageUrls ? true : undefined}>
+      <div data-error-field={fieldErrors.additionalImageUrls ? "additionalImageUrls" : undefined}>
         {fieldErrors.additionalImageUrls && (
           <div className="flex items-start gap-2 p-3 bg-rose-50 rounded-xl border border-rose-100">
             <AlertCircle size={14} className="text-rose-500 mt-0.5 shrink-0" />

@@ -103,7 +103,7 @@ export default function PostDetailsForm({
   };
 
   return (
-    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden relative">.      
+    <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden relative">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary shadow-sm border border-primary/20">
           <FileText size={20} />
@@ -118,7 +118,7 @@ export default function PostDetailsForm({
 
       <div className="space-y-6">
           {/* title - full width */}
-          <div className="space-y-1.5" data-error-field={fieldErrors.title ? true : undefined}>
+          <div className="space-y-1.5" data-error-field={fieldErrors.title ? "title" : undefined}>
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5" htmlFor="title">
               <FileText size={10} /> {t('post.title')} <span className="text-rose-500 ml-1 font-bold">*</span>
             </label>
@@ -136,7 +136,7 @@ export default function PostDetailsForm({
               onChange={handleChange}
             />
 {fieldErrors.title && (
-              <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{fieldErrors.title}</p>
+              <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{fieldErrors.title[0]}</p>
             )}
           </div>
 
@@ -144,7 +144,7 @@ export default function PostDetailsForm({
  
           {/* Language */}
           {'language' in state && (
-            <div className="space-y-1.5" data-error-field={fieldErrors.language ? true : undefined}>
+            <div className="space-y-1.5" data-error-field={fieldErrors.language ? "language" : undefined}>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5" htmlFor="language">
                 <Globe2 size={10} /> {t('formLabels.language')} <span className="text-rose-500 ml-1 font-bold">*</span>
               </label>
@@ -173,7 +173,7 @@ export default function PostDetailsForm({
                 </div>
               </div>
               {fieldErrors.language && (
-                <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{fieldErrors.language}</p>
+                <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{fieldErrors.language[0]}</p>
               )}
             </div>
           )}

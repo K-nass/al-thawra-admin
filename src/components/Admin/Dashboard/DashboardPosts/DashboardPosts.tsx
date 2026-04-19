@@ -57,6 +57,7 @@ export default function DashboardPosts({
 
   const [category, setCategory] = useState<string | null>(null);
   const [language, setLanguage] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState<string>("");
   const [searchPhrase, setSearchPhrase] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -69,6 +70,17 @@ export default function DashboardPosts({
     });
   };
   const [pageSize, setPageSize] = useState<number>(15);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const newPhrase = searchInput || null;
+      if (searchPhrase !== newPhrase) {
+        setSearchPhrase(newPhrase);
+        setPageNumber(1);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput, searchPhrase]);
 
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -328,12 +340,9 @@ export default function DashboardPosts({
               <input
                 type="text"
                 placeholder={t("dashboardPosts.searchPlaceholder")}
-                value={searchPhrase ?? ""}
-                onChange={(e) => {
-                  setSearchPhrase(e.target.value);
-                  setPageNumber(1);
-                }}
-                className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-12 pr-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-start focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all"
               />
             </div>
 
