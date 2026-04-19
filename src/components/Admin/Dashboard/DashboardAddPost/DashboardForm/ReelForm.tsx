@@ -129,7 +129,7 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
           </h3>
         </div>
         <div className="p-6">
-          <div className="space-y-1.5 flex flex-col" data-error-field={fieldErrors.caption ? true : undefined}>
+          <div className="space-y-1.5 flex flex-col" data-error-field={fieldErrors.caption ? "caption" : undefined}>
             <textarea
               name="caption"
               value={state.caption || ""}
@@ -158,7 +158,7 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
         </div>
 
         <div className="p-6 space-y-6">
-          <div className="space-y-4" data-error-field={fieldErrors.tags ? true : undefined}>
+          <div className="space-y-4" data-error-field={fieldErrors.tags ? "tags" : undefined}>
             <div className={`p-4 bg-slate-50 border rounded-2xl transition-colors ${fieldErrors.tags ? "border-rose-300 ring-4 ring-rose-50" : "border-slate-200 focus-within:ring-4 focus-within:ring-primary/5 focus-within:border-primary/30"}`}>
               <div className="flex flex-wrap items-center gap-2">
                 {selectedTags.map((tag) => (
@@ -220,7 +220,7 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
               </div>
             </div>
 
-            {fieldErrors.tags && <p className="text-rose-500 text-sm font-bold mt-1 px-1">{fieldErrors.tags}</p>}
+            {fieldErrors.tags && <p className="text-rose-500 text-sm font-bold mt-1 px-1">{fieldErrors.tags[0]}</p>}
           </div>
         </div>
       </div>

@@ -13,6 +13,7 @@ export default function FileUpload({ handleChange, fieldErrors = {} }: FileUploa
   const [fileName, _setFileName] = useState<string | null>(null);
   const [open, setOpen] = useState<boolean>(false);
   const { t } = useTranslation();
+  const fileErrors = fieldErrors.fileUrls ?? fieldErrors.files;
 
   return (
     <div className="space-y-4">
@@ -57,12 +58,12 @@ export default function FileUpload({ handleChange, fieldErrors = {} }: FileUploa
         </div>
       )}
 
-      <div data-error-field={fieldErrors.files ? true : undefined}>
-        {fieldErrors.files && (
+      <div data-error-field={fileErrors ? "fileUrls" : undefined}>
+        {fileErrors && (
           <div className="flex items-start gap-2 p-3 bg-rose-50 rounded-xl border border-rose-100">
             <AlertCircle size={14} className="text-rose-500 mt-0.5 shrink-0" />
             <ul className="space-y-1">
-              {fieldErrors.files.map((error, idx) => (
+              {fileErrors.map((error, idx) => (
                 <li key={idx} className="text-rose-600 text-[10px] font-black uppercase tracking-tight">{error}</li>
               ))}
             </ul>

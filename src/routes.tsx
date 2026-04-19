@@ -28,6 +28,9 @@ import EditRole from "./components/Admin/Dashboard/EditRole/EditRole";
 import Users from "./components/Admin/Dashboard/Users/Users";
 import EditUser from "./components/Admin/Dashboard/EditUser/EditUser";
 import Home from "./components/Home/Home";
+import Writers from "./components/Admin/Dashboard/Writers/Writers";
+import Writings from "./components/Admin/Dashboard/Writings/Writings";
+import AddWriting from "./components/Admin/Dashboard/Writings/AddWriting";
 
 
 
@@ -92,7 +95,10 @@ export const routes = createBrowserRouter([
           { path: "edit-reel/:id", element: <PermissionRouteGuard><DashboardEditReel /></PermissionRouteGuard> },
           { path: "tags", element: <PermissionRouteGuard><DashboardTags /></PermissionRouteGuard> },
           { path: "add-tag", element: <PermissionRouteGuard><TagForm /></PermissionRouteGuard> },
-          { path: "edit-tag/:id", element: <PermissionRouteGuard><TagForm /></PermissionRouteGuard> }
+          { path: "edit-tag/:id", element: <PermissionRouteGuard><TagForm /></PermissionRouteGuard> },
+          { path: "writers", element: <PermissionRouteGuard><Writers /></PermissionRouteGuard> },
+          { path: "writings", element: <PermissionRouteGuard><Writings /></PermissionRouteGuard> },
+          { path: "writings/add", element: <PermissionRouteGuard><AddWriting /></PermissionRouteGuard> },
 
         ]
       }

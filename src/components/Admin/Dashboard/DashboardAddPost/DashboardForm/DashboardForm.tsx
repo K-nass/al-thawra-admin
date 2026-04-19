@@ -10,7 +10,7 @@ import CategorySelect from "./CategorySelect";
 import PublishSection from "./PublishSection";
 import ReelPublishSection from "./ReelPublishSection";
 import ImageUpload from "./ImageUpload";
-import { useEffect, type ChangeEvent, useState } from "react";
+import { useEffect, type ChangeEvent, useMemo, useState } from "react";
 import axios from "axios";
 import { apiClient, getAuthToken } from "@/api/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -24,10 +24,16 @@ import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/components/Toast/ToastContainer";
 import { Layout, Settings, ChevronLeft, Eye } from "lucide-react";
-import { useMemo } from "react";
 import ArticlePreviewModal from "../Preview/ArticlePreviewModal";
 import ArticlePreview from "../Preview/ArticlePreview";
 import { useDebouncedValue } from "../Preview/useDebouncedValue";
+import {
+  clearFieldErrorByName,
+  getValidationToastMessage,
+  normalizeErrorMap,
+  type FieldErrors,
+  useFormErrorNavigation,
+} from "./formErrorUtils";
 
 interface TagResponse {
   data: {
@@ -61,7 +67,7 @@ export default function DashboardForm() {
     }
   }, [token, navigate]);
 
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   type CustomChangeEvent =
     | ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -86,6 +92,7 @@ export default function DashboardForm() {
       payload = newTags;
     }
     dispatch({ type: "set-field", field: name, payload });
+    setFieldErrors((prev) => clearFieldErrorByName(prev, name));
   }
 
   async function fetchTags() {
@@ -105,8 +112,8 @@ export default function DashboardForm() {
   });
 
   // Validation function for article form
-  const validateArticleForm = (payload: any): Record<string, string[]> => {
-    const errors: Record<string, string[]> = {};
+  const validateArticleForm = (payload: any): FieldErrors => {
+    const errors: FieldErrors = {};
     
     if (!payload.title || payload.title.trim() === '') {
       errors.title = [t('validation.titleRequired')];
@@ -144,20 +151,35 @@ export default function DashboardForm() {
         return response.data;
       }
 
-      const categoryId = payload.categoryId;
-      if (!categoryId) throw new Error("categoryId missing");
-
       // Client-side validation for articles
       if (type === "article") {
+        if (!payload.authorId && userProfile?.id) {
+          payload.authorId = userProfile.id;
+        }
+
         const validationErrors = validateArticleForm(payload);
         if (Object.keys(validationErrors).length > 0) {
-          setFieldErrors(validationErrors);
-          throw new Error(t('validation.formHasErrors'));
+          const validationError = new Error("CLIENT_VALIDATION_ERROR") as Error & {
+            validationErrors?: FieldErrors;
+          };
+          validationError.validationErrors = validationErrors;
+          throw validationError;
         }
         
         if (payload.imageUrl === null || payload.imageUrl === undefined) payload.imageUrl = "";
         if (payload.metaDescription === null || payload.metaDescription === undefined) payload.metaDescription = "";
         if (payload.metaKeywords === null || payload.metaKeywords === undefined) payload.metaKeywords = "";
+      }
+
+      const categoryId = payload.categoryId;
+      if (!categoryId) {
+        const validationError = new Error("CLIENT_VALIDATION_ERROR") as Error & {
+          validationErrors?: FieldErrors;
+        };
+        validationError.validationErrors = {
+          categoryId: [t("validation.categoryRequired")],
+        };
+        throw validationError;
       }
 
       if (type === "audio" && !payload.audioUrl && !payload.audioFileUrls?.length) {
@@ -193,10 +215,22 @@ export default function DashboardForm() {
       toast.success(String(msg));
       navigate('/admin/posts/all');
     },
-    onError: (error: any) => {
+    onError: (error: Error & { validationErrors?: FieldErrors } & Record<string, any>) => {
       console.error("Post creation error:", error);
+      
+      if (error.message === "CLIENT_VALIDATION_ERROR") {
+        const clientErrors = error.validationErrors ?? {};
+        if (Object.keys(clientErrors).length > 0) {
+          setFieldErrors(clientErrors);
+          toast.error(getValidationToastMessage(t, clientErrors));
+          return;
+        }
+        toast.error(t("validation.formHasErrors"));
+        return;
+      }
+
       let message = t('errors.failedToCreatePost');
-      const errors: Record<string, string[]> = {};
+      let serverErrors: FieldErrors = {};
 
       if (axios.isAxiosError(error)) {
         const d = error.response?.data;
@@ -210,10 +244,8 @@ export default function DashboardForm() {
 
         if (status === 422 && d?.errors) {
           if (typeof d.errors === 'object') {
-            Object.entries(d.errors).forEach(([field, messages]) => {
-              errors[field.toLowerCase()] = Array.isArray(messages) ? messages : [String(messages)];
-            });
-            message = Object.values(errors).flat().join('\n') || t('errors.validationErrors');
+            serverErrors = normalizeErrorMap(d.errors as Record<string, unknown>);
+            message = getValidationToastMessage(t, serverErrors);
           }
         } else {
           message = d?.title || d?.message || error.message;
@@ -222,9 +254,36 @@ export default function DashboardForm() {
         message = error.message;
       }
 
-      setFieldErrors(errors);
+      if (Object.keys(serverErrors).length > 0) {
+        setFieldErrors(serverErrors);
+      }
       toast.error(message);
     },
+  });
+
+  const tabByField = useMemo<Partial<Record<string, "main" | "advanced">>>(
+    () => ({
+      title: "main",
+      content: "main",
+      language: "main",
+      slug: "advanced",
+      optionalURL: "advanced",
+      tagIds: "advanced",
+      tags: "advanced",
+      metaDescription: "advanced",
+      metaKeywords: "advanced",
+      additionalImageUrls: "advanced",
+      fileUrls: "advanced",
+      audioUrl: "advanced",
+    }),
+    [],
+  );
+
+  useFormErrorNavigation({
+    activeTab: type === "reel" ? undefined : activeTab,
+    fieldErrors,
+    setActiveTab: type === "reel" ? undefined : setActiveTab,
+    tabByField,
   });
 
   const selectedCategory = useMemo(() => {

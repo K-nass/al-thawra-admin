@@ -10,7 +10,7 @@ interface ContentEditorProps {
 
 export default function ContentEditor({ state, handleChange, errors = {} }: ContentEditorProps) {
   return (
-    <div className="space-y-1.5" data-error-field={errors.content ? true : undefined}>
+    <div className="space-y-1.5" data-error-field={errors.content ? "content" : undefined}>
       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
         Content <span className="text-rose-500 ml-1 font-bold">*</span>
       </label>

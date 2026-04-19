@@ -29,7 +29,8 @@ export default function PublishSection({ mutation, state, handleChange, fieldErr
     return localDate.toISOString().slice(0, 16);
   };
 
-  const scheduledAtErrors = fieldErrors?.scheduledat || fieldErrors?.ScheduledAt;
+  const scheduledAtErrors =
+    fieldErrors?.scheduledAt || fieldErrors?.scheduledat || fieldErrors?.ScheduledAt;
 
   return (
     <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 relative overflow-hidden group">
@@ -72,7 +73,7 @@ export default function PublishSection({ mutation, state, handleChange, fieldErr
         </div>
 
         {/* Scheduled At (Date Picker) */}
-        <div className="space-y-3">
+        <div className="space-y-3" data-error-field={scheduledAtErrors ? "scheduledAt" : undefined}>
             <label className="flex items-center cursor-pointer select-none group/check">
               <input
                 className="sr-only"
@@ -98,6 +99,7 @@ export default function PublishSection({ mutation, state, handleChange, fieldErr
               <div className="animate-in fade-in slide-in-from-top-2 duration-300 space-y-1.5">
                 <div className="relative group/input">
                     <input
+                        name="scheduledAt"
                         type="datetime-local"
                         className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-4 transition-all appearance-none ${
                             scheduledAtErrors ? 'border-rose-300 focus:ring-rose-500/10' : 'border-slate-200 focus:ring-primary/10'

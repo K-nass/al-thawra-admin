@@ -26,6 +26,9 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
   const queryClient = useQueryClient();
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string }[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const tagErrors = fieldErrors.tagIds ?? fieldErrors.tags;
+  const metaDescriptionErrors = fieldErrors.metaDescription ?? fieldErrors.metadescription;
+  const metaKeywordsErrors = fieldErrors.metaKeywords ?? fieldErrors.metakeywords;
 
   const createTagMutation = useMutation({
     mutationFn: async (name: string) => {
@@ -106,7 +109,7 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1.5" data-error-field={fieldErrors.slug ? true : undefined}>
+            <div className="space-y-1.5" data-error-field={fieldErrors.slug ? "slug" : undefined}>
               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5" htmlFor="slug">
                 <LinkIcon size={10} /> {t("post.slug")}
               </label>
@@ -132,7 +135,7 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
               {fieldErrors.slug && <p className="text-rose-500 text-xs font-black uppercase tracking-tight mt-1 ml-1">{fieldErrors.slug}</p>}
             </div>
 
-            <div className="space-y-1.5" data-error-field={fieldErrors.optionalURL ? true : undefined}>
+            <div className="space-y-1.5" data-error-field={fieldErrors.optionalURL ? "optionalURL" : undefined}>
               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5" htmlFor="optional-url">
                 <Database size={10} /> {t("post.externalSourceUrl")}
               </label>
@@ -164,14 +167,14 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
           </div>
 
           <div className="space-y-4">
-            <div className="space-y-1.5" data-error-field={fieldErrors.tagIds ? true : undefined}>
+            <div className="space-y-1.5" data-error-field={tagErrors ? "tagIds" : undefined}>
               <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5" htmlFor="tags">
                 <Hash size={10} /> {t("post.repositoryTags", { language: state.language || t("common.all") })}
               </label>
 
               <div
                 className={`group relative transition-colors duration-200 border rounded-2xl bg-white focus-within:ring-4 ${
-                  fieldErrors.tagIds ? "border-rose-200 focus-within:ring-rose-500/10" : "border-slate-200 focus-within:ring-primary/10 focus-within:border-primary"
+                  tagErrors ? "border-rose-200 focus-within:ring-rose-500/10" : "border-slate-200 focus-within:ring-primary/10 focus-within:border-primary"
                 }`}
               >
                 <div className="flex flex-wrap gap-2 p-3">
@@ -236,6 +239,15 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
                   </div>
                 )}
               </div>
+              {tagErrors && (
+                <div className="flex flex-col gap-1 mt-1 ml-1 text-rose-500">
+                  {tagErrors.map((error, idx) => (
+                    <p key={idx} className="text-xs font-bold uppercase">
+                      • {error}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2 pt-2">
@@ -279,13 +291,13 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" data-error-field={metaDescriptionErrors ? "metaDescription" : undefined}>
             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5" htmlFor="summary">
               <FileText size={10} /> {t("formLabels.metaDescription")}
             </label>
             <textarea
               className={`w-full px-4 py-3 bg-slate-50 border rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 transition-colors min-h-[120px] resize-none ${
-                fieldErrors?.metadescription ? "border-rose-200 focus:ring-rose-500/10" : "border-slate-200 focus:ring-primary/10"
+                metaDescriptionErrors ? "border-rose-200 focus:ring-rose-500/10" : "border-slate-200 focus:ring-primary/10"
               }`}
               id="summary"
               name="metaDescription"
@@ -293,9 +305,9 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
               value={state.metaDescription ?? ""}
               onChange={handleChange}
             />
-            {fieldErrors?.metadescription && (
+            {metaDescriptionErrors && (
               <div className="flex flex-col gap-1 mt-1 ml-1 text-rose-500">
-                {fieldErrors.metadescription.map((error, idx) => (
+                {metaDescriptionErrors.map((error, idx) => (
                   <p key={idx} className="text-xs font-bold uppercase">
                     • {error}
                   </p>
@@ -304,13 +316,13 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
             )}
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" data-error-field={metaKeywordsErrors ? "metaKeywords" : undefined}>
             <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5" htmlFor="keywords">
               <Hash size={10} /> {t("formLabels.metaKeywords")}
             </label>
             <input
               className={`w-full px-4 py-3 bg-slate-50 border rounded-xl text-sm font-medium focus:outline-none focus:ring-4 transition-colors ${
-                fieldErrors?.metakeywords ? "border-rose-200 focus:ring-rose-500/10" : "border-slate-200 focus:ring-primary/10"
+                metaKeywordsErrors ? "border-rose-200 focus:ring-rose-500/10" : "border-slate-200 focus:ring-primary/10"
               }`}
               type="text"
               id="keywords"
@@ -322,9 +334,9 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
             <p className="text-xs text-slate-400 font-medium px-1 flex items-center gap-1 mt-1">
               <Info size={10} /> {t("post.internalSearchHint")}
             </p>
-            {fieldErrors?.metakeywords && (
+            {metaKeywordsErrors && (
               <div className="flex flex-col gap-1 mt-1 ml-1 text-rose-500">
-                {fieldErrors.metakeywords.map((error, idx) => (
+                {metaKeywordsErrors.map((error, idx) => (
                   <p key={idx} className="text-xs font-bold uppercase">
                     • {error}
                   </p>

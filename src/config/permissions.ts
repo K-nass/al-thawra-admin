@@ -12,6 +12,8 @@ import {
   BookOpen,
   Users,
   Key,
+  PenTool,
+  PenLine,
 } from 'lucide-react';
 
 // =============================================================================
@@ -45,6 +47,9 @@ export const KNOWN_PERMISSIONS = {
 
   // Magazines module
   Magazines: 'Magazines',
+
+  // Writers module
+  Writers: 'Writers',
 } as const;
 
 export type KnownPermission = typeof KNOWN_PERMISSIONS[keyof typeof KNOWN_PERMISSIONS];
@@ -93,6 +98,12 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   '/admin/roles-permissions': 'RolesAndPermissions',
   '/admin/add-role': 'RolesAndPermissions',
   '/admin/edit-role/:id': 'RolesAndPermissions',
+
+  // Writers routes
+  '/admin/writers': 'Writers',
+  // Writings routes
+  '/admin/writings': 'Writers',
+  '/admin/writings/add': 'Writers',
 };
 
 // =============================================================================
@@ -121,6 +132,8 @@ export const SIDEBAR_PERMISSIONS: SidebarItemConfig[] = [
   { id: 10, labelKey: 'dashboard.magazines', icon: BookOpen, path: '/admin/magazines', requiredPermission: 'Magazines' },
   { id: 11, labelKey: 'dashboard.users', icon: Users, path: '/admin/users', requiredPermission: 'Users' },
   { id: 12, labelKey: 'dashboard.rolesAndPermissions', icon: Key, path: '/admin/roles-permissions', requiredPermission: 'RolesAndPermissions' },
+  { id: 13, labelKey: 'dashboard.writers', icon: PenTool, path: '/admin/writers', requiredPermission: 'Writers' },
+  { id: 14, labelKey: 'dashboard.writings', icon: PenLine, path: '/admin/writings', requiredPermission: 'Writers' },
 ];
 
 // =============================================================================

@@ -39,7 +39,7 @@ export default memo(function CategorySelect({ categories = [], isLoading, handle
   return (
     <div className={`bg-white p-6 rounded-[2rem] shadow-sm border transition-all duration-300 relative ${
       errors.categoryId ? 'border-rose-200' : 'border-slate-200'
-    }`} data-error-field={errors.categoryId ? true : undefined}>
+    }`} data-error-field={errors.categoryId ? "categoryId" : undefined}>
       
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
