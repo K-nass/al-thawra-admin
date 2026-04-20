@@ -359,23 +359,6 @@ export default function AdvancedOptionsTab({ state, handleChange, tags, errors, 
             <FileUpload handleChange={handleChange} fieldErrors={fieldErrors} />
           </div>
         )}
-
-        {type === "audio" && (
-          <div className="col-span-full">
-            <MediaUploadComponent
-              mediaType="audio"
-              onMediaSelect={(media) => {
-                handleChange({
-                  target: {
-                    name: "audioUrl",
-                    value: media.url,
-                    type: "text",
-                  },
-                } as never);
-              }}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

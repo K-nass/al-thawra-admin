@@ -31,6 +31,8 @@ import Home from "./components/Home/Home";
 import Writers from "./components/Admin/Dashboard/Writers/Writers";
 import Writings from "./components/Admin/Dashboard/Writings/Writings";
 import AddWriting from "./components/Admin/Dashboard/Writings/AddWriting";
+import DashboardAudios from "./components/Admin/Dashboard/DashboardAudios/DashboardAudios";
+import DashboardAddAudio from "./components/Admin/Dashboard/DashboardAddAudio/DashboardAddAudio";
 
 
 
@@ -99,6 +101,9 @@ export const routes = createBrowserRouter([
           { path: "writers", element: <PermissionRouteGuard><Writers /></PermissionRouteGuard> },
           { path: "writings", element: <PermissionRouteGuard><Writings /></PermissionRouteGuard> },
           { path: "writings/add", element: <PermissionRouteGuard><AddWriting /></PermissionRouteGuard> },
+          { path: "audios", element: <PermissionRouteGuard><DashboardAudios /></PermissionRouteGuard> },
+          { path: "add-audio", element: <PermissionRouteGuard><DashboardAddAudio /></PermissionRouteGuard> },
+          { path: "edit-audio/:categoryId/:audioId", element: <PermissionRouteGuard><DashboardAddAudio /></PermissionRouteGuard> },
 
         ]
       }

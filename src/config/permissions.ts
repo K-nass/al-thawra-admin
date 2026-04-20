@@ -14,6 +14,7 @@ import {
   Key,
   PenTool,
   PenLine,
+  Volume2,
 } from 'lucide-react';
 
 // =============================================================================
@@ -50,6 +51,9 @@ export const KNOWN_PERMISSIONS = {
 
   // Writers module
   Writers: 'Writers',
+
+  // Audios module
+  Audios: 'Audios',
 } as const;
 
 export type KnownPermission = typeof KNOWN_PERMISSIONS[keyof typeof KNOWN_PERMISSIONS];
@@ -104,6 +108,11 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   // Writings routes
   '/admin/writings': 'Writers',
   '/admin/writings/add': 'Writers',
+
+  // Audios routes
+  '/admin/audios': 'Audios',
+  '/admin/add-audio': 'Audios',
+  '/admin/edit-audio/:categoryId/:audioId': 'Audios',
 };
 
 // =============================================================================
@@ -129,6 +138,7 @@ export const SIDEBAR_PERMISSIONS: SidebarItemConfig[] = [
   { id: 5, labelKey: 'dashboard.featuredPosts', icon: Star, path: '/admin/posts/featured-posts', requiredPermission: 'ManageAllPosts' },
   { id: 6, labelKey: 'dashboard.breakingNews', icon: Zap, path: '/admin/posts/breaking-news', requiredPermission: 'ManageAllPosts' },
   { id: 7, labelKey: 'dashboard.reels', icon: Video, path: '/admin/reels', requiredPermission: 'AddReels' },
+  { id: 16, labelKey: 'dashboard.audios', icon: Volume2, path: '/admin/audios', requiredPermission: 'Audios' },
   { id: 8, labelKey: 'dashboard.categories', icon: Layers, path: '/admin/categories', requiredPermission: 'Categories' },
   { id: 9, labelKey: 'dashboard.tags', icon: Tags, path: '/admin/tags', requiredPermission: 'Tags' },
   { id: 10, labelKey: 'dashboard.magazines', icon: BookOpen, path: '/admin/magazines', requiredPermission: 'Magazines' },

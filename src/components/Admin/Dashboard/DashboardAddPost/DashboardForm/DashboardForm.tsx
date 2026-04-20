@@ -10,6 +10,7 @@ import CategorySelect from "./CategorySelect";
 import PublishSection from "./PublishSection";
 import ReelPublishSection from "./ReelPublishSection";
 import ImageUpload from "./ImageUpload";
+import MediaUploadComponent from "./MediaUploadComponent";
 import { useEffect, type ChangeEvent, useMemo, useState } from "react";
 import axios from "axios";
 import { apiClient, getAuthToken } from "@/api/client";
@@ -111,15 +112,16 @@ export default function DashboardForm() {
     queryFn: authApi.getUserProfile,
   });
 
-  // Validation function for article form
-  const validateArticleForm = (payload: any): FieldErrors => {
+  // Validation function for article/audio forms
+  const validateArticleForm = (payload: any, postType: string | null): FieldErrors => {
     const errors: FieldErrors = {};
     
     if (!payload.title || payload.title.trim() === '') {
       errors.title = [t('validation.titleRequired')];
     }
     
-    if (!payload.content || payload.content.trim() === '') {
+    // Content is required only for article/video types, not audio
+    if (postType === 'article' && (!payload.content || payload.content.trim() === '')) {
       errors.content = [t('validation.contentRequired')];
     }
     
@@ -129,6 +131,11 @@ export default function DashboardForm() {
     
     if (!payload.language) {
       errors.language = [t('validation.languageRequired')];
+    }
+
+    // Audio URL is required for audio type
+    if (postType === 'audio' && !payload.audioUrl) {
+      errors.audioUrl = [t('validation.audioUrlRequired')];
     }
     
     return errors;
@@ -151,13 +158,13 @@ export default function DashboardForm() {
         return response.data;
       }
 
-      // Client-side validation for articles
-      if (type === "article") {
+      // Client-side validation for articles and audio
+      if (type === "article" || type === "audio") {
         if (!payload.authorId && userProfile?.id) {
           payload.authorId = userProfile.id;
         }
 
-        const validationErrors = validateArticleForm(payload);
+        const validationErrors = validateArticleForm(payload, type);
         if (Object.keys(validationErrors).length > 0) {
           const validationError = new Error("CLIENT_VALIDATION_ERROR") as Error & {
             validationErrors?: FieldErrors;
@@ -266,6 +273,7 @@ export default function DashboardForm() {
       title: "main",
       content: "main",
       language: "main",
+      audioUrl: "main",
       slug: "advanced",
       optionalURL: "advanced",
       tagIds: "advanced",
@@ -274,7 +282,6 @@ export default function DashboardForm() {
       metaKeywords: "advanced",
       additionalImageUrls: "advanced",
       fileUrls: "advanced",
-      audioUrl: "advanced",
     }),
     [],
   );
@@ -428,13 +435,43 @@ export default function DashboardForm() {
                     handleChange={handleChange}
                     fieldErrors={fieldErrors}
                   />
-                  <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200">
-                    <ContentEditor
-                      state={state as ArticleInitialStateInterface}
-                      handleChange={handleChange}
-                      errors={fieldErrors}
-                    />
-                  </div>
+                  {type === 'audio' ? (
+                    // ── Audio: show media uploader + description textarea ──
+                    <>
+                      <MediaUploadComponent
+                        mediaType="audio"
+                        fieldErrors={fieldErrors}
+                        onMediaSelect={(media) => {
+                          handleChange({
+                            target: { name: "audioUrl", value: media.url, type: "text" },
+                          } as never);
+                        }}
+                      />
+                      {/* Optional description for audio */}
+                      <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5 mb-3">
+                          {t('post.description')}
+                        </label>
+                        <textarea
+                          name="content"
+                          rows={4}
+                          value={(state as any).content ?? ''}
+                          onChange={handleChange as any}
+                          placeholder={t('post.contentPlaceholder') || ''}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all resize-none"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // ── Article/Video: TinyMCE rich editor ──
+                    <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200">
+                      <ContentEditor
+                        state={state as ArticleInitialStateInterface}
+                        handleChange={handleChange}
+                        errors={fieldErrors}
+                      />
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="animate-in fade-in duration-500">
