@@ -16,6 +16,12 @@ import { useCloudinaryUpload } from "@/hooks/useCloudinaryUpload";
 import { useCreateMagazine, useUpdateMagazine } from "@/hooks/useFetchMagazines";
 import { useToast } from "@/components/Toast/ToastContainer";
 import type { Magazine } from "@/api/magazines.api";
+import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+  type ModalFieldErrors,
+} from "@/utils/apiFormErrors";
 
 interface MagazineFormModalProps {
   isOpen: boolean;
@@ -37,7 +43,7 @@ export default function MagazineFormModal({
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [pdfFileName, setPdfFileName] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-  const [errors, setErrors] = useState<{ issueNumber?: string; pdf?: string }>({});
+  const [errors, setErrors] = useState<{ issueNumber?: string; pdf?: string; thumbnail?: string }>({});
 
   const pdfUpload = useCloudinaryUpload();
   const thumbUpload = useCloudinaryUpload();
@@ -50,6 +56,12 @@ export default function MagazineFormModal({
 
   const [pdfDragOver, setPdfDragOver] = useState(false);
   const [thumbDragOver, setThumbDragOver] = useState(false);
+  const serverFieldAliases = {
+    issuenumber: "issueNumber",
+    pdfurl: "pdf",
+    pdf: "pdf",
+    thumbnailurl: "thumbnail",
+  } as const;
 
   const isBusy =
     pdfUpload.isUploading ||
@@ -77,6 +89,10 @@ export default function MagazineFormModal({
       thumbUpload.reset();
     }
   }, [isOpen, magazine]);
+
+  useEffect(() => {
+    focusFirstErrorField(errors as ModalFieldErrors);
+  }, [errors]);
 
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
@@ -114,6 +130,7 @@ export default function MagazineFormModal({
         toast.error(t("magazines.imageAcceptedFormats"));
         return;
       }
+      setErrors((prev) => ({ ...prev, thumbnail: undefined }));
 
       const localPreview = URL.createObjectURL(file);
       setThumbnailPreview(localPreview);
@@ -181,14 +198,28 @@ export default function MagazineFormModal({
         toast.success(t("magazines.createSuccess"));
       }
       onClose();
-    } catch (err: any) {
-      const msg =
-        err?.response?.data?.title ||
-        err?.response?.data?.message ||
-        err?.response?.data?.detail ||
-        err?.message ||
-        (isEditMode ? t("magazines.updateError") : t("magazines.createError"));
-      toast.error(msg);
+    } catch (err) {
+      const parsed = parseApiValidationErrors(err, serverFieldAliases);
+      if (Object.keys(parsed.fieldErrors).length > 0) {
+        setErrors((prev) => ({
+          ...prev,
+          issueNumber: parsed.fieldErrors.issueNumber ?? prev.issueNumber,
+          pdf: parsed.fieldErrors.pdf ?? prev.pdf,
+          thumbnail: parsed.fieldErrors.thumbnail ?? prev.thumbnail,
+        }));
+        toast.error(
+          parsed.messages[0] ||
+            (isEditMode ? t("magazines.updateError") : t("magazines.createError")),
+        );
+        return;
+      }
+
+      toast.error(
+        extractApiErrorMessage(
+          err,
+          isEditMode ? t("magazines.updateError") : t("magazines.createError"),
+        ),
+      );
     }
   };
 
@@ -237,7 +268,7 @@ export default function MagazineFormModal({
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
-              <div>
+              <div data-error-field={errors.issueNumber ? "issueNumber" : undefined}>
                 <label
                   htmlFor="magazine-issue-number"
                   className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block"
@@ -246,6 +277,7 @@ export default function MagazineFormModal({
                 </label>
                 <input
                   id="magazine-issue-number"
+                  name="issueNumber"
                   type="text"
                   value={issueNumber}
                   onChange={(e) => {
@@ -267,7 +299,7 @@ export default function MagazineFormModal({
                 )}
               </div>
 
-              <div>
+              <div data-error-field={errors.pdf ? "pdf" : undefined}>
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">
                   {t("magazines.pdfFile")} <span className="text-red-500">*</span>
                 </label>
@@ -364,7 +396,7 @@ export default function MagazineFormModal({
                 />
               </div>
 
-              <div>
+              <div data-error-field={errors.thumbnail ? "thumbnail" : undefined}>
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 block">
                   {t("magazines.thumbnailOptional")}
                 </label>
@@ -452,6 +484,12 @@ export default function MagazineFormModal({
                     </p>
                     <p className="text-xs text-slate-400">{t("magazines.imageAcceptedFormats")}</p>
                   </div>
+                )}
+                {errors.thumbnail && (
+                  <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle size={14} />
+                    {errors.thumbnail}
+                  </p>
                 )}
 
                 <input

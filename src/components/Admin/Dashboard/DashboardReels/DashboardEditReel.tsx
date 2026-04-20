@@ -10,6 +10,11 @@ import ReelForm from "../DashboardAddPost/DashboardForm/ReelForm";
 import Loader from "@/components/Common/Loader";
 import type { TagInterface } from "../DashboardAddPost/DashboardForm/PostDetailsForm";
 import { useToast } from "@/components/Toast/ToastContainer";
+import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+} from "@/utils/apiFormErrors";
 
 interface TagResponse {
   data: {
@@ -23,6 +28,15 @@ export default function DashboardEditReel() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useToast();
+  const serverFieldAliases = {
+    videourl: "videoUrl",
+    thumbnailurl: "thumbnailUrl",
+    caption: "caption",
+    tags: "tags",
+    tags0: "tags",
+    authorid: "authorId",
+    userid: "authorId",
+  } as const;
 
   const [state, dispatch] = usePostReducer("reel");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -61,9 +75,23 @@ export default function DashboardEditReel() {
       setTimeout(() => navigate("/admin/reels"), 700);
     },
     onError: (error: any) => {
-      const message = error?.response?.data?.title || error?.response?.data?.message || t("reels.updateError");
-      toast.error(message);
-      if (error?.response?.data?.errors) setFieldErrors(error.response.data.errors);
+      const parsed = parseApiValidationErrors(error, serverFieldAliases);
+      if (Object.keys(parsed.fieldErrors).length > 0) {
+        const mappedErrors = Object.entries(parsed.fieldErrors).reduce<Record<string, string[]>>(
+          (acc, [field, message]) => {
+            if (!message) return acc;
+            acc[field] = [message];
+            return acc;
+          },
+          {},
+        );
+        setFieldErrors(mappedErrors);
+        focusFirstErrorField(parsed.fieldErrors);
+        toast.error(parsed.messages[0] || t("reels.updateError"));
+        return;
+      }
+
+      toast.error(extractApiErrorMessage(error, t("reels.updateError")));
     },
   });
 
@@ -73,6 +101,14 @@ export default function DashboardEditReel() {
     if (type === "checkbox") payload = checked;
     if (name === "tags" && newTags) payload = newTags;
     dispatch({ type: "set-field", field: name, payload });
+    if (name) {
+      setFieldErrors((prev) => {
+        if (!prev[name]) return prev;
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

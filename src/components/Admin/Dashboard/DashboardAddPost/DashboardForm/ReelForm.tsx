@@ -90,12 +90,13 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
         <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">{t("reels.reelResources")}</p>
         <span className="text-rose-500 font-bold">*</span>
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6" data-error-field={fieldErrors.videoUrl ? "videoUrl" : undefined}>
         <MediaUploadComponent
           mediaType="video"
           forcedMediaType="Reel"
           hideUrlTab={true}
           hideEmbedCode={true}
+          fieldErrors={fieldErrors}
           onMediaSelect={(media) => {
             handleChange({
               target: { name: "videoUrl", value: media.url, type: "text" },
@@ -103,22 +104,24 @@ export default function ReelForm({ state, handleChange, fieldErrors, tags, isLoa
           }}
         />
 
-        <ImageUpload
-          state={{
-            ...state,
-            imageUrl: state.thumbnailUrl || "",
-            imageDescription: null,
-          } as any}
-          handleChange={(e: any) => {
-            if (e.target.name === "imageUrl") {
-              handleChange({
-                target: { name: "thumbnailUrl", value: e.target.value, type: "text" },
-              });
-            }
-          }}
-          type="video"
-          fieldErrors={fieldErrors}
-        />
+        <div className={fieldErrors.thumbnailUrl ? "ring-4 ring-rose-50 rounded-2xl" : undefined} data-error-field={fieldErrors.thumbnailUrl ? "thumbnailUrl" : undefined}>
+          <ImageUpload
+            state={{
+              ...state,
+              imageUrl: state.thumbnailUrl || "",
+              imageDescription: null,
+            } as any}
+            handleChange={(e: any) => {
+              if (e.target.name === "imageUrl") {
+                handleChange({
+                  target: { name: "thumbnailUrl", value: e.target.value, type: "text" },
+                });
+              }
+            }}
+            type="video"
+            fieldErrors={fieldErrors}
+          />
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">

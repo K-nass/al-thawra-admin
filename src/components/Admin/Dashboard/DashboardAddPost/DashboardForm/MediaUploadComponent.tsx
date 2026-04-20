@@ -35,6 +35,7 @@ interface MediaUploadComponentProps {
   forcedMediaType?: string;
   hideUrlTab?: boolean;
   hideEmbedCode?: boolean;
+  fieldErrors?: Record<string, string[]>;
 }
 
 export default function MediaUploadComponent({
@@ -43,11 +44,13 @@ export default function MediaUploadComponent({
   forcedMediaType,
   hideUrlTab = false,
   hideEmbedCode = false,
+  fieldErrors = {},
 }: MediaUploadComponentProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"url" | "upload">(hideUrlTab ? "upload" : "url");
   const [showFileModal, setShowFileModal] = useState(false);
   const [uploadedMedia, setUploadedMedia] = useState<MediaItem | null>(null);
+  const [urlInputValue, setUrlInputValue] = useState("");
 
   const formatDuration = (duration: string | number | null): string => {
     if (!duration) return "";
@@ -72,8 +75,15 @@ export default function MediaUploadComponent({
   const uploadLabel = mediaType === "video" ? t("formLabels.uploadVideo") : t("formLabels.uploadAudio");
   const acceptedFormats = mediaType === "video" ? "MP4, WebM, Ogg" : "MP3, WAV, OGG, WebM";
 
+  const hasError = fieldErrors.videoUrl || fieldErrors.mediaUrl || fieldErrors.audioUrl;
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 hover:shadow-md">
+    <div 
+      className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:shadow-md ${
+        hasError ? "border-rose-300 ring-4 ring-rose-50" : "border-slate-200"
+      }`}
+      data-error-field={hasError ? "videoUrl" : undefined}
+    >
       {/* Header */}
       <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
@@ -133,6 +143,25 @@ export default function MediaUploadComponent({
                   id={`${mediaType}-url`}
                   name={`${mediaType}-url`}
                   type="url"
+                  value={urlInputValue}
+                  onChange={(e) => {
+                    const url = e.target.value.trim();
+                    setUrlInputValue(e.target.value);
+                    if (url) {
+                      onMediaSelect({
+                        id: "",
+                        url,
+                        fileName: url.split("/").pop() || t("formLabels.unnamedResource"),
+                        type: mediaType,
+                        sizeInBytes: 0,
+                        mimeType: mediaType === "audio" ? "audio/mpeg" : "video/mp4",
+                        uploadedAt: null,
+                        altText: null,
+                        description: null,
+                        duration: null,
+                      });
+                    }
+                  }}
                   placeholder={t("formLabels.enterVideoURL")}
                   className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all font-medium"
                 />
@@ -240,6 +269,18 @@ export default function MediaUploadComponent({
           </div>
         )}
       </div>
+
+      {(fieldErrors.videoUrl || fieldErrors.mediaUrl || fieldErrors.audioUrl) && (
+        <div className="px-6 pb-6">
+          <ul className="space-y-1">
+            {(fieldErrors.videoUrl || fieldErrors.mediaUrl || fieldErrors.audioUrl || []).map((err, idx) => (
+              <li key={idx} className="text-rose-600 text-[11px] font-semibold flex items-center gap-1.5">
+                <div className="w-1 h-1 rounded-full bg-rose-500" /> {err}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {showFileModal && (
         <FileModal

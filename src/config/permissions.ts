@@ -14,6 +14,7 @@ import {
   Key,
   PenTool,
   PenLine,
+  Volume2,
 } from 'lucide-react';
 
 // =============================================================================
@@ -50,6 +51,9 @@ export const KNOWN_PERMISSIONS = {
 
   // Writers module
   Writers: 'Writers',
+
+  // Audios module
+  Audios: 'Audios',
 } as const;
 
 export type KnownPermission = typeof KNOWN_PERMISSIONS[keyof typeof KNOWN_PERMISSIONS];
@@ -104,6 +108,11 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   // Writings routes
   '/admin/writings': 'Writers',
   '/admin/writings/add': 'Writers',
+
+  // Audios routes
+  '/admin/audios': 'Audios',
+  '/admin/add-audio': 'Audios',
+  '/admin/edit-audio/:categoryId/:audioId': 'Audios',
 };
 
 // =============================================================================
@@ -122,18 +131,20 @@ export interface SidebarItemConfig {
 export const SIDEBAR_PERMISSIONS: SidebarItemConfig[] = [
   { id: 0, labelKey: 'dashboard.home', icon: Home, path: '/admin' },
   { id: 2, labelKey: 'dashboard.addPost', icon: FilePlus, path: '/admin/post-format', requiredPermission: 'AddPost' },
+  { id: 15, labelKey: 'dashboard.addWriting', icon: PenLine, path: '/admin/writings/add', requiredPermission: 'Writers' },
   { id: 3, labelKey: 'dashboard.allPosts', icon: Files, path: '/admin/posts/all', requiredPermission: 'ManageAllPosts' },
+  { id: 14, labelKey: 'dashboard.writings', icon: PenLine, path: '/admin/writings', requiredPermission: 'Writers' },
   { id: 4, labelKey: 'dashboard.sliderPosts', icon: Rss, path: '/admin/posts/slider-posts', requiredPermission: 'ManageAllPosts' },
   { id: 5, labelKey: 'dashboard.featuredPosts', icon: Star, path: '/admin/posts/featured-posts', requiredPermission: 'ManageAllPosts' },
   { id: 6, labelKey: 'dashboard.breakingNews', icon: Zap, path: '/admin/posts/breaking-news', requiredPermission: 'ManageAllPosts' },
   { id: 7, labelKey: 'dashboard.reels', icon: Video, path: '/admin/reels', requiredPermission: 'AddReels' },
+  { id: 16, labelKey: 'dashboard.audios', icon: Volume2, path: '/admin/audios', requiredPermission: 'Audios' },
   { id: 8, labelKey: 'dashboard.categories', icon: Layers, path: '/admin/categories', requiredPermission: 'Categories' },
   { id: 9, labelKey: 'dashboard.tags', icon: Tags, path: '/admin/tags', requiredPermission: 'Tags' },
   { id: 10, labelKey: 'dashboard.magazines', icon: BookOpen, path: '/admin/magazines', requiredPermission: 'Magazines' },
   { id: 11, labelKey: 'dashboard.users', icon: Users, path: '/admin/users', requiredPermission: 'Users' },
-  { id: 12, labelKey: 'dashboard.rolesAndPermissions', icon: Key, path: '/admin/roles-permissions', requiredPermission: 'RolesAndPermissions' },
   { id: 13, labelKey: 'dashboard.writers', icon: PenTool, path: '/admin/writers', requiredPermission: 'Writers' },
-  { id: 14, labelKey: 'dashboard.writings', icon: PenLine, path: '/admin/writings', requiredPermission: 'Writers' },
+  { id: 12, labelKey: 'dashboard.rolesAndPermissions', icon: Key, path: '/admin/roles-permissions', requiredPermission: 'RolesAndPermissions' },
 ];
 
 // =============================================================================

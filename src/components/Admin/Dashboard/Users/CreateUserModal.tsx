@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { X, User, Mail, Lock, Shield, Loader2 } from 'lucide-react';
 import { usersApi, type CreateUserDto } from '@/api/users.api';
 import { rolesApi } from '@/api/roles.api';
+import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+  type ModalFieldErrors,
+} from '@/utils/apiFormErrors';
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -38,6 +44,18 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [apiError, setApiError] = useState<string | null>(null);
+  const serverFieldAliases = {
+    username: 'userName',
+    email: 'email',
+    password: 'password',
+    rolename: 'roleName',
+    newrolename: 'roleName',
+    role: 'roleName',
+  } as const;
+
+  useEffect(() => {
+    focusFirstErrorField(errors as ModalFieldErrors);
+  }, [errors]);
 
   const { data: rolesData } = useQuery({
     queryKey: ['roles'],
@@ -53,18 +71,15 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
       onSuccess();
       handleClose();
     },
-    onError: (error: any) => {
-      if (error?.response?.status === 422 && error?.response?.data?.errors) {
-         const firstErrorKey = Object.keys(error.response.data.errors)[0];
-         const firstErrorMessage = error.response.data.errors[firstErrorKey][0];
-         setApiError(firstErrorMessage);
-         return;
+    onError: (error) => {
+      const parsed = parseApiValidationErrors(error, serverFieldAliases);
+      if (Object.keys(parsed.fieldErrors).length > 0) {
+        setErrors((prev) => ({ ...prev, ...(parsed.fieldErrors as FormErrors) }));
+        setApiError(parsed.messages[0] || t('users.errors.generic'));
+        return;
       }
-      const message =
-        error?.response?.data?.title ||
-        error?.response?.data?.message ||
-        t('users.errors.generic');
-      setApiError(message);
+
+      setApiError(extractApiErrorMessage(error, t('users.errors.generic')));
     },
   });
 
@@ -123,8 +138,13 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
 
   function handleChange(field: keyof FormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (apiError) setApiError(null);
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
     }
   }
 
@@ -168,7 +188,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
             )}
 
             {/* Username */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" data-error-field={errors.userName ? 'userName' : undefined}>
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ltr:ml-1 rtl:mr-1">
                 {t('users.userName')}
               </label>
@@ -176,6 +196,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
                 <User className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
+                  name="userName"
                   value={form.userName}
                   onChange={(e) => handleChange('userName', e.target.value)}
                   placeholder={t('users.placeholders.userName')}
@@ -192,7 +213,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
             </div>
 
             {/* Email */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" data-error-field={errors.email ? 'email' : undefined}>
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ltr:ml-1 rtl:mr-1">
                 {t('users.email')}
               </label>
@@ -200,6 +221,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
                 <Mail className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="email"
+                  name="email"
                   value={form.email}
                   onChange={(e) => handleChange('email', e.target.value)}
                   placeholder={t('users.placeholders.email')}
@@ -216,7 +238,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
             </div>
 
             {/* Password */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" data-error-field={errors.password ? 'password' : undefined}>
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ltr:ml-1 rtl:mr-1">
                 {t('users.password')}
               </label>
@@ -224,6 +246,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
                 <Lock className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="password"
+                  name="password"
                   value={form.password}
                   onChange={(e) => handleChange('password', e.target.value)}
                   placeholder={t('users.placeholders.password')}
@@ -240,13 +263,14 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }: CreateUs
             </div>
 
             {/* Role */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" data-error-field={errors.roleName ? 'roleName' : undefined}>
               <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ltr:ml-1 rtl:mr-1">
                 {t('users.role')}
               </label>
               <div className="relative">
                 <Shield className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <select
+                  name="roleName"
                   value={form.roleName}
                   onChange={(e) => handleChange('roleName', e.target.value)}
                   className={`w-full pl-10 pr-4 rtl:pl-4 rtl:pr-10 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-colors duration-200 appearance-none ${

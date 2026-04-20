@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
 import { 
   User, 
   ChevronLeft, 
@@ -18,6 +17,12 @@ import {
 import { usersApi, type UpdateUserParams } from "@/api/users.api";
 import FileModal from "../DashboardAddPost/DashboardForm/FileModal";
 import { useToast } from "@/components/Toast/ToastContainer";
+import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+  type ModalFieldErrors,
+} from "@/utils/apiFormErrors";
 
 function normalizeSocialAccounts(accounts?: Record<string, string>) {
     const normalized: Record<string, string> = {};
@@ -37,11 +42,24 @@ export default function EditUser() {
     const queryClient = useQueryClient();
     const toast = useToast();
     const { id, username } = useParams<{ id: string; username: string }>();
+    const serverFieldAliases = {
+        userid: "UserId",
+        username: "UserName",
+        email: "Email",
+        slug: "Slug",
+        aboutme: "AboutMe",
+        avatarimage: "AvatarImage",
+        personalwebsiteurl: "PersonalWebsiteUrl",
+    } as const;
 
     const [formData, setFormData] = useState<UpdateUserParams>({});
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [showAvatarModal, setShowAvatarModal] = useState(false);
-    const [errors, setErrors] = useState<{UserName?: string, Email?: string}>({});
+    const [errors, setErrors] = useState<ModalFieldErrors>({});
+
+    useEffect(() => {
+        focusFirstErrorField(errors);
+    }, [errors]);
 
     // Fetch user profile
     const { data: userProfile, isLoading: isLoadingProfile, isError: isProfileError } = useQuery({
@@ -83,6 +101,12 @@ export default function EditUser() {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+        setErrors((prev) => {
+            if (!prev[name]) return prev;
+            const next = { ...prev };
+            delete next[name];
+            return next;
+        });
     };
 
     const handleAvatarModalChange = (e: any) => {
@@ -101,19 +125,20 @@ export default function EditUser() {
             setTimeout(() => navigate("/admin/users"), 1000);
         },
         onError: (err) => {
-            if (axios.isAxiosError(err)) {
-                const responseData = err.response?.data;
-                const msg = responseData?.title || responseData?.message || err.message;
-                toast.error(msg);
-            } else {
-                toast.error(t("users.errors.unexpected"));
+            const parsed = parseApiValidationErrors(err, serverFieldAliases);
+            if (Object.keys(parsed.fieldErrors).length > 0) {
+                setErrors(parsed.fieldErrors);
+                toast.error(parsed.messages[0] || t("common.fixErrors"));
+                return;
             }
+
+            toast.error(extractApiErrorMessage(err, t("users.errors.unexpected")));
         },
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newErrors: {UserName?: string, Email?: string} = {};
+        const newErrors: ModalFieldErrors = {};
         
         if (!formData.UserName || formData.UserName.trim() === "") {
             newErrors.UserName = t("users.validation.userNameRequired");

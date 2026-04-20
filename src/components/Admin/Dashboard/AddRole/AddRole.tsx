@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
 import { 
   Shield, 
   ChevronLeft, 
@@ -10,23 +9,38 @@ import {
   Save, 
   Loader2,
   Lock,
-  Edit3,
   Globe
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { rolesApi, type CreateRoleDto } from "@/api";
 import { useToast } from "@/components/Toast/ToastContainer";
+import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+  type ModalFieldErrors,
+} from "@/utils/apiFormErrors";
 
 export default function AddRole() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const toast = useToast();
+    const serverFieldAliases = {
+        name: "name",
+        rolename: "name",
+        permissions: "permissions",
+        permissions0: "permissions",
+    } as const;
     
     const [roleNameEn, setRoleNameEn] = useState("");
     const [roleNameAr, setRoleNameAr] = useState("");
     const [permissions, setPermissions] = useState<string[]>([]);
-    const [error, setError] = useState<string>("");
-    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [apiError, setApiError] = useState<string>("");
+    const [fieldErrors, setFieldErrors] = useState<ModalFieldErrors>({});
+
+    useEffect(() => {
+        focusFirstErrorField(fieldErrors);
+    }, [fieldErrors]);
 
     const handlePermissionToggle = (permission: string) => {
         setPermissions((prev) =>
@@ -34,6 +48,13 @@ export default function AddRole() {
                 ? prev.filter((p) => p !== permission)
                 : [...prev, permission]
         );
+        setFieldErrors((prev) => {
+            if (!prev.permissions) return prev;
+            const next = { ...prev };
+            delete next.permissions;
+            return next;
+        });
+        setApiError("");
     };
 
     const presetRoles = [
@@ -46,6 +67,13 @@ export default function AddRole() {
         setPermissions(preset.perms);
         setRoleNameEn(preset.name);
         setRoleNameAr(preset.nameAr);
+        setApiError("");
+        setFieldErrors((prev) => {
+            const next = { ...prev };
+            delete next.name;
+            delete next.permissions;
+            return next;
+        });
         toast.info(t('roles.presetApplied', { name: preset.name }));
     };
 
@@ -56,30 +84,23 @@ export default function AddRole() {
             navigate("/admin/roles-permissions");
         },
         onError: (err) => {
-            if (axios.isAxiosError(err)) {
-                const responseData = err.response?.data;
-                if (err.response?.status === 422 && responseData?.errors) {
-                    const errors: Record<string, string> = {};
-                    Object.keys(responseData.errors).forEach((key) => {
-                        const messages = responseData.errors[key];
-                        errors[key.toLowerCase()] = Array.isArray(messages) ? messages[0] : messages;
-                    });
-                    setFieldErrors(errors);
-                    toast.error(t('common.validationError'));
-                } else {
-                    const msg = responseData?.title || responseData?.message || err.message;
-                    setError(msg);
-                    toast.error(msg);
-                }
-            } else {
-                setError(t("users.errors.unexpected"));
+            const parsed = parseApiValidationErrors(err, serverFieldAliases);
+            if (Object.keys(parsed.fieldErrors).length > 0) {
+                setFieldErrors(parsed.fieldErrors);
+                setApiError("");
+                toast.error(parsed.messages[0] || t('common.validationError'));
+                return;
             }
+
+            const message = extractApiErrorMessage(err, t("users.errors.unexpected"));
+            setApiError(message);
+            toast.error(message);
         },
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
+        setApiError("");
         setFieldErrors({});
 
         if (!roleNameEn.trim()) {
@@ -88,8 +109,8 @@ export default function AddRole() {
         }
 
         if (permissions.length === 0) {
-            setError(t("roles.selectPermissionRequired"));
-            toast.info(t("roles.selectPermissionRequired"));
+            setFieldErrors({ permissions: t("roles.selectPermissionRequired") });
+            toast.error(t("roles.selectPermissionRequired"));
             return;
         }
 
@@ -171,8 +192,18 @@ export default function AddRole() {
                                         <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <input
                                             type="text"
+                                            name="name"
                                             value={roleNameEn}
-                                            onChange={(e) => setRoleNameEn(e.target.value)}
+                                            onChange={(e) => {
+                                                setRoleNameEn(e.target.value);
+                                                setApiError("");
+                                                setFieldErrors((prev) => {
+                                                    if (!prev.name) return prev;
+                                                    const next = { ...prev };
+                                                    delete next.name;
+                                                    return next;
+                                                });
+                                            }}
                                             placeholder={t("roles.roleNameExample")}
                                             className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-colors duration-200 ${
                                                 fieldErrors.name 
@@ -227,7 +258,12 @@ export default function AddRole() {
                     </div>
 
                     {/* Permissions Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div
+                        className={`bg-white rounded-2xl shadow-sm border overflow-hidden ${
+                            fieldErrors.permissions ? "border-rose-300" : "border-slate-200"
+                        }`}
+                        data-error-field={fieldErrors.permissions ? "permissions" : undefined}
+                    >
                         <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                             <h3 className="font-bold text-slate-800 flex items-center gap-2">
                                 <Lock size={18} className="text-primary" />
@@ -269,6 +305,12 @@ export default function AddRole() {
                                     </label>
                                 ))}
                             </div>
+                            {fieldErrors.permissions && (
+                                <p className="px-1 mt-4 text-xs font-medium text-red-500">{fieldErrors.permissions}</p>
+                            )}
+                            {apiError && (
+                                <p className="px-1 mt-2 text-xs font-medium text-red-500">{apiError}</p>
+                            )}
                         </div>
                     </div>
 

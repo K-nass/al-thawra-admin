@@ -6,6 +6,12 @@ import { useToast } from "@/components/Toast/ToastContainer";
 import { X, Loader2, Image as ImageIcon, UploadCloud } from "lucide-react";
 import FileModal from "../DashboardAddPost/DashboardForm/FileModal";
 import type { HandleChangeType } from "../DashboardAddPost/DashboardForm/types";
+import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+  type ModalFieldErrors,
+} from "@/utils/apiFormErrors";
 
 interface WriterModalProps {
   isOpen: boolean;
@@ -17,6 +23,13 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
   const { t } = useLanguage();
   const toast = useToast();
   const queryClient = useQueryClient();
+  const serverFieldAliases = {
+    name: "name",
+    bio: "bio",
+    birthdate: "birthDate",
+    dateofdeath: "dateOfDeath",
+    imageurl: "imageUrl",
+  } as const;
 
   const [formData, setFormData] = useState<CreateWriterRequest>({
     name: "",
@@ -26,7 +39,7 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
     imageUrl: null,
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<ModalFieldErrors>({});
   const [showImageModal, setShowImageModal] = useState(false);
 
   useEffect(() => {
@@ -50,14 +63,18 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
     setErrors({});
   }, [writer, isOpen]);
 
+  useEffect(() => {
+    focusFirstErrorField(errors);
+  }, [errors]);
+
   const validate = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: ModalFieldErrors = {};
 
     if (!formData.name.trim()) {
       newErrors.name = t("writers.nameRequired");
     }
     if (!formData.birthDate) {
-      newErrors.birthDate = t("writers.birthDate") + " is required";
+      newErrors.birthDate = t("writers.birthDateRequired");
     }
 
     setErrors(newErrors);
@@ -71,8 +88,15 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
       toast.success(t("writers.createSuccess"));
       onClose();
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || t("writers.createError"));
+    onError: (error) => {
+      const parsed = parseApiValidationErrors(error, serverFieldAliases);
+      if (Object.keys(parsed.fieldErrors).length > 0) {
+        setErrors(parsed.fieldErrors);
+        toast.error(parsed.messages[0] || t("writers.createError"));
+        return;
+      }
+
+      toast.error(extractApiErrorMessage(error, t("writers.createError")));
     },
   });
 
@@ -84,19 +108,40 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
       toast.success(t("writers.updateSuccess"));
       onClose();
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || t("writers.updateError"));
+    onError: (error) => {
+      const parsed = parseApiValidationErrors(error, serverFieldAliases);
+      if (Object.keys(parsed.fieldErrors).length > 0) {
+        setErrors(parsed.fieldErrors);
+        toast.error(parsed.messages[0] || t("writers.updateError"));
+        return;
+      }
+
+      toast.error(extractApiErrorMessage(error, t("writers.updateError")));
     },
   });
 
+  const handleFieldChange = <K extends keyof CreateWriterRequest>(
+    field: K,
+    value: CreateWriterRequest[K],
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setFormData({ ...formData, imageUrl: value || null });
+    handleFieldChange("imageUrl", value || null);
   };
 
   const handleMediaSelect = (media: { url: string }) => {
     if (media.url) {
-      setFormData({ ...formData, imageUrl: media.url });
+      handleFieldChange("imageUrl", media.url);
       setShowImageModal(false);
       toast.success("تم اضافة الصورة بنجاح");
     } else {
@@ -155,14 +200,15 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
           <div className="space-y-6">
-            <div>
+            <div data-error-field={errors.name ? "name" : undefined}>
               <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
                 {t("writers.writerName")}
               </label>
               <input
                 type="text"
+                name="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => handleFieldChange("name", e.target.value)}
                 placeholder={t("writers.writerNamePlaceholder")}
                 className={`w-full px-4 py-3.5 bg-slate-50 border ${
                   errors.name ? "border-rose-500" : "border-slate-200"
@@ -173,29 +219,36 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
               )}
             </div>
 
-            <div>
+            <div data-error-field={errors.bio ? "bio" : undefined}>
               <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
                 {t("writers.bio")}
               </label>
               <textarea
+                name="bio"
                 value={formData.bio || ""}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value || null })}
+                onChange={(e) => handleFieldChange("bio", e.target.value || null)}
                 placeholder={t("writers.bioPlaceholder")}
                 rows={4}
-                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors resize-none"
+                className={`w-full px-4 py-3.5 bg-slate-50 border ${
+                  errors.bio ? "border-rose-500" : "border-slate-200"
+                } rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors resize-none`}
               />
+              {errors.bio && (
+                <p className="text-xs text-rose-500 mt-2 font-medium">{errors.bio}</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+              <div data-error-field={errors.birthDate ? "birthDate" : undefined}>
                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
                   {t("writers.birthDate")}
                 </label>
                 <div className="relative group/date">
                   <input
                     type="date"
+                    name="birthDate"
                     value={formData.birthDate}
-                    onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
+                    onChange={(e) => handleFieldChange("birthDate", e.target.value)}
                     className={`w-full px-4 py-3.5 bg-slate-50 border ${
                       errors.birthDate ? "border-rose-500 bg-rose-50" : "border-slate-200"
                     } rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors text-slate-700 min-h-[50px] appearance-none`}
@@ -209,24 +262,33 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
                 )}
               </div>
 
-              <div>
+              <div data-error-field={errors.dateOfDeath ? "dateOfDeath" : undefined}>
                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
                   {t("writers.dateOfDeath")}
                 </label>
                 <div className="relative group/date">
                   <input
                     type="date"
+                    name="dateOfDeath"
                     value={formData.dateOfDeath || ""}
                     onChange={(e) =>
-                      setFormData({ ...formData, dateOfDeath: e.target.value || null })
+                      handleFieldChange("dateOfDeath", e.target.value || null)
                     }
-                    className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors text-slate-700 min-h-[50px] appearance-none"
+                    className={`w-full px-4 py-3.5 bg-slate-50 border ${
+                      errors.dateOfDeath ? "border-rose-500 bg-rose-50" : "border-slate-200"
+                    } rounded-2xl text-sm font-medium focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors text-slate-700 min-h-[50px] appearance-none`}
                   />
                 </div>
+                {errors.dateOfDeath && (
+                  <p className="text-xs text-rose-500 mt-2 font-medium flex items-center gap-1">
+                    <X size={14} />
+                    {errors.dateOfDeath}
+                  </p>
+                )}
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4" data-error-field={errors.imageUrl ? "imageUrl" : undefined}>
               <label className="block text-xs font-black text-slate-400 uppercase tracking-widest text-center sm:text-start">
                 الصوره
               </label>
@@ -278,6 +340,9 @@ export default function WriterModal({ isOpen, onClose, writer }: WriterModalProp
                     )}
                 </div>
               </div>
+              {errors.imageUrl && (
+                <p className="text-xs text-rose-500 mt-2 font-medium">{errors.imageUrl}</p>
+              )}
             </div>
           </div>
 

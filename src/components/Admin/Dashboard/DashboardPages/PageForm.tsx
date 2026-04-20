@@ -4,6 +4,12 @@ import { usePage, useCreatePage, useUpdatePage, useFetchPages } from "@/hooks/us
 import type { CreatePageRequest } from "@/api/pages.api";
 import { useToast } from "@/components/Toast/ToastContainer";
 import {
+  extractApiErrorMessage,
+  focusFirstErrorField,
+  parseApiValidationErrors,
+  type ModalFieldErrors,
+} from "@/utils/apiFormErrors";
+import {
   ChevronLeft,
   Save,
   Loader2,
@@ -26,6 +32,22 @@ export default function PageForm() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  const serverFieldAliases = {
+    title: "title",
+    slug: "slug",
+    language: "language",
+    location: "location",
+    content: "content",
+    description: "description",
+    keywords: "keywords",
+    menuorder: "menuOrder",
+    parentmenulinkid: "parentMenuLinkId",
+    parentpageid: "parentPageId",
+    showbreadcrumb: "showBreadcrumb",
+    showonlytoregisteredusers: "showOnlyToRegisteredUsers",
+    showrightcolumn: "showRightColumn",
+    showtitle: "showTitle",
+  } as const;
 
   const [formData, setFormData] = useState<CreatePageRequest>({
     title: "",
@@ -43,7 +65,7 @@ export default function PageForm() {
     showRightColumn: true,
     showTitle: true,
   });
-  const [errors, setErrors] = useState<{ title?: string; content?: string; language?: string; location?: string }>({});
+  const [errors, setErrors] = useState<ModalFieldErrors>({});
   const [keywordInput, setKeywordInput] = useState("");
 
   const { data: pageData, isLoading: isLoadingPage } = usePage(id || "", isEditMode);
@@ -70,11 +92,22 @@ export default function PageForm() {
     }
   }, [pageData, isEditMode]);
 
+  useEffect(() => {
+    focusFirstErrorField(errors);
+  }, [errors]);
+
   const createMutation = useCreatePage();
   const updateMutation = useUpdatePage();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
+    setErrors((prev) => {
+      if (!prev[name]) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
@@ -100,7 +133,7 @@ export default function PageForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { title?: string; content?: string; language?: string; location?: string } = {};
+    const newErrors: ModalFieldErrors = {};
 
     if (!formData.title.trim()) newErrors.title = t("pages.validation.titleRequired");
     if (!formData.content.trim()) newErrors.content = t("pages.validation.contentRequired");
@@ -121,14 +154,14 @@ export default function PageForm() {
             navigate("/admin/pages");
           },
           onError: (error: any) => {
-            const errorData = error.response?.data;
-            let errorMessage = t("pages.updateError");
-            if (errorData?.title) errorMessage = errorData.title;
-            if (errorData?.errors) {
-              const errorDetails = Object.values(errorData.errors).flat().join("\n");
-              errorMessage += `\n\n${errorDetails}`;
+            const parsed = parseApiValidationErrors(error, serverFieldAliases);
+            if (Object.keys(parsed.fieldErrors).length > 0) {
+              setErrors(parsed.fieldErrors);
+              toast.error(parsed.messages[0] || t("pages.validation.fixErrors"));
+              return;
             }
-            toast.error(errorMessage);
+
+            toast.error(extractApiErrorMessage(error, t("pages.updateError")));
           },
         },
       );
@@ -139,14 +172,14 @@ export default function PageForm() {
           navigate("/admin/pages");
         },
         onError: (error: any) => {
-          const errorData = error.response?.data;
-          let errorMessage = t("pages.createError");
-          if (errorData?.title) errorMessage = errorData.title;
-          if (errorData?.errors) {
-            const errorDetails = Object.values(errorData.errors).flat().join("\n");
-            errorMessage += `\n\n${errorDetails}`;
+          const parsed = parseApiValidationErrors(error, serverFieldAliases);
+          if (Object.keys(parsed.fieldErrors).length > 0) {
+            setErrors(parsed.fieldErrors);
+            toast.error(parsed.messages[0] || t("pages.validation.fixErrors"));
+            return;
           }
-          toast.error(errorMessage);
+
+          toast.error(extractApiErrorMessage(error, t("pages.createError")));
         },
       });
     }
@@ -252,11 +285,16 @@ export default function PageForm() {
                         name="language"
                         value={formData.language}
                         onChange={handleChange}
-                        className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-colors appearance-none cursor-pointer"
+                        className={`w-full px-5 py-3 bg-slate-50 border rounded-2xl text-sm font-bold text-slate-700 focus:ring-4 transition-colors appearance-none cursor-pointer ${
+                          errors.language
+                            ? "border-rose-400 focus:ring-rose-500/10"
+                            : "border-slate-200 focus:ring-primary/10 focus:border-primary"
+                        }`}
                       >
                         <option value="English">{t("formLabels.english")}</option>
                         <option value="Arabic">{t("formLabels.arabic")}</option>
                       </select>
+                      {errors.language && <p className="text-rose-500 text-xs font-black uppercase tracking-tight mt-1 ml-1">{errors.language}</p>}
                     </div>
                   </div>
                 </div>
@@ -359,7 +397,9 @@ export default function PageForm() {
                       name="location"
                       value={formData.location}
                       onChange={handleChange}
-                      className="w-full px-5 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors cursor-pointer appearance-none"
+                      className={`w-full px-5 py-3.5 bg-white/5 border rounded-2xl text-xs font-black uppercase tracking-widest text-white focus:outline-none focus:ring-2 transition-colors cursor-pointer appearance-none ${
+                        errors.location ? "border-rose-300 focus:ring-rose-100/40" : "border-white/10 focus:ring-white/20"
+                      }`}
                     >
                       {locationOptions.map((option) => (
                         <option className="bg-slate-900" key={option.value} value={option.value}>
@@ -367,6 +407,7 @@ export default function PageForm() {
                         </option>
                       ))}
                     </select>
+                    {errors.location && <p className="text-rose-300 text-xs font-black uppercase tracking-tight mt-1 ml-1">{errors.location}</p>}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -378,8 +419,11 @@ export default function PageForm() {
                         value={formData.menuOrder}
                         onChange={handleChange}
                         min="1"
-                        className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-2xl text-xs font-black text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
+                        className={`w-full px-5 py-3 bg-white/5 border rounded-2xl text-xs font-black text-white focus:outline-none focus:ring-2 transition-colors ${
+                          errors.menuOrder ? "border-rose-300 focus:ring-rose-100/40" : "border-white/10 focus:ring-white/20"
+                        }`}
                       />
+                      {errors.menuOrder && <p className="text-rose-300 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{errors.menuOrder}</p>}
                     </div>
                     <div>
                       <label className="block text-xs font-black text-white/40 uppercase tracking-[0.2em] mb-2 ml-1">{t("pages.parentNode")}</label>
@@ -387,7 +431,9 @@ export default function PageForm() {
                         name="parentPageId"
                         value={formData.parentPageId || ""}
                         onChange={handleChange}
-                        className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-2xl text-xs font-bold text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors appearance-none cursor-pointer"
+                        className={`w-full px-5 py-3 bg-white/5 border rounded-2xl text-xs font-bold text-white focus:outline-none focus:ring-2 transition-colors appearance-none cursor-pointer ${
+                          errors.parentPageId ? "border-rose-300 focus:ring-rose-100/40" : "border-white/10 focus:ring-white/20"
+                        }`}
                       >
                         <option className="bg-slate-900" value="">
                           {t("pages.globalRoot")}
@@ -400,6 +446,7 @@ export default function PageForm() {
                             </option>
                           ))}
                       </select>
+                      {errors.parentPageId && <p className="text-rose-300 text-[10px] font-black uppercase tracking-tight mt-1 ml-1">{errors.parentPageId}</p>}
                     </div>
                   </div>
                 </div>
