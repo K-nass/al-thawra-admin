@@ -13,8 +13,6 @@ import {
   CheckCircle2,
   Clock,
   PenLine,
-  Trash2,
-  Pencil,
 } from "lucide-react";
 
 import { useFetchPosts } from "@/hooks/useFetchPosts";
@@ -22,6 +20,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { postsApi } from "@/api";
 import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/Toast/ToastContainer";
+import PostActionsDropdown from "@/components/Common/PostActionsDropdown";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
@@ -92,6 +91,16 @@ export default function Writings() {
     },
     onError: (error: any) => toast.error(error?.response?.data?.message || "فشل في حذف الكتابة"),
   });
+
+  const handleEditClick = (item: any) => {
+    const postType = item.postType?.toLowerCase() || "article";
+    navigate(`/admin/edit-post/${item.id}?type=${postType}`, {
+      state: {
+        slug: item.slug,
+        categorySlug: item.categorySlug
+      }
+    });
+  };
 
   const handleDeleteClick = (item: any) => {
     setConfirmDialog({
@@ -216,11 +225,11 @@ export default function Writings() {
                 <TableHeader>
                   <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-200">
                     <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">المقال</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الكاتب</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الحالة</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">التصنيف</TableHead>
-                    <TableHead className="text-[10px] font-black text-slate-400 uppercase tracking-widest">التاريخ</TableHead>
-                    <TableHead className="px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">إجراءات</TableHead>
+                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">الكاتب</TableHead>
+                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">الحالة</TableHead>
+                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">التصنيف</TableHead>
+                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">التاريخ</TableHead>
+                    <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -241,7 +250,7 @@ export default function Writings() {
                     filteredItems.map((item: any) => (
                       <TableRow key={item.id} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
                         {/* Article */}
-                        <TableCell className="px-8">
+                        <TableCell className="px-8 py-4">
                           <div className="flex items-center gap-4 py-2">
                             <div className="relative shrink-0">
                               <img
@@ -268,7 +277,7 @@ export default function Writings() {
                         </TableCell>
 
                         {/* Writer */}
-                        <TableCell>
+                        <TableCell className="px-4 py-4">
                           <div className="flex items-center gap-2.5">
                             <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
                               {item.authorImageUrl || item.writerImageUrl ? (
@@ -286,7 +295,7 @@ export default function Writings() {
                         </TableCell>
 
                         {/* Status */}
-                        <TableCell>
+                        <TableCell className="px-4 py-4">
                           {item.status === "Published" ? (
                             <div className="flex items-center gap-1.5">
                               <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
@@ -305,7 +314,7 @@ export default function Writings() {
                         </TableCell>
 
                         {/* Category */}
-                        <TableCell>
+                        <TableCell className="px-4 py-4">
                           <div className="flex items-center gap-2">
                             <div
                               className="w-2.5 h-2.5 rounded-full shadow-sm ring-1 ring-white"
@@ -321,7 +330,7 @@ export default function Writings() {
                         </TableCell>
 
                         {/* Date */}
-                        <TableCell>
+                        <TableCell className="px-4 py-4">
                           <div className="flex flex-col">
                             <span className="text-xs text-slate-900 font-bold tracking-tight">
                               {formatDate(item.createdAt)}
@@ -333,26 +342,12 @@ export default function Writings() {
                         </TableCell>
 
                         {/* Actions */}
-                        <TableCell className="px-8">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/admin/edit-post/${item.id}`)}
-                              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors border border-transparent hover:border-primary/20"
-                              title="تحرير"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteClick(item)}
-                              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100 disabled:opacity-50"
-                              title="حذف"
-                              disabled={deletePostMutation.isPending}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                        <TableCell className="px-8 py-4">
+                          <PostActionsDropdown
+                            postId={item.id}
+                            onEdit={(id) => handleEditClick(item)}
+                            onDelete={() => handleDeleteClick(item)}
+                          />
                         </TableCell>
                       </TableRow>
                     ))

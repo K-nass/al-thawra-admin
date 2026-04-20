@@ -230,9 +230,9 @@ export default function DashboardEditPost() {
 
   if (isLoadingPost) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-surface">
-        <Loader2 size={48} className="text-primary animate-spin mb-4" />
-        <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">{t("post.loadingFormData")}</p>
+      <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm animate-pulse py-32">
+        <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t("post.loadingFormData")}</p>
       </div>
     );
   }
@@ -251,14 +251,14 @@ export default function DashboardEditPost() {
             </button>
             <div>
               <FormHeader type={type} isEditMode={true} />
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded border border-primary/10 tracking-widest uppercase">
-                  ID: {postId?.slice(-6)}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Revision Mode
-                </span>
-              </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded border border-primary/10 tracking-widest uppercase">
+                    {t('post.id')}: {postId?.slice(-6)}
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    {t('post.revisionMode')}
+                  </span>
+                </div>
             </div>
           </div>
           

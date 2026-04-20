@@ -48,8 +48,8 @@ export function useFetchPosts(params: FetchPostsParams = {}) {
     // Only add parameters that have values (don't send empty strings)
     if (category && category !== "all") queryParams.append("CategorySlug", category);
     if (authorName) queryParams.append("AuthorName", authorName);
-    if (hasAuthor !== undefined) queryParams.append("HasAuthor", String(hasAuthor));
-    if (hasWriter !== undefined) queryParams.append("HasWriter", String(hasWriter));
+    if (hasAuthor !== undefined) queryParams.append("hasAuthor", String(hasAuthor));
+    if (hasWriter !== undefined) queryParams.append("hasWriter", String(hasWriter));
     if (status) queryParams.append("Status", status);
     
     // IMPORTANT: Only send boolean flags when they are TRUE
