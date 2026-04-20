@@ -172,15 +172,23 @@ export default function DashboardEditPost() {
         delete payload.optionalURL;
       }
 
-      // Cleanup response-only fields
-      const readOnlyFields = ['id', 'createdAt', 'updatedAt', 'createdBy', 'publishedAt', 'authorName', 'authorImage', 'ownerIsAuthor', 'categoryName', 'categorySlug', 'tags', 'likedByUsers', 'viewsCount', 'likesCount', 'isLikedByCurrentUser', 'postType', 'image', 'additionalImages'];
-      readOnlyFields.forEach(f => delete payload[f]);
+       // Cleanup response-only fields
+       const readOnlyFields = ['id', 'createdAt', 'updatedAt', 'createdBy', 'publishedAt', 'authorName', 'authorImage', 'ownerIsAuthor', 'categoryName', 'categorySlug', 'tags', 'likedByUsers', 'viewsCount', 'likesCount', 'isLikedByCurrentUser', 'postType', 'image', 'additionalImages'];
+       readOnlyFields.forEach(f => delete payload[f]);
 
-      if (type === "article" && payload.imageUrl === null) payload.imageUrl = "";
-      if (!payload.metaDescription) payload.metaDescription = "";
-      if (!payload.metaKeywords) payload.metaKeywords = "";
-      
-      payload.authorId = null; // System preference
+       if (type === "article" && payload.imageUrl === null) payload.imageUrl = "";
+       if (!payload.metaDescription) payload.metaDescription = "";
+       if (!payload.metaKeywords) payload.metaKeywords = "";
+
+       // Preserve authorId if it exists in the fetched post data, otherwise use current user
+       if (!payload.authorId && userProfile?.id) {
+         payload.authorId = userProfile.id;
+       }
+
+       // Remove authorId if it's explicitly null (no author set and no user profile)
+       if (payload.authorId === null || payload.authorId === undefined) {
+         delete payload.authorId;
+       }
 
       if (type === "video" && "imageUrl" in payload) payload.videoThumbnailUrl = payload.imageUrl || null;
       if (type === "audio" && "imageUrl" in payload) payload.thumbnailUrl = payload.imageUrl || null;

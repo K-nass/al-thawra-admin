@@ -204,6 +204,7 @@ export default function DashboardPosts({
         isBreaking: post.isBreaking ?? false,
         isRecommended: post.isRecommended ?? false,
         imageUrl: post.image || post.imageUrl || "",
+        authorId: post.authorId || null,
         [flag]: !post[flag],
       };
 
