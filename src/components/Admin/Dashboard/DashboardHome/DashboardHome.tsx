@@ -5,10 +5,10 @@ import { apiClient } from "@/api/client";
 import { postsApi } from "@/api";
 import LatestUsersSection from "./LatestUsersSection/LatestUsersSection";
 import { useTranslation } from "react-i18next";
-import { 
-  FileText, 
-  MessageSquare, 
-  Clock, 
+import {
+  FileText,
+  MessageSquare,
+  Clock,
   Calendar,
   LayoutDashboard
 } from "lucide-react";
@@ -22,11 +22,13 @@ export interface CommentInterface {
 
 export interface MessageInterface {
   id: string;
-  userId: string | null;
-  username: string;
+  userId?: string | null;
+  username?: string;
+  name?: string;
   email: string;
   message: string;
-  date: string;
+  date?: string;
+  createdDate?: string;
 }
 
 export default function DashboardHome() {
@@ -37,10 +39,10 @@ export default function DashboardHome() {
     queryFn: () => apiClient.get("/contact-messages").then(res => res.data),
   });
 
-  const { data: contactMessagesData } = useQuery({
-    queryKey: ["contactMessagesCount"],
-    queryFn: () => apiClient.get("/contact-messages").then(res => res.data),
-  });
+  // const { data: contactMessagesData } = useQuery({
+  //   queryKey: ["contactMessagesCount"],
+  //   queryFn: () => apiClient.get("/contact-messages").then(res => res.data),
+  // });
 
   const { data: postsData } = useQuery({
     queryKey: ["postsCount"],
@@ -48,7 +50,7 @@ export default function DashboardHome() {
   });
 
   const postsCount = postsData?.data?.totalCount || 0;
-  const contactMessagesCount = contactMessagesData?.totalCount || 0;
+  const contactMessagesCount = latestContactMessages?.totalCount || 0;
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-surface">
@@ -66,28 +68,28 @@ export default function DashboardHome() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatsCard 
-            count={postsCount} 
-            label={t('dashboard.stats.posts')} 
+          <StatsCard
+            count={postsCount}
+            label={t('dashboard.stats.posts')}
             bgColor="bg-emerald-500"
             icon={FileText}
             trend={{ value: "12%", isPositive: true }}
           />
-          <StatsCard 
-            count={contactMessagesCount} 
-            label={t('dashboard.stats.contactMessages')} 
+          <StatsCard
+            count={contactMessagesCount}
+            label={t('dashboard.stats.contactMessages')}
             bgColor="bg-rose-500"
             icon={MessageSquare}
           />
-          <StatsCard 
-            count={0} 
-            label={t('dashboard.stats.drafts')} 
+          <StatsCard
+            count={0}
+            label={t('dashboard.stats.drafts')}
             bgColor="bg-indigo-500"
             icon={Clock}
           />
-          <StatsCard 
-            count={0} 
-            label={t('dashboard.stats.scheduledPosts')} 
+          <StatsCard
+            count={0}
+            label={t('dashboard.stats.scheduledPosts')}
             bgColor="bg-amber-500"
             icon={Calendar}
           />

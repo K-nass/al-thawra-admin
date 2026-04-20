@@ -8,7 +8,19 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import Loader from "./components/Common/Loader";
 
-const query = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 10,
+      retry: 3,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 3,
+    },
+  },
+});
 
 function AppContent() {
   const { isLoading } = useAuthRefresh();
@@ -26,7 +38,7 @@ function AppContent() {
   }
 
   return (
-    <QueryClientProvider client={query}>
+    <QueryClientProvider client={queryClient}>
       <RouterProvider router={routes}></RouterProvider>
     </QueryClientProvider>
   );
