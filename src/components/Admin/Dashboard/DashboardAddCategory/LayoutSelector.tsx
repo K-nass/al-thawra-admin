@@ -1,12 +1,12 @@
 import { Check } from "lucide-react";
-import Layout1Preview from "./LayoutPreviews/Layout1Preview";
-import Layout2Preview from "./LayoutPreviews/Layout2Preview";
-import Layout3Preview from "./LayoutPreviews/Layout3Preview";
-import Layout4Preview from "./LayoutPreviews/Layout4Preview";
-import Layout6Preview from "./LayoutPreviews/Layout6Preview";
-import Layout7Preview from "./LayoutPreviews/Layout7Preview";
-import Layout8Preview from "./LayoutPreviews/Layout8Preview";
-import Layout11Preview from "./LayoutPreviews/Layout11Preview";
+import BalancedColumnsLayout from "./LayoutPreviews/BalancedColumnsLayout";
+import DualFeaturedLayout from "./LayoutPreviews/DualFeaturedLayout";
+import DualSwiperLayout from "./LayoutPreviews/DualSwiperLayout";
+import FeaturedWithRowLayout from "./LayoutPreviews/FeaturedWithRowLayout";
+import HeroSliderLayout from "./LayoutPreviews/HeroSliderLayout";
+import InvertedSplitLayout from "./LayoutPreviews/InvertedSplitLayout";
+import SplitHeroLayout from "./LayoutPreviews/SplitHeroLayout";
+import TripleColumnLayout from "./LayoutPreviews/TripleColumnLayout";
 
 interface LayoutOption {
   id: string;
@@ -15,14 +15,14 @@ interface LayoutOption {
 }
 
 const AVAILABLE_LAYOUTS: LayoutOption[] = [
-  { id: "Layout1", name: "Layout 1", component: Layout1Preview },
-  { id: "Layout2", name: "Layout 2", component: Layout2Preview },
-  { id: "Layout3", name: "Layout 3", component: Layout3Preview },
-  { id: "Layout4", name: "Layout 4", component: Layout4Preview },
-  { id: "Layout6", name: "Layout 6", component: Layout6Preview },
-  { id: "Layout7", name: "Layout 7", component: Layout7Preview },
-  { id: "Layout8", name: "Layout 8", component: Layout8Preview },
-  { id: "Layout11", name: "Layout 11", component: Layout11Preview },
+  { id: "BalancedColumnsLayout", name: "Balanced Columns", component: BalancedColumnsLayout },
+  { id: "DualFeaturedLayout", name: "Dual Featured", component: DualFeaturedLayout },
+  { id: "DualSwiperLayout", name: "Dual Swiper", component: DualSwiperLayout },
+  { id: "FeaturedWithRowLayout", name: "Featured With Row", component: FeaturedWithRowLayout },
+  { id: "HeroSliderLayout", name: "Hero Slider", component: HeroSliderLayout },
+  { id: "InvertedSplitLayout", name: "Inverted Split", component: InvertedSplitLayout },
+  { id: "SplitHeroLayout", name: "Split Hero", component: SplitHeroLayout },
+  { id: "TripleColumnLayout", name: "Triple Column", component: TripleColumnLayout },
 ];
 
 interface LayoutSelectorProps {
