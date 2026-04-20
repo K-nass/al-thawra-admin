@@ -12,7 +12,7 @@ import { Eye , EyeOff } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [formData, setFormData] = useState<LoginRequest>({
     email: '',
     password: '',
@@ -197,7 +197,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-700"
+                  className={`absolute ${language === 'en' ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-700`}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>

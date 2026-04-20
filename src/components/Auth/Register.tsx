@@ -10,7 +10,7 @@ import { Eye, EyeOff } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t , language} = useLanguage();
   const [formData, setFormData] = useState<RegisterRequest>({
     userName: '',
     email: '',
@@ -129,7 +129,7 @@ export default function Register() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img src="/icon.png" alt="Logo" className="w-20 h-20 rounded-lg shadow-lg" />
+            <img src="/icon.jpg" alt="Logo" className="w-20 h-20 rounded-lg shadow-lg" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">{t('app.name')}</h1>
           <p className="text-indigo-100">{t('auth.register')}</p>
@@ -225,7 +225,7 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-700"
+                  className={`absolute ${language === 'en' ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-700`}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -260,7 +260,7 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-700"
+                  className={`absolute ${language === 'en' ? 'right-4' : 'left-4'} top-1/2 transform -translate-y-1/2 text-indigo-600 hover:text-indigo-700`}
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
