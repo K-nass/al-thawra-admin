@@ -15,14 +15,14 @@ interface LayoutOption {
 }
 
 const AVAILABLE_LAYOUTS: LayoutOption[] = [
-  { id: "BalancedColumnsLayout", name: "Balanced Columns", component: BalancedColumnsLayout },
-  { id: "DualFeaturedLayout", name: "Dual Featured", component: DualFeaturedLayout },
-  { id: "DualSwiperLayout", name: "Dual Swiper", component: DualSwiperLayout },
-  { id: "FeaturedWithRowLayout", name: "Featured With Row", component: FeaturedWithRowLayout },
-  { id: "HeroSliderLayout", name: "Hero Slider", component: HeroSliderLayout },
-  { id: "InvertedSplitLayout", name: "Inverted Split", component: InvertedSplitLayout },
-  { id: "SplitHeroLayout", name: "Split Hero", component: SplitHeroLayout },
-  { id: "TripleColumnLayout", name: "Triple Column", component: TripleColumnLayout },
+  { id: "BalancedColumns", name: "Balanced Columns", component: BalancedColumnsLayout },
+  { id: "DualFeatured", name: "Dual Featured", component: DualFeaturedLayout },
+  { id: "DualSwiper", name: "Dual Swiper", component: DualSwiperLayout },
+  { id: "FeaturedWithRow", name: "Featured With Row", component: FeaturedWithRowLayout },
+  { id: "HeroSlider", name: "Hero Slider", component: HeroSliderLayout },
+  { id: "InvertedSplit", name: "Inverted Split", component: InvertedSplitLayout },
+  { id: "SplitHero", name: "Split Hero", component: SplitHeroLayout },
+  { id: "TripleColumn", name: "Triple Column", component: TripleColumnLayout },
 ];
 
 interface LayoutSelectorProps {

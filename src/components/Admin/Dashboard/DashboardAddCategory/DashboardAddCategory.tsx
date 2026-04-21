@@ -60,11 +60,22 @@ export default function DashboardAddCategory() {
     parentcategoryid: "parentCategoryId",
   } as const;
 
+  const VALID_LAYOUTS = [
+    "BalancedColumns",
+    "DualFeatured",
+    "DualSwiper",
+    "FeaturedWithRow",
+    "HeroSlider",
+    "InvertedSplit",
+    "SplitHero",
+    "TripleColumn",
+  ];
+
   const [formData, setFormData] = useState<CategoryFormData>({
     name: "",
     slug: null,
     language: "English",
-    layout: "Layout1",
+    layout: "BalancedColumns",
     description: "",
     colorHex: "#10b981",
     order: 1,
@@ -85,12 +96,18 @@ export default function DashboardAddCategory() {
   // Populate form when editing
   useEffect(() => {
     if (categoryData && isEditMode) {
+      // Resolve the stored layout to a known LayoutSelector ID; fall back to
+      // the first valid layout if the stored value is stale / unrecognised.
+      const resolvedLayout = VALID_LAYOUTS.includes(categoryData.layout)
+        ? categoryData.layout
+        : "BalancedColumns";
+
       setFormData({
         categoryId: categoryData.id,
         name: categoryData.name,
         slug: categoryData.slug,
         language: categoryData.language as "English" | "Arabic",
-        layout: categoryData.layout || "Layout1",
+        layout: resolvedLayout,
         description: categoryData.description,
         colorHex: categoryData.colorHex || "#10b981",
         order: categoryData.order,
