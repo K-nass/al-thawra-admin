@@ -18,15 +18,27 @@ import type {
 import { postConfig } from "../DashboardAddPost/DashboardForm/usePostReducer/postConfig";
 import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
-import Loader from "@/components/Common/Loader";
 import { useToast } from "@/components/Toast/ToastContainer";
-import { ChevronLeft, Layout, Settings, Loader2, Sparkles, Wand2 } from "lucide-react";
+import { ChevronLeft, Layout, Settings, Loader2, Sparkles } from "lucide-react";
 
 interface TagResponse {
   data: {
     items: TagInterface[];
   };
 }
+
+// Map API response field names → reducer state field names.
+// The API returns isSlider/isFeatured/isBreaking/isRecommended but the
+// reducer state uses addToSlider/addToFeatured/addToBreaking/addToRecommended.
+const API_TO_STATE_MAP: Record<string, string> = {
+  isSlider:      "addToSlider",
+  isFeatured:    "addToFeatured",
+  isBreaking:    "addToBreaking",
+  isRecommended: "addToRecommended",
+  isUrgent:      "addToUrgent",
+  // The API returns the main image as "image" but the form state uses "imageUrl"
+  image:         "imageUrl",
+};
 
 export default function DashboardEditPost() {
   const { t } = useTranslation();
@@ -40,6 +52,15 @@ export default function DashboardEditPost() {
   const token = getAuthToken();
   const [isLoadingPost, setIsLoadingPost] = useState(true);
   const [activeTab, setActiveTab] = useState<'main' | 'advanced'>('main');
+
+  const dispatchField = (key: string, value: unknown) => {
+    const stateKey = API_TO_STATE_MAP[key] ?? key;
+    dispatch({
+      type: "set-field",
+      field: stateKey,
+      payload: value as string | boolean | string[] | object[] | undefined,
+    });
+  };
 
   useEffect(() => {
     if (!type) {
@@ -62,22 +83,30 @@ export default function DashboardEditPost() {
       try {
         setIsLoadingPost(true);
 
-        // Get categorySlug and slug from location state
-        const { categorySlug, slug } = location.state || {};
+        const { categorySlug, slug, post: statePost } = location.state || {};
 
+        // ── Step 1: Seed flags immediately from location.state.post ──────────
+        // When navigating from the posts table, the full item (including isSlider,
+        // isFeatured, isBreaking, isRecommended) is already in location.state.post.
+        // Pre-populate the form now so the user sees correct values even before
+        // the async fetch resolves, and as a fallback if the API omits these fields.
+        if (statePost) {
+          Object.entries(statePost as Record<string, unknown>).forEach(([key, value]) => {
+            dispatchField(key, value);
+          });
+        }
+
+        // ── Step 2: Fetch full post data from the API ────────────────────────
         let postData;
-
-        // If we have categorySlug and slug, use the slug-based API
         if (categorySlug && slug && type) {
           postData = await postsApi.getPostBySlug(categorySlug, slug, type);
         } else {
-          // Fallback to ID-based API
           postData = await postsApi.getById(postId);
         }
 
-        // Populate form with existing data
-        Object.entries(postData).forEach(([key, value]) => {
-          dispatch({ type: "set-field", field: key, payload: value as string | boolean | string[] | object[] | undefined });
+        // ── Step 3: Populate form – overwrite all fields from the API response ──
+        Object.entries(postData as Record<string, unknown>).forEach(([key, value]) => {
+          dispatchField(key, value);
         });
       } catch (error) {
         console.error("Failed to fetch post:", error);
@@ -146,7 +175,7 @@ export default function DashboardEditPost() {
       else if (type === 'video') payload.videoId = postId;
       else if (type === 'audio') payload.audioId = postId;
 
-      // Map frontend field names to API field names
+      // Map frontend field names → API field names
       if (payload.addToBreaking !== undefined) {
         payload.isBreaking = payload.addToBreaking;
         delete payload.addToBreaking;
@@ -163,7 +192,7 @@ export default function DashboardEditPost() {
         payload.isRecommended = payload.addToRecommended;
         delete payload.addToRecommended;
       }
-      
+
       if (payload.summary !== undefined) payload.description = payload.summary;
       delete payload.summary;
 
@@ -172,23 +201,22 @@ export default function DashboardEditPost() {
         delete payload.optionalURL;
       }
 
-       // Cleanup response-only fields
-       const readOnlyFields = ['id', 'createdAt', 'updatedAt', 'createdBy', 'publishedAt', 'authorName', 'authorImage', 'ownerIsAuthor', 'categoryName', 'categorySlug', 'tags', 'likedByUsers', 'viewsCount', 'likesCount', 'isLikedByCurrentUser', 'postType', 'image', 'additionalImages'];
-       readOnlyFields.forEach(f => delete payload[f]);
+      // Cleanup response-only fields
+      const readOnlyFields = [
+        'id', 'createdAt', 'updatedAt', 'createdBy', 'publishedAt',
+        'authorName', 'authorImage', 'ownerIsAuthor', 'categoryName',
+        'categorySlug', 'tags', 'likedByUsers', 'viewsCount', 'likesCount',
+        'isLikedByCurrentUser', 'postType', 'image', 'additionalImages',
+      ];
+      readOnlyFields.forEach(f => delete payload[f]);
 
-       if (type === "article" && payload.imageUrl === null) payload.imageUrl = "";
-       if (!payload.metaDescription) payload.metaDescription = "";
-       if (!payload.metaKeywords) payload.metaKeywords = "";
+      if (type === "article" && payload.imageUrl === null) payload.imageUrl = "";
+      if (!payload.metaDescription) payload.metaDescription = "";
+      if (!payload.metaKeywords) payload.metaKeywords = "";
 
-       // Preserve authorId if it exists in the fetched post data, otherwise use current user
-       if (!payload.authorId && userProfile?.id) {
-         payload.authorId = userProfile.id;
-       }
-
-       // Remove authorId if it's explicitly null (no author set and no user profile)
-       if (payload.authorId === null || payload.authorId === undefined) {
-         delete payload.authorId;
-       }
+      if (payload.authorId === null || payload.authorId === undefined) {
+        delete payload.authorId;
+      }
 
       if (type === "video" && "imageUrl" in payload) payload.videoThumbnailUrl = payload.imageUrl || null;
       if (type === "audio" && "imageUrl" in payload) payload.thumbnailUrl = payload.imageUrl || null;
@@ -251,7 +279,7 @@ export default function DashboardEditPost() {
       <div className="p-4 sm:p-6 border-b border-slate-200 bg-white sticky top-0 z-20 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => navigate(-1)}
               className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all border border-slate-200/50"
             >
@@ -259,26 +287,26 @@ export default function DashboardEditPost() {
             </button>
             <div>
               <FormHeader type={type} isEditMode={true} />
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded border border-primary/10 tracking-widest uppercase">
-                    {t('post.id')}: {postId?.slice(-6)}
-                  </span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    {t('post.revisionMode')}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded border border-primary/10 tracking-widest uppercase">
+                  {t('post.id')}: {postId?.slice(-6)}
+                </span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  {t('post.revisionMode')}
+                </span>
+              </div>
             </div>
           </div>
-          
+
           {/* Tab Switcher */}
           {type !== "reel" && (
             <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200/50">
               <button
                 type="button"
                 onClick={() => setActiveTab('main')}
-            className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${
-                  activeTab === 'main' 
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+                className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${
+                  activeTab === 'main'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -289,8 +317,8 @@ export default function DashboardEditPost() {
                 type="button"
                 onClick={() => setActiveTab('advanced')}
                 className={`flex items-center gap-2.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-colors ${
-                  activeTab === 'advanced' 
-                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50' 
+                  activeTab === 'advanced'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
@@ -321,11 +349,11 @@ export default function DashboardEditPost() {
                   fieldErrors={fieldErrors}
                 />
                 <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200">
-                   <ContentEditor
-                     state={state as ArticleInitialStateInterface}
-                     handleChange={handleChange}
-                     errors={fieldErrors}
-                   />
+                  <ContentEditor
+                    state={state as ArticleInitialStateInterface}
+                    handleChange={handleChange}
+                    errors={fieldErrors}
+                  />
                 </div>
               </div>
 
@@ -354,26 +382,26 @@ export default function DashboardEditPost() {
                 />
 
                 <div className="bg-white/50 backdrop-blur-sm p-6 rounded-[2rem] border border-slate-200 border-dashed text-center">
-                   <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Sparkles className="text-primary w-6 h-6" />
-                   </div>
-                   <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">{t("post.globalSync")}</h4>
-                   <p className="text-[10px] text-slate-500 font-medium mt-1 leading-relaxed">
-                     {t("post.globalSyncDescription")}
-                   </p>
+                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Sparkles className="text-primary w-6 h-6" />
+                  </div>
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest leading-none">{t("post.globalSync")}</h4>
+                  <p className="text-[10px] text-slate-500 font-medium mt-1 leading-relaxed">
+                    {t("post.globalSyncDescription")}
+                  </p>
                 </div>
               </div>
             </div>
           ) : (
             <div className="animate-in fade-in duration-500">
-               <AdvancedOptionsTab
-                 type={type}
-                 state={state as ArticleInitialStateInterface}
-                 handleChange={handleChange}
-                 tags={tags?.data.items ?? []}
-                 isLoading={isLoadingTags}
-                 fieldErrors={fieldErrors}
-               />
+              <AdvancedOptionsTab
+                type={type}
+                state={state as ArticleInitialStateInterface}
+                handleChange={handleChange}
+                tags={tags?.data.items ?? []}
+                isLoading={isLoadingTags}
+                fieldErrors={fieldErrors}
+              />
             </div>
           )}
         </form>

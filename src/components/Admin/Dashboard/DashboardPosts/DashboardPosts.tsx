@@ -627,6 +627,10 @@ export default function DashboardPosts({
                           <TableCell className="px-6 text-right">
                             <PostActionsDropdown
                               postId={item.id}
+                              isSlider={!!item.isSlider}
+                              isFeatured={!!item.isFeatured}
+                              isBreaking={!!item.isBreaking}
+                              isRecommended={!!item.isRecommended}
                               onEdit={(id) =>
                                 onEditHandler(id, item, isPages, navigate)
                               }
@@ -656,6 +660,7 @@ export default function DashboardPosts({
                               }
                               onDelete={handleDeleteClick}
                             />
+
                           </TableCell>
                         </TableRow>
                       ))}
@@ -757,6 +762,10 @@ export default function DashboardPosts({
                       </div>
                       <PostActionsDropdown
                         postId={item.id}
+                        isSlider={!!item.isSlider}
+                        isFeatured={!!item.isFeatured}
+                        isBreaking={!!item.isBreaking}
+                        isRecommended={!!item.isRecommended}
                         onEdit={(id) =>
                           onEditHandler(id, item, isPages, navigate)
                         }
@@ -786,6 +795,7 @@ export default function DashboardPosts({
                         }
                         onDelete={handleDeleteClick}
                       />
+
                     </div>
                   </div>
                 ),

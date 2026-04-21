@@ -1,11 +1,17 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Pencil, Plus, Trash2 as Trash, MoreVertical } from 'lucide-react';
+import { ChevronDown, Pencil, Plus, Minus, Trash2 as Trash, MoreVertical } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface PostActionsDropdownProps {
   postId: string;
+  /** Current flag states — drives "Add to" vs "Remove from" labels */
+  isSlider?: boolean;
+  isFeatured?: boolean;
+  isBreaking?: boolean;
+  isRecommended?: boolean;
   onEdit?: (postId: string) => void;
+  /** Called for both add AND remove — the mutation toggles the current value */
   onAddToSlider?: (postId: string) => void;
   onAddToFeatured?: (postId: string) => void;
   onAddToBreaking?: (postId: string) => void;
@@ -15,6 +21,10 @@ interface PostActionsDropdownProps {
 
 export default function PostActionsDropdown({
   postId,
+  isSlider = false,
+  isFeatured = false,
+  isBreaking = false,
+  isRecommended = false,
   onEdit,
   onAddToSlider,
   onAddToFeatured,
@@ -22,7 +32,7 @@ export default function PostActionsDropdown({
   onAddToRecommended,
   onDelete,
 }: PostActionsDropdownProps) {
-  const MENU_WIDTH_PX = 240;
+  const MENU_WIDTH_PX = 260;
   const VIEWPORT_PADDING_PX = 8;
   const GAP_PX = 8;
   const { t } = useTranslation();
@@ -57,7 +67,7 @@ export default function PostActionsDropdown({
     );
 
     const measuredHeight = menuRef.current?.offsetHeight ?? 0;
-    const estimatedHeight = measuredHeight || 280;
+    const estimatedHeight = measuredHeight || 300;
 
     let top = rect.bottom + GAP_PX;
     if (top + estimatedHeight > window.innerHeight - VIEWPORT_PADDING_PX) {
@@ -73,25 +83,22 @@ export default function PostActionsDropdown({
       left,
       width,
       zIndex: 9999,
-      maxHeight: 'min(70vh, 420px)',
+      maxHeight: 'min(70vh, 440px)',
       overflowY: 'auto',
     });
   };
 
   useEffect(() => {
     if (!isOpen) return;
-
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       if (buttonRef.current?.contains(target)) return;
       if (menuRef.current?.contains(target)) return;
       setIsOpen(false);
     };
-
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsOpen(false);
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscape);
     return () => {
@@ -107,7 +114,6 @@ export default function PostActionsDropdown({
     window.addEventListener('scroll', onScrollOrResize, true);
     const raf = requestAnimationFrame(() => updateMenuPosition());
     const timeout = window.setTimeout(() => updateMenuPosition(), 0);
-
     return () => {
       window.removeEventListener('resize', onScrollOrResize);
       window.removeEventListener('scroll', onScrollOrResize, true);
@@ -117,15 +123,48 @@ export default function PostActionsDropdown({
   }, [isOpen]);
 
   const handleAction = (callback?: (id: string) => void) => {
-    if (callback) {
-      callback(postId);
-    }
+    if (callback) callback(postId);
     setIsOpen(false);
   };
 
+  /**
+   * A toggle row for a boolean flag.
+   * - When `active = false`: "Add to …" with green Plus icon
+   * - When `active = true`:  "Remove from …" with red Minus icon
+   * Clicking always calls the same callback (the mutation toggles !current value).
+   */
+  const FlagToggleItem = ({
+    active,
+    addLabel,
+    removeLabel,
+    onClick,
+  }: {
+    active: boolean;
+    addLabel: string;
+    removeLabel: string;
+    onClick?: (id: string) => void;
+  }) => (
+    <button
+      type="button"
+      onClick={() => handleAction(onClick)}
+      className={`w-full px-4 py-2.5 text-start text-sm flex items-center justify-start gap-3 transition-colors duration-200 ${
+        active
+          ? 'text-rose-600 hover:bg-rose-50'
+          : 'text-slate-700 hover:bg-slate-50'
+      }`}
+    >
+      {active ? (
+        <Minus className="w-4 h-4 text-rose-500 shrink-0" />
+      ) : (
+        <Plus className="w-4 h-4 text-slate-400 shrink-0" />
+      )}
+      <span className="font-medium">{active ? removeLabel : addLabel}</span>
+    </button>
+  );
+
   return (
     <div className="relative inline-block">
-      {/* Dropdown Button */}
+      {/* Trigger */}
       <button
         ref={buttonRef}
         type="button"
@@ -141,78 +180,73 @@ export default function PostActionsDropdown({
         />
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Menu */}
       {isOpen && typeof document !== 'undefined'
         ? createPortal(
-        <div ref={menuRef} style={menuStyle} className="bg-white rounded-xl shadow-lg ring-1 ring-slate-200 py-1.5" role="menu">
-          {/* Edit */}
-          <button
-            type="button"
-            onClick={() => handleAction(onEdit)}
-            className="w-full px-4 py-2.5 text-start text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-start gap-3 transition-colors duration-200"
+          <div
+            ref={menuRef}
+            style={menuStyle}
+            className="bg-white rounded-xl shadow-lg ring-1 ring-slate-200 py-1.5"
+            role="menu"
           >
-            <Pencil className="text-slate-600 w-4 h-4" />
-            <span>{t('common.edit')}</span>
-          </button>
+            {/* Edit */}
+            <button
+              type="button"
+              onClick={() => handleAction(onEdit)}
+              className="w-full px-4 py-2.5 text-start text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-start gap-3 transition-colors duration-200"
+            >
+              <Pencil className="text-slate-500 w-4 h-4" />
+              <span>{t('common.edit')}</span>
+            </button>
 
-          {/* Divider */}
-          <div className="border-t border-slate-200 my-1"></div>
+            <div className="border-t border-slate-100 my-1" />
 
-          {/* Add to Slider */}
-          <button
-            type="button"
-            onClick={() => handleAction(onAddToSlider)}
-            className="w-full px-4 py-2.5 text-start text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-start gap-3 transition-colors duration-200"
-          >
-            <Plus className="text-slate-600 w-4 h-4" />
-            <span>{t('formLabels.addToSlider')}</span>
-          </button>
+            {/* Slider */}
+            <FlagToggleItem
+              active={isSlider}
+              addLabel={t('formLabels.addToSlider')}
+              removeLabel={t('formLabels.removeFromSlider') || 'Remove from Slider'}
+              onClick={onAddToSlider}
+            />
 
-          {/* Add to Featured */}
-          <button
-            type="button"
-            onClick={() => handleAction(onAddToFeatured)}
-            className="w-full px-4 py-2.5 text-start text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-start gap-3 transition-colors duration-200"
-          >
-            <Plus className="text-slate-600 w-4 h-4" />
-            <span>{t('formLabels.addToFeatured')}</span>
-          </button>
+            {/* Featured */}
+            <FlagToggleItem
+              active={isFeatured}
+              addLabel={t('formLabels.addToFeatured')}
+              removeLabel={t('formLabels.removeFromFeatured') || 'Remove from Featured'}
+              onClick={onAddToFeatured}
+            />
 
-          {/* Add to Breaking */}
-          <button
-            type="button"
-            onClick={() => handleAction(onAddToBreaking)}
-            className="w-full px-4 py-2.5 text-start text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-start gap-3 transition-colors duration-200"
-          >
-            <Plus className="text-slate-600 w-4 h-4" />
-            <span>{t('formLabels.addToBreaking')}</span>
-          </button>
+            {/* Breaking */}
+            <FlagToggleItem
+              active={isBreaking}
+              addLabel={t('formLabels.addToBreaking')}
+              removeLabel={t('formLabels.removeFromBreaking') || 'Remove from Breaking'}
+              onClick={onAddToBreaking}
+            />
 
-          {/* Add to Recommended */}
-          <button
-            type="button"
-            onClick={() => handleAction(onAddToRecommended)}
-            className="w-full px-4 py-2.5 text-start text-sm text-slate-700 hover:bg-slate-50 flex items-center justify-start gap-3 transition-colors duration-200"
-          >
-            <Plus className="text-slate-600 w-4 h-4" />
-            <span>{t('formLabels.addToRecommended')}</span>
-          </button>
+            {/* Recommended */}
+            <FlagToggleItem
+              active={isRecommended}
+              addLabel={t('formLabels.addToRecommended')}
+              removeLabel={t('formLabels.removeFromRecommended') || 'Remove from Recommended'}
+              onClick={onAddToRecommended}
+            />
 
-          {/* Divider */}
-          <div className="border-t border-slate-200 my-1"></div>
+            <div className="border-t border-slate-100 my-1" />
 
-          {/* Delete */}
-          <button
-            type="button"
-            onClick={() => handleAction(onDelete)}
-            className="w-full px-4 py-2.5 text-start text-sm text-red-600 hover:bg-red-50 flex items-center justify-start gap-3 transition-colors duration-200"
-          >
-            <Trash className="text-red-600 w-4 h-4" />
-            <span>{t('common.delete')}</span>
-          </button>
-        </div>,
-        document.body
-      )
+            {/* Delete */}
+            <button
+              type="button"
+              onClick={() => handleAction(onDelete)}
+              className="w-full px-4 py-2.5 text-start text-sm text-red-600 hover:bg-red-50 flex items-center justify-start gap-3 transition-colors duration-200"
+            >
+              <Trash className="text-red-500 w-4 h-4" />
+              <span>{t('common.delete')}</span>
+            </button>
+          </div>,
+          document.body
+        )
         : null}
     </div>
   );

@@ -99,7 +99,9 @@ apiClient.interceptors.request.use(
     }
 
     // Always send current UI language with every API request.
-    config.headers.language = getCurrentLanguage();
+    const lang = getCurrentLanguage();
+    config.headers['Accept-Language'] = lang;
+    config.headers['X-Language'] = lang;
 
     return config;
   },
