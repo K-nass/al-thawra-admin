@@ -21,6 +21,7 @@ import { postsApi } from "@/api";
 import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/Toast/ToastContainer";
 import PostActionsDropdown from "@/components/Common/PostActionsDropdown";
+import ArticleImageFallback from "@/components/Common/ArticleImageFallback";
 import {
   Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
 } from "@/components/ui/table";
@@ -298,12 +299,20 @@ export default function Writings() {
                         <TableCell className="px-8 py-4">
                           <div className="flex items-center gap-4 py-2">
                             <div className="relative shrink-0">
-                              <img
-                                src={item.image || "/placeholder-post.jpg"}
-                                className="w-14 h-14 rounded-2xl object-cover bg-slate-100 border border-slate-100 shadow-sm"
-                                alt=""
-                                onError={(e) => (e.currentTarget.src = "https://placehold.co/400x400/f8fafc/64748b?text=مقال")}
-                              />
+                              {item.image ? (
+                                <img
+                                  src={item.image}
+                                  className="w-14 h-14 rounded-2xl object-cover bg-slate-100 border border-slate-100 shadow-sm"
+                                  alt=""
+                                  onError={(e) => (e.currentTarget.src = "https://placehold.co/400x400/f8fafc/64748b?text=مقال")}
+                                />
+                              ) : (
+                                <ArticleImageFallback
+                                  writerImageUrl={item.authorImage || item.authorImageUrl || item.writerImageUrl}
+                                  writerName={item.authorName || item.writerName}
+                                  className="w-14 h-14 rounded-2xl border border-slate-100 shadow-sm"
+                                />
+                              )}
                               <div className="absolute -top-1 -end-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
                                 <FileText size={10} className="text-primary" />
                               </div>

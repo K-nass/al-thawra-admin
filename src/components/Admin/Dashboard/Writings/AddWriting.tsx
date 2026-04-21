@@ -16,12 +16,14 @@ import type { TagInterface } from "../DashboardAddPost/DashboardForm/PostDetails
 import PostDetailsForm from "../DashboardAddPost/DashboardForm/PostDetailsForm";
 import ContentEditor from "../DashboardAddPost/DashboardForm/ContentEditor";
 import AdvancedOptionsTab from "../DashboardAddPost/DashboardForm/AdvancedOptionsTab";
-import ImageUpload from "../DashboardAddPost/DashboardForm/ImageUpload";
 import PublishSection from "../DashboardAddPost/DashboardForm/PublishSection";
 import ArticlePreviewModal from "../DashboardAddPost/Preview/ArticlePreviewModal";
 import ArticlePreview from "../DashboardAddPost/Preview/ArticlePreview";
 import { useDebouncedValue } from "../DashboardAddPost/Preview/useDebouncedValue";
 import WriterSelect from "./WriterSelect";
+import type { Writer } from "@/api/writers.api";
+import ArticleImageFallback from "@/components/Common/ArticleImageFallback";
+
 import {
   clearFieldErrorByName,
   getValidationToastMessage,
@@ -42,6 +44,7 @@ export default function AddWriting() {
 
   const [state, dispatch] = usePostReducer("article");
   const [writerId, setWriterId] = useState<string | null>(null);
+  const [selectedWriter, setSelectedWriter] = useState<Writer | null>(null);
   const [activeTab, setActiveTab] = useState<"main" | "advanced">("main");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
@@ -374,15 +377,17 @@ export default function AddWriting() {
                     setWriterId(value);
                     setFieldErrors((prev) => clearFieldErrorByName(prev, "writerId"));
                   }}
+                  onSelectWriter={setSelectedWriter}
                   error={fieldErrors.writerId}
                 />
               </div>
 
-              <ImageUpload
-                state={state}
-                handleChange={handleChange}
-                type="article"
-                fieldErrors={fieldErrors}
+              {/* Writer image preview — replaces ImageUpload for writings */}
+              <ArticleImageFallback
+                writerImageUrl={selectedWriter?.imageUrl ?? null}
+                writerName={selectedWriter?.name}
+                className="w-full rounded-[2rem] shadow-sm border border-slate-200"
+                style={{ aspectRatio: '4/3', minHeight: 180 } as React.CSSProperties}
               />
 
               <PublishSection

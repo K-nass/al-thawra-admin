@@ -6,12 +6,13 @@ import { Search, ChevronDown, X, User, Loader2, CheckCircle2, AlertCircle } from
 interface WriterSelectProps {
   value: string | null;
   onChange: (writerId: string | null) => void;
+  onSelectWriter?: (writer: Writer | null) => void;
   error?: string[];
 }
 
 const PAGE_LIMIT = 10;
 
-export default function WriterSelect({ value, onChange, error }: WriterSelectProps) {
+export default function WriterSelect({ value, onChange, onSelectWriter, error }: WriterSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -128,14 +129,16 @@ export default function WriterSelect({ value, onChange, error }: WriterSelectPro
   const handleSelect = useCallback((writer: Writer) => {
     setSelectedWriter(writer);
     onChange(writer.id);
+    onSelectWriter?.(writer);
     setIsOpen(false);
-  }, [onChange]);
+  }, [onChange, onSelectWriter]);
 
   const handleClear = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedWriter(null);
     onChange(null);
-  }, [onChange]);
+    onSelectWriter?.(null);
+  }, [onChange, onSelectWriter]);
 
   const hasError = !!error?.length;
   const showLoader = isLoading || (isFetching && writers.length === 0);
