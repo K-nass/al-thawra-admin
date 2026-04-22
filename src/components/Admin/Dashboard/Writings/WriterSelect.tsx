@@ -7,12 +7,19 @@ interface WriterSelectProps {
   value: string | null;
   onChange: (writerId: string | null) => void;
   onSelectWriter?: (writer: Writer | null) => void;
+  preselectedWriter?: Writer | null;
   error?: string[];
 }
 
 const PAGE_LIMIT = 10;
 
-export default function WriterSelect({ value, onChange, onSelectWriter, error }: WriterSelectProps) {
+export default function WriterSelect({
+  value,
+  onChange,
+  onSelectWriter,
+  preselectedWriter,
+  error,
+}: WriterSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -124,6 +131,13 @@ export default function WriterSelect({ value, onChange, onSelectWriter, error }:
     const found = allWriters.find((w) => w.id === value);
     if (found) setSelectedWriter(found);
   }, [value, data]);
+
+  useEffect(() => {
+    if (!preselectedWriter) return;
+    if (!value || preselectedWriter.id === value) {
+      setSelectedWriter(preselectedWriter);
+    }
+  }, [preselectedWriter, value]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleSelect = useCallback((writer: Writer) => {

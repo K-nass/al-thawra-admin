@@ -21,7 +21,6 @@ import { postsApi } from "@/api";
 import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/Toast/ToastContainer";
 import PostActionsDropdown from "@/components/Common/PostActionsDropdown";
-import ArticleImageFallback from "@/components/Common/ArticleImageFallback";
 import WritingPlaceHolder from "@/components/Common/writingPlaceHolder";
 import {
   Table,
@@ -36,7 +35,7 @@ import { Pagination } from "@/components/ui/pagination";
 
 export default function Writings() {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const queryClient = useQueryClient();
   const toast = useToast();
   const { data: categoriesData } = useCategories();
@@ -121,10 +120,62 @@ export default function Writings() {
       toast.error(error?.response?.data?.message || "فشل في حذف الكتابة"),
   });
 
+  const toggleFlagMutation = useMutation({
+    mutationFn: async ({
+      postId,
+      flag,
+    }: {
+      postId: string;
+      flag: "isSlider" | "isFeatured" | "isRecommended";
+    }) => {
+      const items = (posts as any)?.data?.items || (posts as any)?.items;
+      const post = items?.find((p: any) => p.id === postId);
+      if (!post) throw new Error("Post not found");
+
+      const postType = post?.postType?.toLowerCase() || "article";
+      const categoryId = post?.categoryId;
+      if (!categoryId) throw new Error("Category ID not found");
+
+      const typeIdMap: Record<string, string> = {
+        article: "articleId",
+        video: "videoId",
+        audio: "audioId",
+      };
+
+      const payload: any = {
+        [typeIdMap[postType] || "articleId"]: postId,
+        title: post.title || "",
+        slug: post.slug || null,
+        description: post.description || post.summary || "",
+        content: post.content || "",
+        categoryId,
+        tagIds: post.tagIds || [],
+        status: post.status || "Published",
+        isSlider: post.isSlider ?? false,
+        isFeatured: post.isFeatured ?? false,
+        isBreaking: post.isBreaking ?? false,
+        isRecommended: post.isRecommended ?? false,
+        imageUrl: post.image || post.imageUrl || "",
+        authorId: post.authorId || null,
+        writerId: post.writerId || null,
+        hasWriter: true,
+        [flag]: !post[flag],
+      };
+
+      return await postsApi.updatePost(categoryId, postId, postType, payload);
+    },
+    onSuccess: () => {
+      toast.success("تم تحديث الكتابة بنجاح");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error: any) =>
+      toast.error(error?.response?.data?.message || "فشل في تحديث الكتابة"),
+  });
+
   const handleEditClick = (item: any) => {
-    const postType = item.postType?.toLowerCase() || "article";
-    navigate(`/admin/edit-post/${item.id}?type=${postType}`, {
+    navigate(`/admin/writings/edit/${item.id}`, {
       state: {
+        post: item,
         slug: item.slug,
         categorySlug: item.categorySlug,
       },
@@ -455,7 +506,28 @@ export default function Writings() {
                         <TableCell className="px-8 py-4">
                           <PostActionsDropdown
                             postId={item.id}
+                            isSlider={!!item.isSlider}
+                            isFeatured={!!item.isFeatured}
+                            isRecommended={!!item.isRecommended}
                             onEdit={(id) => handleEditClick(item)}
+                            onAddToSlider={(id) =>
+                              toggleFlagMutation.mutate({
+                                postId: id,
+                                flag: "isSlider",
+                              })
+                            }
+                            onAddToFeatured={(id) =>
+                              toggleFlagMutation.mutate({
+                                postId: id,
+                                flag: "isFeatured",
+                              })
+                            }
+                            onAddToRecommended={(id) =>
+                              toggleFlagMutation.mutate({
+                                postId: id,
+                                flag: "isRecommended",
+                              })
+                            }
                             onDelete={() => handleDeleteClick(item)}
                           />
                         </TableCell>

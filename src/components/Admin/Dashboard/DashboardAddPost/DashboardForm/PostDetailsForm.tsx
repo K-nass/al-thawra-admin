@@ -27,6 +27,7 @@ interface PostDetailsForm {
   fieldErrors?: Record<string, string[]>;
   type: string | null;
   hidePublishingFlags?: boolean;
+  hideBreakingFlag?: boolean;
 }
 
 export default function PostDetailsForm({ 
@@ -35,6 +36,7 @@ export default function PostDetailsForm({
   fieldErrors = {},
   type,
   hidePublishingFlags = false,
+  hideBreakingFlag = false,
 }: PostDetailsForm) {
   const { t } = useTranslation();
 
@@ -207,7 +209,7 @@ export default function PostDetailsForm({
                 />
               )}
               {/* Add to Breaking */}
-              {'addToBreaking' in state && (
+              {'addToBreaking' in state && !hideBreakingFlag && (
                 <FlagCheckbox
                   name="addToBreaking"
                   label={t('formLabels.addToBreaking')}
