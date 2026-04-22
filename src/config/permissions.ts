@@ -108,6 +108,7 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   // Writings routes
   '/admin/writings': 'Writers',
   '/admin/writings/add': 'Writers',
+  '/admin/writings/edit/:postId': 'Writers',
 
   // Audios routes
   '/admin/audios': 'Audios',

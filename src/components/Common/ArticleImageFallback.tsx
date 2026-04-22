@@ -1,5 +1,5 @@
 import { User, PenLine } from 'lucide-react';
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 
 interface ArticleImageFallbackProps {
   className?: string;
@@ -15,6 +15,11 @@ export default function ArticleImageFallback({
   writerName,
 }: ArticleImageFallbackProps) {
   const hasWriter = writerImageUrl !== undefined;
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [writerImageUrl]);
 
   return (
     <div
@@ -93,17 +98,12 @@ export default function ArticleImageFallback({
               className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-white"
               style={{ boxShadow: '0 4px 4px rgba(20,80,140,0.2), inset 0 1px 0 rgba(255,255,255,0.5)' }}
             >
-              {writerImageUrl ? (
+              {writerImageUrl && !imageFailed ? (
                 <img
                   src={writerImageUrl}
                   alt={writerName || ''}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const el = e.currentTarget as HTMLImageElement;
-                    el.style.display = 'none';
-                    const parent = el.parentElement!;
-                    parent.classList.add('flex', 'items-center', 'justify-center');
-                  }}
+                  onError={() => setImageFailed(true)}
                 />
               ) : (
                 <div

@@ -1,12 +1,21 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
-import { Layout, Settings, ChevronRight, Eye, PenLine } from "lucide-react";
+import {
+  Layout,
+  Settings,
+  ChevronRight,
+  Eye,
+  PenLine,
+  Loader2,
+} from "lucide-react";
 
 import { apiClient, getAuthToken } from "@/api/client";
+import { postsApi } from "@/api";
 import { authApi } from "@/api/auth.api";
+import { writersApi } from "@/api/writers.api";
 import { useCategories } from "@/hooks/useCategories";
 import { useToast } from "@/components/Toast/ToastContainer";
 import { usePostReducer } from "../DashboardAddPost/DashboardForm/usePostReducer/usePostReducer";
@@ -36,10 +45,29 @@ interface TagResponse {
   data: { items: TagInterface[] };
 }
 
-export default function AddWriting() {
+const API_TO_STATE_MAP: Record<string, string> = {
+  isSlider: "addToSlider",
+  isFeatured: "addToFeatured",
+  isBreaking: "addToBreaking",
+  isRecommended: "addToRecommended",
+  image: "imageUrl",
+};
+
+const getFirstNonEmptyString = (...values: Array<unknown>) => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value;
+    }
+  }
+  return null;
+};
+
+export default function EditWriting() {
   const { t } = useTranslation();
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { postId } = useParams<{ postId: string }>();
   const token = getAuthToken();
 
   const [state, dispatch] = usePostReducer("article");
@@ -49,8 +77,17 @@ export default function AddWriting() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isPreviewFullscreen, setIsPreviewFullscreen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [isLoadingPost, setIsLoadingPost] = useState(true);
 
-  // Auth guard
+  const dispatchField = (key: string, value: unknown) => {
+    const stateKey = API_TO_STATE_MAP[key] ?? key;
+    dispatch({
+      type: "set-field",
+      field: stateKey,
+      payload: value as string | boolean | string[] | object[] | undefined,
+    });
+  };
+
   useEffect(() => {
     if (!token) navigate("/login");
   }, [token, navigate]);
@@ -59,8 +96,11 @@ export default function AddWriting() {
     queryKey: ["tags"],
     queryFn: async () => {
       const res = await apiClient.get<{ items: TagInterface[] }>("/tags");
-      // Normalise: backend may return { items: [] } directly or wrapped in { data: { items: [] } }
-      return { data: { items: (res.data as any)?.items ?? (res.data as any)?.data?.items ?? [] } };
+      return {
+        data: {
+          items: (res.data as any)?.items ?? (res.data as any)?.data?.items ?? [],
+        },
+      };
     },
   });
 
@@ -71,18 +111,121 @@ export default function AddWriting() {
     queryFn: authApi.getUserProfile,
   });
 
-  // Auto-assign the category behind the scenes for the Writings endpoint
   useEffect(() => {
     if (categories?.data && !state.categoryId) {
-      const writingsCat = categories.data.find(
-        (c: any) => c.slug === "writings" || c.name === "كتابات" || c.slug === "writers" || c.name === "مقالات"
-      ) || categories.data[0];
-      
+      const writingsCat =
+        categories.data.find(
+          (c: any) =>
+            c.slug === "writings" ||
+            c.name === "كتابات" ||
+            c.slug === "writers" ||
+            c.name === "مقالات",
+        ) || categories.data[0];
+
       if (writingsCat) {
         dispatch({ type: "set-field", field: "categoryId", payload: writingsCat.id });
       }
     }
   }, [categories?.data, state.categoryId, dispatch]);
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      if (!postId) return;
+
+      try {
+        setIsLoadingPost(true);
+
+        const { categorySlug, slug, post: statePost } = (location.state as any) || {};
+
+        if (statePost) {
+          Object.entries(statePost as Record<string, unknown>).forEach(([key, value]) => {
+            dispatchField(key, value);
+          });
+        }
+
+        let postData: any;
+        if (categorySlug && slug) {
+          postData = await postsApi.getPostBySlug(categorySlug, slug, "article");
+        } else {
+          postData = await postsApi.getById(postId);
+        }
+
+        Object.entries(postData as Record<string, unknown>).forEach(([key, value]) => {
+          dispatchField(key, value);
+        });
+
+        dispatch({
+          type: "set-field",
+          field: "addToBreaking",
+          payload: false,
+        });
+
+        const resolvedWriterId = postData?.writerId || (statePost as any)?.writerId || null;
+        const resolvedWriterName =
+          getFirstNonEmptyString(
+            postData?.writerName,
+            postData?.authorName,
+            (statePost as any)?.writerName,
+            (statePost as any)?.authorName,
+          ) ?? "";
+        const resolvedWriterImage = getFirstNonEmptyString(
+          postData?.writerImageUrl,
+          postData?.authorImageUrl,
+          postData?.authorImage,
+          (statePost as any)?.writerImageUrl,
+          (statePost as any)?.authorImageUrl,
+          (statePost as any)?.authorImage,
+        );
+        setWriterId(resolvedWriterId);
+
+        if (resolvedWriterId) {
+          setSelectedWriter({
+            id: resolvedWriterId,
+            name: resolvedWriterName,
+            imageUrl: resolvedWriterImage,
+            bio: null,
+            birthDate: "",
+            dateOfDeath: null,
+          });
+        }
+      } catch (error) {
+        toast.error(t("error.failedToLoadPost"));
+        navigate("/admin/writings");
+      } finally {
+        setIsLoadingPost(false);
+      }
+    };
+
+    fetchPost();
+  }, [postId, location.state, navigate, t, toast]);
+
+  useEffect(() => {
+    if (!writerId) return;
+    if (selectedWriter?.imageUrl) return;
+
+    let ignore = false;
+
+    writersApi
+      .getById(writerId)
+      .then((writer) => {
+        if (ignore) return;
+        setSelectedWriter((prev) => ({
+          id: writer.id || writerId,
+          name: writer.name || prev?.name || "",
+          imageUrl: writer.imageUrl ?? prev?.imageUrl ?? null,
+          bio: writer.bio ?? prev?.bio ?? null,
+          birthDate: writer.birthDate || prev?.birthDate || "",
+          dateOfDeath: writer.dateOfDeath ?? prev?.dateOfDeath ?? null,
+        }));
+      })
+      .catch(() => {
+        // Keep current fallback UI if writer details cannot be loaded.
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [writerId, selectedWriter?.imageUrl]);
 
   type CustomChangeEvent =
     | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -110,6 +253,8 @@ export default function AddWriting() {
 
   const mutation = useMutation({
     mutationFn: async () => {
+      if (!postId) throw new Error("Post ID is required");
+
       const errors = validate();
       if (Object.keys(errors).length > 0) {
         const validationError = new Error("CLIENT_VALIDATION_ERROR") as Error & {
@@ -123,18 +268,61 @@ export default function AddWriting() {
       const categoryId = payload.categoryId;
       if (!categoryId) throw new Error("categoryId missing");
 
-      // Inject writer fields
+      payload.articleId = postId;
       payload.writerId = writerId;
       payload.hasWriter = true;
       if (!payload.authorId && userProfile?.id) {
         payload.authorId = userProfile.id;
       }
 
-      // Writings support slider/featured/recommended only.
-      payload.addToBreaking = false;
-      delete payload.isBreaking;
+      if (payload.addToSlider !== undefined) {
+        payload.isSlider = payload.addToSlider;
+        delete payload.addToSlider;
+      }
+      if (payload.addToFeatured !== undefined) {
+        payload.isFeatured = payload.addToFeatured;
+        delete payload.addToFeatured;
+      }
+      if (payload.addToRecommended !== undefined) {
+        payload.isRecommended = payload.addToRecommended;
+        delete payload.addToRecommended;
+      }
 
-      // Sanitize
+      payload.isBreaking = false;
+      delete payload.addToBreaking;
+      delete payload.isUrgent;
+      delete payload.addToUrgent;
+
+      if (payload.summary !== undefined) payload.description = payload.summary;
+      delete payload.summary;
+
+      if (payload.optionalURL !== undefined) {
+        payload.optionalUrl = payload.optionalURL;
+        delete payload.optionalURL;
+      }
+
+      const readOnlyFields = [
+        "id",
+        "createdAt",
+        "updatedAt",
+        "createdBy",
+        "publishedAt",
+        "authorName",
+        "authorImage",
+        "ownerIsAuthor",
+        "categoryName",
+        "categorySlug",
+        "tags",
+        "likedByUsers",
+        "viewsCount",
+        "likesCount",
+        "isLikedByCurrentUser",
+        "postType",
+        "image",
+        "additionalImages",
+      ];
+      readOnlyFields.forEach((f) => delete payload[f]);
+
       if (payload.imageUrl === null || payload.imageUrl === undefined) payload.imageUrl = "";
       if (payload.metaDescription === null || payload.metaDescription === undefined) payload.metaDescription = "";
       if (payload.metaKeywords === null || payload.metaKeywords === undefined) payload.metaKeywords = "";
@@ -147,11 +335,10 @@ export default function AddWriting() {
         if (payload.tagIds.length === 0) delete payload.tagIds;
       }
 
-      const response = await apiClient.post(`/posts/categories/${categoryId}/articles`, payload);
-      return response.data;
+      return await postsApi.updatePost(categoryId, postId, "article", payload);
     },
     onSuccess: (data) => {
-      const msg = data?.message || data?.title || "تم إنشاء الكتابة بنجاح";
+      const msg = data?.message || data?.title || "تم تحديث الكتابة بنجاح";
       setFieldErrors({});
       toast.success(String(msg));
       navigate("/admin/writings");
@@ -168,21 +355,21 @@ export default function AddWriting() {
         return;
       }
 
-      let message = t("errors.failedToCreatePost");
+      let message = t("error.failedToUpdatePost");
       let serverErrors: FieldErrors = {};
 
       if (axios.isAxiosError(error)) {
         const d = error.response?.data;
         const status = error.response?.status;
-        
-        if (status === 401) { 
-          toast.error(t("common.sessionExpired")); 
-          navigate("/login"); 
-          return; 
+
+        if (status === 401) {
+          toast.error(t("common.sessionExpired"));
+          navigate("/login");
+          return;
         }
-        
+
         if (status === 422 && d?.errors) {
-          if (typeof d.errors === 'object') {
+          if (typeof d.errors === "object") {
             serverErrors = normalizeErrorMap(d.errors as Record<string, unknown>);
             message = getValidationToastMessage(t, serverErrors);
           }
@@ -213,6 +400,7 @@ export default function AddWriting() {
       metaKeywords: "advanced",
       additionalImageUrls: "advanced",
       fileUrls: "advanced",
+      writerId: "main",
     }),
     [],
   );
@@ -237,24 +425,48 @@ export default function AddWriting() {
     const language = String((state as any)?.language ?? "Arabic");
     const dir = (language === "Arabic" ? "rtl" : "ltr") as "rtl" | "ltr";
     const publishedAtLabel = new Date().toLocaleDateString(language === "Arabic" ? "ar-EG" : "en-US", {
-      year: "numeric", month: "long", day: "numeric",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
     return {
-      dir, title: debouncedTitle.trim() || t("post.title"),
+      dir,
+      title: debouncedTitle.trim() || t("post.title"),
       categoryName: selectedCategory?.name || t("formLabels.selectCategory"),
-      authorName: userProfile?.userName,
-      authorImageUrl: userProfile?.avatarImageUrl ?? null,
-      publishedAtLabel, imageUrl: debouncedImageUrl,
+      authorName: selectedWriter?.name || userProfile?.userName,
+      authorImageUrl: selectedWriter?.imageUrl ?? userProfile?.avatarImageUrl ?? null,
+      publishedAtLabel,
+      imageUrl: debouncedImageUrl,
       imageAlt: Array.isArray((state as any)?.imageDescription)
         ? undefined
         : String((state as any)?.imageDescription ?? ""),
       contentHtml: debouncedContent || "",
     };
-  }, [debouncedContent, debouncedImageUrl, debouncedTitle, selectedCategory?.name, state, t, userProfile]);
+  }, [
+    debouncedContent,
+    debouncedImageUrl,
+    debouncedTitle,
+    selectedCategory?.name,
+    selectedWriter?.imageUrl,
+    selectedWriter?.name,
+    state,
+    t,
+    userProfile,
+  ]);
+
+  if (isLoadingPost) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm py-32">
+        <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+          {t("post.loadingFormData")}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-surface">
-      {/* Header */}
       <div className="p-4 sm:p-6 border-b border-slate-200 bg-white sticky top-0 z-20 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -267,7 +479,7 @@ export default function AddWriting() {
             <div>
               <div className="flex items-center gap-2">
                 <PenLine size={18} className="text-primary" />
-                <h1 className="text-lg font-black text-slate-900 tracking-tight">إضافة كتابة</h1>
+                <h1 className="text-lg font-black text-slate-900 tracking-tight">تعديل كتابة</h1>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[10px] font-black text-primary px-2 py-0.5 bg-primary/5 rounded border border-primary/10 tracking-widest uppercase">
@@ -320,7 +532,10 @@ export default function AddWriting() {
       <ArticlePreviewModal
         isOpen={isPreviewOpen}
         isFullscreen={isPreviewFullscreen}
-        onClose={() => { setIsPreviewOpen(false); setIsPreviewFullscreen(false); }}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setIsPreviewFullscreen(false);
+        }}
         onToggleFullscreen={() => setIsPreviewFullscreen((v) => !v)}
         onPublish={() => mutation.mutate()}
         publishDisabled={mutation.isPending}
@@ -331,13 +546,18 @@ export default function AddWriting() {
       <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <form
           className="max-w-7xl mx-auto"
-          onSubmit={(e) => { e.preventDefault(); mutation.mutate(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            mutation.mutate();
+          }}
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column */}
             <div className="lg:col-span-8 space-y-6">
               {fieldErrors.categoryId && (
-                <div data-error-field="categoryId" className="p-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 text-sm font-semibold">
+                <div
+                  data-error-field="categoryId"
+                  className="p-4 rounded-2xl border border-rose-200 bg-rose-50 text-rose-700 text-sm font-semibold"
+                >
                   {fieldErrors.categoryId[0]}
                 </div>
               )}
@@ -372,12 +592,11 @@ export default function AddWriting() {
               )}
             </div>
 
-            {/* Right Sidebar */}
             <div className="lg:col-span-4 space-y-6">
-              {/* Writer Select — required, at top of sidebar */}
               <div data-error-field="writerId" className="relative rounded-[2rem]">
                 <WriterSelect
                   value={writerId}
+                  preselectedWriter={selectedWriter}
                   onChange={(value) => {
                     setWriterId(value);
                     setFieldErrors((prev) => clearFieldErrorByName(prev, "writerId"));
@@ -387,16 +606,16 @@ export default function AddWriting() {
                 />
               </div>
 
-              {/* Writer image preview — replaces ImageUpload for writings */}
               <ArticleImageFallback
                 writerImageUrl={selectedWriter?.imageUrl ?? null}
                 writerName={selectedWriter?.name}
                 className="w-full rounded-[2rem] shadow-sm border border-slate-200"
-                style={{ aspectRatio: '4/3', minHeight: 180 } as React.CSSProperties}
+                style={{ aspectRatio: "4/3", minHeight: 180 } as React.CSSProperties}
               />
 
               <PublishSection
                 mutation={mutation}
+                isEditMode
                 state={state}
                 handleChange={handleChange}
                 fieldErrors={fieldErrors}
