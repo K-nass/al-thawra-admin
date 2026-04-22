@@ -38,42 +38,37 @@ export default function ArticleImageFallback({
         className="absolute -top-12 -end-12 w-40 h-40 rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(circle, rgba(15,80,150,0.12) 0%, transparent 70%)' }}
       />
-      {/* ── Accent glow circle — bottom left ─────────────────────────── */}
-      <div
-        className="absolute -bottom-10 -start-10 w-36 h-36 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(20,90,180,0.1) 0%, transparent 70%)' }}
-      />
-
       {/* ── Header: logo + badge ──────────────────────────────────────── */}
-      <div className="relative z-10 flex items-center justify-between px-5 pt-4 pb-2">
-        <img
-          src="/icon.jpg"
-          alt=""
-          className="h-15 w-auto object-contain rounded-lg shadow-md"
-        />
-        <span
-          className="flex items-center gap-1 text-[15px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border"
-          style={{
-            color: 'rgba(20,80,140,0.85)',
-            borderColor: 'rgba(20,80,140,0.15)',
-            background: 'white',
-            letterSpacing: '0.15em',
-          }}
-        >
-          <PenLine size={15} />
+      <div className="relative z-10 px-5 pt-4 pb-3">
+        <div className="flex items-center justify-between">
+          <img
+            src="/icon.jpg"
+            alt=""
+            className="h-10 w-auto object-contain rounded-lg shadow-md"
+          />
+          <span
+            className="flex items-center gap-1 text-[15px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border"
+            style={{
+              color: 'rgba(20,80,140,0.85)',
+              borderColor: 'rgba(20,80,140,0.15)',
+              background: 'white',
+              letterSpacing: '0.15em',
+            }}
+          >
+            <PenLine size={15} />
           كتابة
-        </span>
+          </span>
+        </div>
+        <div
+          className="absolute bottom-0 inset-x-5 h-px"
+          style={{ background: 'linear-gradient(to right, transparent, rgba(20,80,140,0.24), transparent)' }}
+        />
       </div>
 
-      {/* ── Divider ───────────────────────────────────────────────────── */}
-      <div
-        className="relative z-10 mx-5 mb-1"
-        style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(20,80,140,0.15), transparent)' }}
-      />
-
       {/* ── Default mode: article SVG ─────────────────────────────────── */}
+
       {!hasWriter && (
-        <div className="relative z-10 flex-1 flex items-center justify-center px-6 pb-5">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-4 px-6 pb-6">
           <img
             src="/article.svg"
             alt=""
@@ -84,7 +79,7 @@ export default function ArticleImageFallback({
 
       {/* ── Writer mode ───────────────────────────────────────────────── */}
       {hasWriter && (
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center gap-4 px-6 pb-6">
+        <div className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center gap-3 px-5 pb-4">
 
           {/* Photo with ring + glow */}
           <div className="relative">
@@ -95,7 +90,7 @@ export default function ArticleImageFallback({
             /> */}
             {/* Photo frame */}
             <div
-              className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-white"
+              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border-2 border-white"
               style={{ boxShadow: '0 4px 4px rgba(20,80,140,0.2), inset 0 1px 0 rgba(255,255,255,0.5)' }}
             >
               {writerImageUrl ? (
@@ -123,9 +118,13 @@ export default function ArticleImageFallback({
 
           {/* Name + label */}
           {writerName ? (
-            <div className="text-center space-y-1">
+            <div className="relative text-center space-y-1">
+              <div
+                className="absolute -bottom-10 -start-10 w-36 h-36 rounded-full pointer-events-none"
+                style={{ background: 'radial-gradient(circle, rgba(20,90,180,0.1) 0%, transparent 70%)' }}
+              />
               <p
-                className="font-bold font-serif text-2xl leading-tight tracking-widest line-clamp-2"
+                className="relative z-10 font-bold font-serif text-xl sm:text-2xl leading-tight tracking-widest line-clamp-2"
                 dir="auto"
                 style={{ 
                   color: '#ffffff',
@@ -135,7 +134,7 @@ export default function ArticleImageFallback({
                 {writerName}
               </p>
               <p
-                className="text-xs font-semibold uppercase tracking-[0.18em]"
+                className="relative z-10 text-xs font-semibold uppercase tracking-[0.18em]"
                 style={{ color: 'rgba(20,80,140,0.75)' }}
               >
                 كاتب المقال
@@ -164,3 +163,4 @@ export default function ArticleImageFallback({
     </div>
   );
 }
+
