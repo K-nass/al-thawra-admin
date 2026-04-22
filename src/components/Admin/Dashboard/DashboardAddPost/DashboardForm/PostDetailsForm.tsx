@@ -26,13 +26,15 @@ interface PostDetailsForm {
   handleChange: HandleChangeType;
   fieldErrors?: Record<string, string[]>;
   type: string | null;
+  hidePublishingFlags?: boolean;
 }
 
 export default function PostDetailsForm({ 
   state, 
   handleChange, 
   fieldErrors = {},
-  type
+  type,
+  hidePublishingFlags = false,
 }: PostDetailsForm) {
   const { t } = useTranslation();
 
@@ -179,70 +181,74 @@ export default function PostDetailsForm({
           )}
         </div>
 
-        <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Add to Slider */}
-          {'addToSlider' in state && (
-            <FlagCheckbox
-              name="addToSlider"
-              label={t('formLabels.addToSlider')}
-              icon={<Layout size={14} />}
-              checked={(state as ArticleInitialStateInterface).addToSlider === true}
-              onChange={handleCheckboxChange}
-              color="blue"
-            />
-          )}
-          {/* Add to Featured */}
-          {'addToFeatured' in state && (
-            <FlagCheckbox
-              name="addToFeatured"
-              label={t('formLabels.addToFeatured')}
-              icon={<Star size={14} />}
-              checked={(state as ArticleInitialStateInterface).addToFeatured === true}
-              onChange={handleCheckboxChange}
-              color="amber"
-            />
-          )}
-          {/* Add to Breaking */}
-          {'addToBreaking' in state && (
-            <FlagCheckbox
-              name="addToBreaking"
-              label={t('formLabels.addToBreaking')}
-              icon={<Zap size={14} />}
-              checked={(state as ArticleInitialStateInterface).addToBreaking === true}
-              onChange={handleCheckboxChange}
-              color="rose"
-            />
-          )}
-          {/* Add to Recommended */}
-          <FlagCheckbox
-            name="addToRecommended"
-            label={t('formLabels.addToRecommended')}
-            icon={<Heart size={14} />}
-            checked={state.addToRecommended === true}
-            onChange={handleCheckboxChange}
-            color="emerald"
-          />
-          {/* Show Only to Registered Users */}
-          <FlagCheckbox
-            name="showOnlyToRegisteredUsers"
-            label={t('formLabels.showOnlyToRegisteredUsers')}
-            icon={<ShieldCheck size={14} />}
-            checked={state.showOnlyToRegisteredUsers === true}
-            onChange={handleChange}
-            color="indigo"
-          />
-        </div>
-
-        {/* Explanatory note for mutual exclusion */}
-        {state.addToSlider && (
-          <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-              <Info size={16} />
+        {!hidePublishingFlags && (
+          <>
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Add to Slider */}
+              {'addToSlider' in state && (
+                <FlagCheckbox
+                  name="addToSlider"
+                  label={t('formLabels.addToSlider')}
+                  icon={<Layout size={14} />}
+                  checked={(state as ArticleInitialStateInterface).addToSlider === true}
+                  onChange={handleCheckboxChange}
+                  color="blue"
+                />
+              )}
+              {/* Add to Featured */}
+              {'addToFeatured' in state && (
+                <FlagCheckbox
+                  name="addToFeatured"
+                  label={t('formLabels.addToFeatured')}
+                  icon={<Star size={14} />}
+                  checked={(state as ArticleInitialStateInterface).addToFeatured === true}
+                  onChange={handleCheckboxChange}
+                  color="amber"
+                />
+              )}
+              {/* Add to Breaking */}
+              {'addToBreaking' in state && (
+                <FlagCheckbox
+                  name="addToBreaking"
+                  label={t('formLabels.addToBreaking')}
+                  icon={<Zap size={14} />}
+                  checked={(state as ArticleInitialStateInterface).addToBreaking === true}
+                  onChange={handleCheckboxChange}
+                  color="rose"
+                />
+              )}
+              {/* Add to Recommended */}
+              <FlagCheckbox
+                name="addToRecommended"
+                label={t('formLabels.addToRecommended')}
+                icon={<Heart size={14} />}
+                checked={state.addToRecommended === true}
+                onChange={handleCheckboxChange}
+                color="emerald"
+              />
+              {/* Show Only to Registered Users */}
+              <FlagCheckbox
+                name="showOnlyToRegisteredUsers"
+                label={t('formLabels.showOnlyToRegisteredUsers')}
+                icon={<ShieldCheck size={14} />}
+                checked={state.showOnlyToRegisteredUsers === true}
+                onChange={handleChange}
+                color="indigo"
+              />
             </div>
-            <p className="text-xs text-blue-800 font-medium leading-relaxed pt-1">
-              {t('post.sliderMutualExclusionNote')}
-            </p>
-          </div>
+
+            {/* Explanatory note for mutual exclusion */}
+            {state.addToSlider && (
+              <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                  <Info size={16} />
+                </div>
+                <p className="text-xs text-blue-800 font-medium leading-relaxed pt-1">
+                  {t('post.sliderMutualExclusionNote')}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

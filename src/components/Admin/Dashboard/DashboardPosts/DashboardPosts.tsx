@@ -30,6 +30,7 @@ import { useFetchPages, useDeletePage } from "@/hooks/useFetchPages";
 import { postsApi } from "@/api";
 import PostActionsDropdown from "@/components/Common/PostActionsDropdown";
 import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
+import WritingPlaceHolder from "@/components/Common/writingPlaceHolder";
 import { useToast } from "@/components/Toast/ToastContainer";
 import {
   Table,
@@ -498,15 +499,19 @@ export default function DashboardPosts({
                             <div className="flex items-center gap-4 py-2">
                               {!isPages && (
                                 <div className="relative shrink-0">
-                                  <img
-                                    src={item.image || "/placeholder-post.jpg"}
-                                    className="w-14 h-14 rounded-2xl object-cover bg-slate-100 border border-slate-100 shadow-sm transition-transform group-hover:scale-110"
-                                    alt=""
-                                    onError={(e) =>
-                                      (e.currentTarget.src =
-                                        "https://placehold.co/400x400/f8fafc/64748b?text=Post")
-                                    }
-                                  />
+                                  {item.image ? (
+                                    <img
+                                      src={item.image}
+                                      className="w-14 h-14 rounded-2xl object-cover bg-slate-100 border border-slate-100 shadow-sm transition-transform group-hover:scale-110"
+                                      alt=""
+                                      onError={(e) =>
+                                        (e.currentTarget.src =
+                                          "https://placehold.co/400x400/f8fafc/64748b?text=Post")
+                                      }
+                                    />
+                                  ) : (
+                                    <WritingPlaceHolder text="مقال" />
+                                  )}
                                   <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
                                     {item.postType === "video" ? (
                                       <Zap
@@ -677,17 +682,21 @@ export default function DashboardPosts({
                     className="bg-white rounded-[1.5rem] border border-slate-200 p-5 shadow-sm space-y-4 relative overflow-hidden group active:scale-[0.98] transition-all"
                   >
                     <div className="flex items-start gap-4">
-                      {!isPages && item.image && (
+                      {!isPages && (
                         <div className="relative">
-                          <img
-                            src={item.image}
-                            className="w-20 h-20 rounded-2xl object-cover bg-slate-100 shadow-sm"
-                            alt=""
-                            onError={(e) =>
-                              (e.currentTarget.src =
-                                "https://placehold.co/400x400/f8fafc/64748b?text=Post")
-                            }
-                          />
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              className="w-20 h-20 rounded-2xl object-cover bg-slate-100 shadow-sm"
+                              alt=""
+                              onError={(e) =>
+                                (e.currentTarget.src =
+                                  "https://placehold.co/400x400/f8fafc/64748b?text=Post")
+                              }
+                            />
+                          ) : (
+                            <WritingPlaceHolder text="مقال" />
+                          )}
                           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
                             <Activity size={12} className="text-primary" />
                           </div>

@@ -127,6 +127,12 @@ export default function PostActionsDropdown({
     setIsOpen(false);
   };
 
+  const hasFlagActions =
+    Boolean(onAddToSlider) ||
+    Boolean(onAddToFeatured) ||
+    Boolean(onAddToBreaking) ||
+    Boolean(onAddToRecommended);
+
   /**
    * A toggle row for a boolean flag.
    * - When `active = false`: "Add to …" with green Plus icon
@@ -199,41 +205,53 @@ export default function PostActionsDropdown({
               <span>{t('common.edit')}</span>
             </button>
 
-            <div className="border-t border-slate-100 my-1" />
+            {hasFlagActions && (
+              <>
+                <div className="border-t border-slate-100 my-1" />
 
-            {/* Slider */}
-            <FlagToggleItem
-              active={isSlider}
-              addLabel={t('formLabels.addToSlider')}
-              removeLabel={t('formLabels.removeFromSlider') || 'Remove from Slider'}
-              onClick={onAddToSlider}
-            />
+                {/* Slider */}
+                {onAddToSlider && (
+                  <FlagToggleItem
+                    active={isSlider}
+                    addLabel={t('formLabels.addToSlider')}
+                    removeLabel={t('formLabels.removeFromSlider') || 'Remove from Slider'}
+                    onClick={onAddToSlider}
+                  />
+                )}
 
-            {/* Featured */}
-            <FlagToggleItem
-              active={isFeatured}
-              addLabel={t('formLabels.addToFeatured')}
-              removeLabel={t('formLabels.removeFromFeatured') || 'Remove from Featured'}
-              onClick={onAddToFeatured}
-            />
+                {/* Featured */}
+                {onAddToFeatured && (
+                  <FlagToggleItem
+                    active={isFeatured}
+                    addLabel={t('formLabels.addToFeatured')}
+                    removeLabel={t('formLabels.removeFromFeatured') || 'Remove from Featured'}
+                    onClick={onAddToFeatured}
+                  />
+                )}
 
-            {/* Breaking */}
-            <FlagToggleItem
-              active={isBreaking}
-              addLabel={t('formLabels.addToBreaking')}
-              removeLabel={t('formLabels.removeFromBreaking') || 'Remove from Breaking'}
-              onClick={onAddToBreaking}
-            />
+                {/* Breaking */}
+                {onAddToBreaking && (
+                  <FlagToggleItem
+                    active={isBreaking}
+                    addLabel={t('formLabels.addToBreaking')}
+                    removeLabel={t('formLabels.removeFromBreaking') || 'Remove from Breaking'}
+                    onClick={onAddToBreaking}
+                  />
+                )}
 
-            {/* Recommended */}
-            <FlagToggleItem
-              active={isRecommended}
-              addLabel={t('formLabels.addToRecommended')}
-              removeLabel={t('formLabels.removeFromRecommended') || 'Remove from Recommended'}
-              onClick={onAddToRecommended}
-            />
+                {/* Recommended */}
+                {onAddToRecommended && (
+                  <FlagToggleItem
+                    active={isRecommended}
+                    addLabel={t('formLabels.addToRecommended')}
+                    removeLabel={t('formLabels.removeFromRecommended') || 'Remove from Recommended'}
+                    onClick={onAddToRecommended}
+                  />
+                )}
 
-            <div className="border-t border-slate-100 my-1" />
+                <div className="border-t border-slate-100 my-1" />
+              </>
+            )}
 
             {/* Delete */}
             <button

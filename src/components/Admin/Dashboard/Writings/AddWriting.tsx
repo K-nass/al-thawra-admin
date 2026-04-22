@@ -130,6 +130,16 @@ export default function AddWriting() {
         payload.authorId = userProfile.id;
       }
 
+      // Writings do not support homepage placement flags.
+      delete payload.addToSlider;
+      delete payload.addToFeatured;
+      delete payload.addToBreaking;
+      delete payload.addToRecommended;
+      delete payload.isSlider;
+      delete payload.isFeatured;
+      delete payload.isBreaking;
+      delete payload.isRecommended;
+
       // Sanitize
       if (payload.imageUrl === null || payload.imageUrl === undefined) payload.imageUrl = "";
       if (payload.metaDescription === null || payload.metaDescription === undefined) payload.metaDescription = "";
@@ -344,6 +354,7 @@ export default function AddWriting() {
                     state={state as ArticleInitialStateInterface}
                     handleChange={handleChange}
                     fieldErrors={fieldErrors}
+                    hidePublishingFlags
                   />
                   <div className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200">
                     <ContentEditor
