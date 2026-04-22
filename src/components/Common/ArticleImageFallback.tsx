@@ -20,13 +20,13 @@ export default function ArticleImageFallback({
     <div
       className={`relative overflow-hidden flex flex-col ${className}`}
       style={{
-        background: 'linear-gradient(135deg, #1a2a3a 0%, #0f3460 40%, #16213e 100%)',
+        background: 'linear-gradient(135deg, #b5d6e8 0%, #d0e8f2 50%, #c0dce8 100%)',
         ...style,
       }}
     >
       {/* ── Decorative noise / grain overlay ─────────────────────────── */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        className="absolute inset-0 pointer-events-none opacity-[0.06]"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
           backgroundSize: '128px',
@@ -36,12 +36,12 @@ export default function ArticleImageFallback({
       {/* ── Accent glow circle — top right ───────────────────────────── */}
       <div
         className="absolute -top-12 -end-12 w-40 h-40 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(99,179,237,0.18) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(15,80,150,0.12) 0%, transparent 70%)' }}
       />
       {/* ── Accent glow circle — bottom left ─────────────────────────── */}
       <div
         className="absolute -bottom-10 -start-10 w-36 h-36 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(129,140,248,0.14) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(circle, rgba(20,90,180,0.1) 0%, transparent 70%)' }}
       />
 
       {/* ── Header: logo + badge ──────────────────────────────────────── */}
@@ -49,18 +49,18 @@ export default function ArticleImageFallback({
         <img
           src="/icon.jpg"
           alt=""
-          className="h-15 w-auto object-contain rounded-lg"
+          className="h-15 w-auto object-contain rounded-lg shadow-md"
         />
         <span
           className="flex items-center gap-1 text-[15px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border"
           style={{
-            color: 'rgba(147,210,255,0.9)',
-            borderColor: 'rgba(147,210,255,0.2)',
-            background: 'rgba(147,210,255,0.07)',
+            color: 'rgba(20,80,140,0.85)',
+            borderColor: 'rgba(20,80,140,0.15)',
+            background: 'white',
             letterSpacing: '0.15em',
           }}
         >
-          <PenLine size={9} />
+          <PenLine size={15} />
           كتابة
         </span>
       </div>
@@ -68,7 +68,7 @@ export default function ArticleImageFallback({
       {/* ── Divider ───────────────────────────────────────────────────── */}
       <div
         className="relative z-10 mx-5 mb-1"
-        style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.12), transparent)' }}
+        style={{ height: 1, background: 'linear-gradient(to right, transparent, rgba(20,80,140,0.15), transparent)' }}
       />
 
       {/* ── Default mode: article SVG ─────────────────────────────────── */}
@@ -89,14 +89,14 @@ export default function ArticleImageFallback({
           {/* Photo with ring + glow */}
           <div className="relative">
             {/* Outer glow ring */}
-            <div
+            {/* <div
               className="absolute inset-0 rounded-xl -m-1.5"
-              style={{ background: 'linear-gradient(135deg, rgba(99,179,237,0.4), rgba(129,140,248,0.3))', filter: 'blur(8px)' }}
-            />
+              style={{ background: 'linear-gradient(135deg, rgba(20,80,150,0.25), rgba(40,100,180,0.2))', filter: 'blur(8px)' }}
+            /> */}
             {/* Photo frame */}
             <div
-              className="relative w-24 h-24 rounded-xl overflow-hidden border"
-              style={{ borderColor: 'rgba(255,255,255,0.25)', boxShadow: '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)' }}
+              className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-white"
+              style={{ boxShadow: '0 4px 4px rgba(20,80,140,0.2), inset 0 1px 0 rgba(255,255,255,0.5)' }}
             >
               {writerImageUrl ? (
                 <img
@@ -113,9 +113,9 @@ export default function ArticleImageFallback({
               ) : (
                 <div
                   className="w-full h-full flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                  style={{ background: 'rgba(20,80,140,0.08)' }}
                 >
-                  <User size={36} style={{ color: 'rgba(255,255,255,0.4)' }} />
+                  <User size={36} style={{ color: 'rgba(20,80,140,0.5)' }} />
                 </div>
               )}
             </div>
@@ -125,15 +125,18 @@ export default function ArticleImageFallback({
           {writerName ? (
             <div className="text-center space-y-1">
               <p
-                className="text-white font-bold text-base leading-tight tracking-tight line-clamp-2"
+                className="font-bold font-serif text-2xl leading-tight tracking-widest line-clamp-2"
                 dir="auto"
-                style={{ textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}
+                style={{ 
+                  color: '#ffffff',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.15)',
+                }}
               >
                 {writerName}
               </p>
               <p
                 className="text-xs font-semibold uppercase tracking-[0.18em]"
-                style={{ color: 'rgba(147,210,255,0.7)' }}
+                style={{ color: 'rgba(20,80,140,0.75)' }}
               >
                 كاتب المقال
               </p>
@@ -142,11 +145,11 @@ export default function ArticleImageFallback({
             <div className="text-center space-y-1">
               <div
                 className="w-28 h-3 rounded-full mx-auto"
-                style={{ background: 'rgba(255,255,255,0.1)' }}
+                style={{ background: 'rgba(20,80,140,0.1)' }}
               />
               <div
                 className="w-16 h-2.5 rounded-full mx-auto"
-                style={{ background: 'rgba(255,255,255,0.07)' }}
+                style={{ background: 'rgba(20,80,140,0.07)' }}
               />
             </div>
           )}
@@ -156,7 +159,7 @@ export default function ArticleImageFallback({
       {/* ── Bottom shimmer line ───────────────────────────────────────── */}
       <div
         className="absolute bottom-0 inset-x-0 h-px pointer-events-none"
-        style={{ background: 'linear-gradient(to right, transparent, rgba(99,179,237,0.4), transparent)' }}
+        style={{ background: 'linear-gradient(to right, transparent, rgba(20,80,150,0.3), transparent)' }}
       />
     </div>
   );
