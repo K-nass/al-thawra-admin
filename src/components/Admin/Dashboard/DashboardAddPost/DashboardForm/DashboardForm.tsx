@@ -197,6 +197,15 @@ export default function DashboardForm() {
 
       if (type === "audio" && "imageUrl" in payload) {
         payload.thumbnailUrl = payload.imageUrl || null;
+        // Audio module does not use placement flags.
+        delete payload.addToBreaking;
+        delete payload.addToFeatured;
+        delete payload.addToSlider;
+        delete payload.addToRecommended;
+        delete payload.isBreaking;
+        delete payload.isFeatured;
+        delete payload.isSlider;
+        delete payload.isRecommended;
       }
 
       if (payload.additionalImageUrls) {
@@ -434,6 +443,7 @@ export default function DashboardForm() {
                     state={state}
                     handleChange={handleChange}
                     fieldErrors={fieldErrors}
+                    hidePublishingFlags={type === "audio"}
                   />
                   {type === 'audio' ? (
                     // ── Audio: show media uploader + description textarea ──

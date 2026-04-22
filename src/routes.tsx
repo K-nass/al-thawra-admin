@@ -18,6 +18,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import { PermissionRouteGuard } from "./components/AdminProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
+import RouteErrorPage from "./components/ErrorBoundary/RouteErrorPage";
+import NotFoundPage from "./components/ErrorBoundary/NotFoundPage";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import { PermissionsProvider } from "./contexts/PermissionsContext";
 import { getAuthToken } from "./api/client";
@@ -33,7 +35,6 @@ import Writings from "./components/Admin/Dashboard/Writings/Writings";
 import AddWriting from "./components/Admin/Dashboard/Writings/AddWriting";
 import EditWriting from "./components/Admin/Dashboard/Writings/EditWriting";
 import DashboardAudios from "./components/Admin/Dashboard/DashboardAudios/DashboardAudios";
-import DashboardAddAudio from "./components/Admin/Dashboard/DashboardAddAudio/DashboardAddAudio";
 
 
 
@@ -55,6 +56,7 @@ function RootLayout() {
 export const routes = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         path: "login",
@@ -104,11 +106,11 @@ export const routes = createBrowserRouter([
           { path: "writings/add", element: <PermissionRouteGuard><AddWriting /></PermissionRouteGuard> },
           { path: "writings/edit/:postId", element: <PermissionRouteGuard><EditWriting /></PermissionRouteGuard> },
           { path: "audios", element: <PermissionRouteGuard><DashboardAudios /></PermissionRouteGuard> },
-          { path: "add-audio", element: <PermissionRouteGuard><DashboardAddAudio /></PermissionRouteGuard> },
-          { path: "edit-audio/:categoryId/:audioId", element: <PermissionRouteGuard><DashboardAddAudio /></PermissionRouteGuard> },
+          { path: "*", element: <NotFoundPage embedded /> },
 
         ]
-      }
+      },
+      { path: "*", element: <NotFoundPage /> }
     ]
   }
 ]);

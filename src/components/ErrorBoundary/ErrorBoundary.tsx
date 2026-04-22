@@ -32,11 +32,12 @@ class ErrorBoundaryClass extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="mb-4">
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white flex items-center justify-center px-6 py-10">
+          <div className="w-full max-w-2xl rounded-[2rem] border border-slate-200 bg-white shadow-sm p-8 sm:p-12 text-center relative overflow-hidden">
+            <div className="absolute -top-14 -right-14 w-40 h-40 rounded-full bg-rose-100 pointer-events-none" />
+            <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-200">
               <svg
-                className="mx-auto h-16 w-16 text-red-500"
+                className="h-7 w-7"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -49,17 +50,18 @@ class ErrorBoundaryClass extends Component<Props, State> {
                 />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 mb-3">Error</p>
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-4">
               Something went wrong
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm sm:text-base font-medium text-slate-500 max-w-xl mx-auto mb-8">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-[#13967B] hover:bg-[#0e7a64] text-white rounded-lg font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-primary transition-colors"
             >
-              Reload Page
+              Reload
             </button>
           </div>
         </div>

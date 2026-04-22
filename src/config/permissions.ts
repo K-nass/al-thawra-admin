@@ -112,8 +112,6 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
 
   // Audios routes
   '/admin/audios': 'Audios',
-  '/admin/add-audio': 'Audios',
-  '/admin/edit-audio/:categoryId/:audioId': 'Audios',
 };
 
 // =============================================================================
