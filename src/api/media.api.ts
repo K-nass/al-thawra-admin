@@ -85,6 +85,8 @@ export const mediaApi = {
     formData.append("api_key", signatureData.apiKey);
     formData.append("timestamp", String(signatureData.timestamp));
     formData.append("signature", signatureData.signature);
+    // IMPORTANT: pass signed fields exactly as received from backend.
+    // Any normalization/mutation can cause "Invalid Signature".
     formData.append("folder", signatureData.folder);
     formData.append("public_id", signatureData.publicId);
 

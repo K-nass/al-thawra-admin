@@ -131,20 +131,6 @@ function AudioPlayer({ src, title }: { src: string; title: string }) {
   );
 }
 
-// ─── Flag types ─────────────────────────────────────────────────────────────
-
-type FlagFilter = "isFeatured" | "isBreaking" | "isSlider" | "isRecommended";
-
-const FLAG_FILTERS: {
-  key: FlagFilter;
-  icon: React.ElementType;
-  label_i18n: string;
-}[] = [
-  { key: "isFeatured",    icon: Star,        label_i18n: "audios.flagFeatured"    },
-  { key: "isSlider",      icon: Layers,      label_i18n: "audios.flagSlider"      },
-  { key: "isBreaking",    icon: AlertCircle, label_i18n: "audios.flagBreaking"    },
-  { key: "isRecommended", icon: Megaphone,   label_i18n: "audios.flagRecommended" },
-];
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
@@ -162,7 +148,6 @@ export default function DashboardAudios() {
   const [searchPhrase, setSearchPhrase]   = useState<string | undefined>();
   const [languageFilter, setLanguageFilter] = useState("all");
   const [statusFilter, setStatusFilter]   = useState("all");
-  const [activeFlags, setActiveFlags] = useState<Partial<Record<FlagFilter, boolean>>>({});
   const [fromDate, setFromDate] = useState("");
   const [toDate,   setToDate]   = useState("");
   const [pageSize,   setPageSize]   = useState(15);
@@ -195,7 +180,7 @@ export default function DashboardAudios() {
   const { data: audiosData, isLoading } = useQuery<PaginatedResponse<Audio>>({
     queryKey: [
       "audios", selectedCategoryId, languageFilter, statusFilter,
-      searchPhrase, activeFlags, fromDate, toDate, pageNumber, pageSize,
+      searchPhrase, fromDate, toDate, pageNumber, pageSize,
     ],
     queryFn: () => {
       if (!selectedCategoryId)
@@ -207,10 +192,6 @@ export default function DashboardAudios() {
         language:     languageFilter !== "all" ? languageFilter : undefined,
         status:       statusFilter   !== "all" ? statusFilter   : undefined,
         searchPhrase: searchPhrase || undefined,
-        isFeatured:    activeFlags.isFeatured    || undefined,
-        isBreaking:    activeFlags.isBreaking    || undefined,
-        isSlider:      activeFlags.isSlider      || undefined,
-        isRecommended: activeFlags.isRecommended || undefined,
         from: fromDate ? `${fromDate}T00:00:00Z` : undefined,
         to:   toDate   ? `${toDate}T23:59:59Z`   : undefined,
         pageNumber,
@@ -248,23 +229,14 @@ export default function DashboardAudios() {
     return date.toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
   };
 
-  const toggleFlag = (key: FlagFilter) => {
-    setActiveFlags((prev) => {
-      const next = { ...prev };
-      if (next[key]) delete next[key]; else next[key] = true;
-      return next;
-    });
-    resetPage();
-  };
-
   const clearAllFilters = () => {
     setSearchInput(""); setSearchPhrase(undefined);
     setLanguageFilter("all"); setStatusFilter("all");
-    setActiveFlags({}); setFromDate(""); setToDate(""); setPageNumber(1);
+    setFromDate(""); setToDate(""); setPageNumber(1);
   };
 
   const hasActiveFilters = !!searchPhrase || languageFilter !== "all" ||
-    statusFilter !== "all" || Object.keys(activeFlags).length > 0 || !!fromDate || !!toDate;
+    statusFilter !== "all" || !!fromDate || !!toDate;
 
   const audios     = audiosData?.items     || [];
   const totalPages = audiosData?.totalPages ?? 0;
@@ -427,27 +399,6 @@ export default function DashboardAudios() {
               </div>
             </div>
 
-            {/* Flag pills */}
-            <div className="flex flex-wrap gap-2">
-              {FLAG_FILTERS.map(({ key, icon: Icon, label_i18n }) => {
-                const active = !!activeFlags[key];
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    disabled={!selectedCategoryId}
-                    onClick={() => toggleFlag(key)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-                      active
-                        ? "bg-primary text-white border-primary shadow-sm shadow-primary/20"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-100"
-                    }`}
-                  >
-                    <Icon size={11} />{t(label_i18n)}
-                  </button>
-                );
-              })}
-            </div>
           </div>
         </div>
 
