@@ -22,8 +22,14 @@ import ConfirmDialog from "@/components/ConfirmDialog/ConfirmDialog";
 import { useToast } from "@/components/Toast/ToastContainer";
 import PostActionsDropdown from "@/components/Common/PostActionsDropdown";
 import ArticleImageFallback from "@/components/Common/ArticleImageFallback";
+import WritingPlaceHolder from "@/components/Common/writingPlaceHolder";
 import {
-  Table, TableHeader, TableBody, TableRow, TableHead, TableCell,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
@@ -38,7 +44,9 @@ export default function Writings() {
   const [searchInput, setSearchInput] = useState("");
   const [searchPhrase, setSearchPhrase] = useState<string | null>(null);
   const [language, setLanguage] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "published" | "draft"
+  >("all");
   const [pageSize, setPageSize] = useState(15);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -55,12 +63,24 @@ export default function Writings() {
 
   const pageNumber = Number(searchParams.get("page")) || 1;
   const setPageNumber = (page: number) =>
-    setSearchParams((prev) => { prev.set("page", page.toString()); return prev; });
+    setSearchParams((prev) => {
+      prev.set("page", page.toString());
+      return prev;
+    });
 
   const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean; itemId: string | null; itemTitle: string;
-    categoryId: string | null; postType: string;
-  }>({ isOpen: false, itemId: null, itemTitle: "", categoryId: null, postType: "article" });
+    isOpen: boolean;
+    itemId: string | null;
+    itemTitle: string;
+    categoryId: string | null;
+    postType: string;
+  }>({
+    isOpen: false,
+    itemId: null,
+    itemTitle: "",
+    categoryId: null,
+    postType: "article",
+  });
 
   const locale = i18n.language?.startsWith("ar") ? "ar-EG" : "en-US";
 
@@ -84,58 +104,21 @@ export default function Writings() {
   }, [posts, statusFilter]);
 
   const deletePostMutation = useMutation({
-    mutationFn: async ({ postId, categoryId, postType }: { postId: string; categoryId: string; postType: string }) =>
-      postsApi.deletePost(categoryId, postId, postType),
+    mutationFn: async ({
+      postId,
+      categoryId,
+      postType,
+    }: {
+      postId: string;
+      categoryId: string;
+      postType: string;
+    }) => postsApi.deletePost(categoryId, postId, postType),
     onSuccess: () => {
       toast.success("تم حذف الكتابة بنجاح");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-    onError: (error: any) => toast.error(error?.response?.data?.message || "فشل في حذف الكتابة"),
-  });
-
-  const toggleFlagMutation = useMutation({
-    mutationFn: async ({ postId, flag }: { postId: string; flag: "isSlider" | "isFeatured" | "isBreaking" | "isRecommended" }) => {
-      const items = (posts as any)?.data?.items || (posts as any)?.items || [];
-      const post = items.find((p: any) => p.id === postId);
-      if (!post) throw new Error("Post not found");
-
-      const postType = post?.postType?.toLowerCase() || "article";
-      const categoryId = post?.categoryId;
-      if (!categoryId) throw new Error("Category ID not found");
-
-      const typeIdMap: Record<string, string> = {
-        article: "articleId",
-        video: "videoId",
-        audio: "audioId",
-      };
-
-      const payload: any = {
-        [typeIdMap[postType] || "articleId"]: postId,
-        title: post.title || "",
-        slug: post.slug || null,
-        description: post.description || post.summary || "",
-        content: post.content || "",
-        categoryId,
-        tagIds: post.tagIds || [],
-        status: post.status || "Published",
-        isSlider: post.isSlider ?? false,
-        isFeatured: post.isFeatured ?? false,
-        isBreaking: post.isBreaking ?? false,
-        isRecommended: post.isRecommended ?? false,
-        imageUrl: post.image || post.imageUrl || "",
-        authorId: post.authorId || null,
-        [flag]: !post[flag],
-      };
-
-      return await postsApi.updatePost(categoryId, postId, postType, payload);
-    },
-    onSuccess: () => {
-      toast.success("تم تحديث حالة الكتابة بنجاح");
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "فشل في تحديث الحالة");
-    },
+    onError: (error: any) =>
+      toast.error(error?.response?.data?.message || "فشل في حذف الكتابة"),
   });
 
   const handleEditClick = (item: any) => {
@@ -143,8 +126,8 @@ export default function Writings() {
     navigate(`/admin/edit-post/${item.id}?type=${postType}`, {
       state: {
         slug: item.slug,
-        categorySlug: item.categorySlug
-      }
+        categorySlug: item.categorySlug,
+      },
     });
   };
 
@@ -161,8 +144,21 @@ export default function Writings() {
   const handleConfirmDelete = () => {
     if (!confirmDialog.itemId || !confirmDialog.categoryId) return;
     deletePostMutation.mutate(
-      { postId: confirmDialog.itemId, categoryId: confirmDialog.categoryId, postType: confirmDialog.postType },
-      { onSuccess: () => setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "", categoryId: null, postType: "article" }) },
+      {
+        postId: confirmDialog.itemId,
+        categoryId: confirmDialog.categoryId,
+        postType: confirmDialog.postType,
+      },
+      {
+        onSuccess: () =>
+          setConfirmDialog({
+            isOpen: false,
+            itemId: null,
+            itemTitle: "",
+            categoryId: null,
+            postType: "article",
+          }),
+      },
     );
   };
 
@@ -170,14 +166,23 @@ export default function Writings() {
     if (!dateString) return "-";
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return "-";
-    return date.toLocaleDateString(locale, { year: "numeric", month: "short", day: "numeric" });
+    return date.toLocaleDateString(locale, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [pageNumber]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [pageNumber]);
 
-  const totalPages = (posts as any)?.data?.totalPages || (posts as any)?.totalPages || 0;
-  const totalCount = (posts as any)?.data?.totalCount || (posts as any)?.totalCount || 0;
-  const itemsFrom = (posts as any)?.data?.itemsFrom || (posts as any)?.itemsFrom || 0;
+  const totalPages =
+    (posts as any)?.data?.totalPages || (posts as any)?.totalPages || 0;
+  const totalCount =
+    (posts as any)?.data?.totalCount || (posts as any)?.totalCount || 0;
+  const itemsFrom =
+    (posts as any)?.data?.itemsFrom || (posts as any)?.itemsFrom || 0;
   const itemsTo = (posts as any)?.data?.itemsTo || (posts as any)?.itemsTo || 0;
 
   return (
@@ -194,7 +199,9 @@ export default function Writings() {
                 محتوى الكتّاب
               </span>
             </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">كتابات</h1>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+              كتابات
+            </h1>
             <p className="text-sm text-slate-500 mt-2 font-medium max-w-xl">
               إدارة المقالات المرتبطة بكتّاب بعينهم
             </p>
@@ -214,7 +221,9 @@ export default function Writings() {
           <div className="absolute top-0 end-0 w-32 h-32 bg-slate-50 rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-50" />
           <div className="flex items-center gap-2 mb-6">
             <Filter size={14} className="text-primary" />
-            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">الفلاتر</h3>
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              الفلاتر
+            </h3>
           </div>
           <div className="space-y-4">
             <div className="relative group">
@@ -231,7 +240,10 @@ export default function Writings() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <select
-                onChange={(e) => { setLanguage(e.target.value === "all" ? null : e.target.value); setPageNumber(1); }}
+                onChange={(e) => {
+                  setLanguage(e.target.value === "all" ? null : e.target.value);
+                  setPageNumber(1);
+                }}
                 className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
               >
                 <option value="all">جميع اللغات</option>
@@ -240,7 +252,10 @@ export default function Writings() {
               </select>
               <select
                 value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value as any); setPageNumber(1); }}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as any);
+                  setPageNumber(1);
+                }}
                 className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
               >
                 <option value="all">جميع الحالات</option>
@@ -252,7 +267,11 @@ export default function Writings() {
                 onChange={(e) => setPageSize(Number(e.target.value))}
                 className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all appearance-none cursor-pointer"
               >
-                {[15, 30, 60].map((n) => <option key={n} value={n}>{n} عنصر</option>)}
+                {[15, 30, 60].map((n) => (
+                  <option key={n} value={n}>
+                    {n} عنصر
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -262,7 +281,9 @@ export default function Writings() {
         {isLoading ? (
           <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[2rem] border border-slate-200 shadow-sm animate-pulse">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">جاري التحميل...</p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+              جاري التحميل...
+            </p>
           </div>
         ) : (
           <div className="space-y-8">
@@ -270,12 +291,24 @@ export default function Writings() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-200">
-                    <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">المقال</TableHead>
-                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">الكاتب</TableHead>
-                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">الحالة</TableHead>
-                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">التصنيف</TableHead>
-                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">التاريخ</TableHead>
-                    <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">إجراءات</TableHead>
+                    <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      المقال
+                    </TableHead>
+                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      الكاتب
+                    </TableHead>
+                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      الحالة
+                    </TableHead>
+                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      التصنيف
+                    </TableHead>
+                    <TableHead className="py-6 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      التاريخ
+                    </TableHead>
+                    <TableHead className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      إجراءات
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -294,7 +327,10 @@ export default function Writings() {
                     </TableRow>
                   ) : (
                     filteredItems.map((item: any) => (
-                      <TableRow key={item.id} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                      <TableRow
+                        key={item.id}
+                        className="group hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0"
+                      >
                         {/* Article */}
                         <TableCell className="px-8 py-4">
                           <div className="flex items-center gap-4 py-2">
@@ -304,14 +340,13 @@ export default function Writings() {
                                   src={item.image}
                                   className="w-14 h-14 rounded-2xl object-cover bg-slate-100 border border-slate-100 shadow-sm"
                                   alt=""
-                                  onError={(e) => (e.currentTarget.src = "https://placehold.co/400x400/f8fafc/64748b?text=مقال")}
+                                  onError={(e) =>
+                                    (e.currentTarget.src =
+                                      "https://placehold.co/400x400/f8fafc/64748b?text=Article")
+                                  }
                                 />
                               ) : (
-                                <ArticleImageFallback
-                                  writerImageUrl={item.authorImage || item.authorImageUrl || item.writerImageUrl}
-                                  writerName={item.authorName || item.writerName}
-                                  className="w-14 h-14 rounded-2xl border border-slate-100 shadow-sm"
-                                />
+                                <WritingPlaceHolder text="كتابة" />
                               )}
                               <div className="absolute -top-1 -end-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100">
                                 <FileText size={10} className="text-primary" />
@@ -322,7 +357,14 @@ export default function Writings() {
                                 {item.title}
                               </span>
                               <div className="flex items-center gap-1.5">
-                                <Badge variant={item.language === "Arabic" ? "warning" : "primary"} className="rounded-lg text-[9px]">
+                                <Badge
+                                  variant={
+                                    item.language === "Arabic"
+                                      ? "warning"
+                                      : "primary"
+                                  }
+                                  className="rounded-lg text-[9px]"
+                                >
                                   {item.language === "Arabic" ? "AR" : "EN"}
                                 </Badge>
                               </div>
@@ -335,7 +377,13 @@ export default function Writings() {
                           <div className="flex items-center gap-2.5">
                             <div className="w-9 h-9 rounded-full bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
                               {item.authorImageUrl || item.writerImageUrl ? (
-                                <img src={item.authorImageUrl || item.writerImageUrl} alt="" className="w-full h-full object-cover" />
+                                <img
+                                  src={
+                                    item.authorImageUrl || item.writerImageUrl
+                                  }
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-slate-400">
                                   <UserIcon size={14} />
@@ -355,14 +403,18 @@ export default function Writings() {
                               <div className="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
                                 <CheckCircle2 size={13} />
                               </div>
-                              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">منشور</span>
+                              <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                                منشور
+                              </span>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1.5">
                               <div className="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100">
                                 <Clock size={13} />
                               </div>
-                              <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">مسودة</span>
+                              <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                                مسودة
+                              </span>
                             </div>
                           )}
                         </TableCell>
@@ -374,7 +426,11 @@ export default function Writings() {
                               className="w-2.5 h-2.5 rounded-full shadow-sm ring-1 ring-white"
                               style={{
                                 backgroundColor:
-                                  categoriesData?.data?.find((c: any) => c.slug === item.categorySlug || c.name === item.categoryName)?.colorHex || "#cbd5e1",
+                                  categoriesData?.data?.find(
+                                    (c: any) =>
+                                      c.slug === item.categorySlug ||
+                                      c.name === item.categoryName,
+                                  )?.colorHex || "#cbd5e1",
                               }}
                             />
                             <span className="text-xs font-black text-slate-600 uppercase tracking-widest leading-none">
@@ -400,10 +456,6 @@ export default function Writings() {
                           <PostActionsDropdown
                             postId={item.id}
                             onEdit={(id) => handleEditClick(item)}
-                            onAddToSlider={(id) => toggleFlagMutation.mutate({ postId: id, flag: "isSlider" })}
-                            onAddToFeatured={(id) => toggleFlagMutation.mutate({ postId: id, flag: "isFeatured" })}
-                            onAddToBreaking={(id) => toggleFlagMutation.mutate({ postId: id, flag: "isBreaking" })}
-                            onAddToRecommended={(id) => toggleFlagMutation.mutate({ postId: id, flag: "isRecommended" })}
                             onDelete={() => handleDeleteClick(item)}
                           />
                         </TableCell>
@@ -437,7 +489,15 @@ export default function Writings() {
         confirmText={deletePostMutation.isPending ? "جاري الحذف..." : "حذف"}
         cancelText="إلغاء"
         onConfirm={handleConfirmDelete}
-        onCancel={() => setConfirmDialog({ isOpen: false, itemId: null, itemTitle: "", categoryId: null, postType: "article" })}
+        onCancel={() =>
+          setConfirmDialog({
+            isOpen: false,
+            itemId: null,
+            itemTitle: "",
+            categoryId: null,
+            postType: "article",
+          })
+        }
         type="danger"
       />
     </div>
